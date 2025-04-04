@@ -1,15 +1,25 @@
-import { StatusBar } from 'expo-status-bar';
-import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { StatusBar } from 'expo-status-bar'
+import { SafeAreaProvider } from 'react-native-safe-area-context'
+import { ThemeProvider, useTheme } from './lib/theme/ThemeContext'
+import { Navigation } from './app/navigation'
+import './global.css'
 
-import { Navigation } from './app/navigation';
+// Wrapper component to access theme context for StatusBar
+const Main = () => {
+  const { isDark } = useTheme()
 
-import './global.css';
-
-export default function App() {
   return (
     <SafeAreaProvider>
       <Navigation />
-      <StatusBar style="auto" />
+      <StatusBar style={isDark ? 'light' : 'dark'} />
     </SafeAreaProvider>
-  );
+  )
+}
+
+export default function App() {
+  return (
+    <ThemeProvider>
+      <Main />
+    </ThemeProvider>
+  )
 }

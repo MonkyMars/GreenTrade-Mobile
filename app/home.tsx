@@ -1,35 +1,61 @@
-import { useState } from 'react';
-import { View, Text, TouchableOpacity, ScrollView } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { FaLeaf, FaUser, FaBell, FaRecycle, FaChartLine, FaShoppingBag } from 'react-icons/fa';
-import type { NativeStackScreenProps } from '@react-navigation/native-stack';
-import type { RootStackParamList } from './navigation';
+import { useState } from 'react'
+import { View, Text, TouchableOpacity, ScrollView } from 'react-native'
+import { SafeAreaView } from 'react-native-safe-area-context'
+import {
+  FaLeaf,
+  FaUser,
+  FaBell,
+  FaRecycle,
+  FaChartLine,
+  FaShoppingBag,
+} from 'react-icons/fa'
+import type { NativeStackScreenProps } from '@react-navigation/native-stack'
+import type { RootStackParamList } from './navigation'
+import BottomNavigation from '../components/BottomNavigation'
 
-type HomeScreenProps = NativeStackScreenProps<RootStackParamList, 'Home'>;
+type HomeScreenProps = NativeStackScreenProps<RootStackParamList, 'Home'>
 
 // Mock data for sustainability metrics
 const sustainabilityData = [
   { id: 1, title: 'Carbon Saved', value: '125 kg', change: '+12%' },
   { id: 2, title: 'Items Recycled', value: '37', change: '+5' },
   { id: 3, title: 'Green Points', value: '1,450', change: '+230' },
-];
+]
 
 // Mock data for recent transactions
 const recentTransactions = [
-  { id: 1, title: 'Recycled Glass Bottles', date: '2 Apr 2025', points: 45, amount: '+€2.25' },
-  { id: 2, title: 'Recycled Paper', date: '1 Apr 2025', points: 30, amount: '+€1.50' },
-  { id: 3, title: 'Purchased Eco Bag', date: '31 Mar 2025', points: -20, amount: '-€4.99' },
-];
+  {
+    id: 1,
+    title: 'Recycled Glass Bottles',
+    date: '2 Apr 2025',
+    points: 45,
+    amount: '+€2.25',
+  },
+  {
+    id: 2,
+    title: 'Recycled Paper',
+    date: '1 Apr 2025',
+    points: 30,
+    amount: '+€1.50',
+  },
+  {
+    id: 3,
+    title: 'Purchased Eco Bag',
+    date: '31 Mar 2025',
+    points: -20,
+    amount: '-€4.99',
+  },
+]
 
 // Mock data for featured products
 const featuredProducts = [
   { id: 1, name: 'Eco-friendly Water Bottle', price: '€19.99', image: '🍶' },
   { id: 2, name: 'Bamboo Toothbrush Set', price: '€12.50', image: '🪥' },
   { id: 3, name: 'Organic Cotton Tote', price: '€8.99', image: '👜' },
-];
+]
 
-export default function HomeScreen({ navigation }: HomeScreenProps) {
-  const [activeTab, setActiveTab] = useState('home');
+export default function HomeScreen() {
+  const [activeTab, setActiveTab] = useState('home')
 
   return (
     <SafeAreaView className={styles.container}>
@@ -59,9 +85,11 @@ export default function HomeScreen({ navigation }: HomeScreenProps) {
 
         {/* Sustainability Metrics */}
         <View className={styles.metricsContainer}>
-          <Text className={styles.sectionTitle}>Your Sustainability Impact</Text>
+          <Text className={styles.sectionTitle}>
+            Your Sustainability Impact
+          </Text>
           <View className={styles.metricsGrid}>
-            {sustainabilityData.map((metric) => (
+            {sustainabilityData.map(metric => (
               <View key={metric.id} className={styles.metricCard}>
                 <Text className={styles.metricTitle}>{metric.title}</Text>
                 <Text className={styles.metricValue}>{metric.value}</Text>
@@ -102,16 +130,25 @@ export default function HomeScreen({ navigation }: HomeScreenProps) {
         <View className={styles.recentActivity}>
           <Text className={styles.sectionTitle}>Recent Activity</Text>
           <View className={styles.transactionsList}>
-            {recentTransactions.map((transaction) => (
+            {recentTransactions.map(transaction => (
               <View key={transaction.id} className={styles.transactionItem}>
                 <View>
-                  <Text className={styles.transactionTitle}>{transaction.title}</Text>
-                  <Text className={styles.transactionDate}>{transaction.date}</Text>
+                  <Text className={styles.transactionTitle}>
+                    {transaction.title}
+                  </Text>
+                  <Text className={styles.transactionDate}>
+                    {transaction.date}
+                  </Text>
                 </View>
                 <View>
-                  <Text className={styles.transactionAmount}>{transaction.amount}</Text>
+                  <Text className={styles.transactionAmount}>
+                    {transaction.amount}
+                  </Text>
                   <Text className={styles.transactionPoints}>
-                    {transaction.points > 0 ? `+${transaction.points}` : transaction.points} pts
+                    {transaction.points > 0
+                      ? `+${transaction.points}`
+                      : transaction.points}{' '}
+                    pts
                   </Text>
                 </View>
               </View>
@@ -125,8 +162,9 @@ export default function HomeScreen({ navigation }: HomeScreenProps) {
           <ScrollView
             horizontal
             showsHorizontalScrollIndicator={false}
-            className={styles.productsScroll}>
-            {featuredProducts.map((product) => (
+            className={styles.productsScroll}
+          >
+            {featuredProducts.map(product => (
               <View key={product.id} className={styles.productCard}>
                 <Text className={styles.productImage}>{product.image}</Text>
                 <Text className={styles.productName}>{product.name}</Text>
@@ -138,44 +176,9 @@ export default function HomeScreen({ navigation }: HomeScreenProps) {
       </ScrollView>
 
       {/* Bottom Navigation */}
-      <View className={styles.bottomNav}>
-        <TouchableOpacity
-          className={`${styles.navButton} ${activeTab === 'home' ? styles.activeNavButton : ''}`}
-          onPress={() => setActiveTab('home')}>
-          <FaLeaf size={20} color={activeTab === 'home' ? '#16a34a' : '#6b7280'} />
-          <Text className={activeTab === 'home' ? styles.activeNavText : styles.navText}>Home</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          className={`${styles.navButton} ${activeTab === 'recycle' ? styles.activeNavButton : ''}`}
-          onPress={() => setActiveTab('recycle')}>
-          <FaRecycle size={20} color={activeTab === 'recycle' ? '#16a34a' : '#6b7280'} />
-          <Text className={activeTab === 'recycle' ? styles.activeNavText : styles.navText}>
-            Recycle
-          </Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          className={`${styles.navButton} ${activeTab === 'shop' ? styles.activeNavButton : ''}`}
-          onPress={() => setActiveTab('shop')}>
-          <FaShoppingBag size={20} color={activeTab === 'shop' ? '#16a34a' : '#6b7280'} />
-          <Text className={activeTab === 'shop' ? styles.activeNavText : styles.navText}>Shop</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          className={`${styles.navButton} ${activeTab === 'profile' ? styles.activeNavButton : ''}`}
-          onPress={() => {
-            setActiveTab('profile');
-            navigation.navigate('Login'); // Temporary logout functionality
-          }}>
-          <FaUser size={20} color={activeTab === 'profile' ? '#16a34a' : '#6b7280'} />
-          <Text className={activeTab === 'profile' ? styles.activeNavText : styles.navText}>
-            Profile
-          </Text>
-        </TouchableOpacity>
-      </View>
+      <BottomNavigation activeTab={activeTab} onTabChange={setActiveTab} />
     </SafeAreaView>
-  );
+  )
 }
 
 const styles = {
@@ -199,7 +202,8 @@ const styles = {
   actionSection: 'p-4',
   actionButtons: 'flex-row justify-around mt-2',
   actionButton: 'items-center',
-  actionIconContainer: 'w-12 h-12 bg-green-600 rounded-full items-center justify-center',
+  actionIconContainer:
+    'w-12 h-12 bg-green-600 rounded-full items-center justify-center',
   actionText: 'text-gray-800 mt-2 text-xs',
   recentActivity: 'p-4',
   transactionsList: 'bg-white rounded-lg shadow p-3',
@@ -214,9 +218,4 @@ const styles = {
   productImage: 'text-4xl mb-2',
   productName: 'text-center text-sm font-medium text-gray-800',
   productPrice: 'text-center text-green-600 font-bold mt-1',
-  bottomNav: 'flex-row justify-around pt-2 pb-1 bg-white border-t border-gray-200',
-  navButton: 'items-center p-2',
-  activeNavButton: 'border-t-2 border-green-600',
-  navText: 'text-xs text-gray-500 mt-1',
-  activeNavText: 'text-xs text-green-600 mt-1',
-};
+}
