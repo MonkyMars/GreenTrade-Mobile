@@ -569,6 +569,7 @@ export default function ListingsScreen({ navigation }: ListingsScreenProps) {
                       alignItems: 'center',
                       paddingVertical: 8,
                       paddingHorizontal: 12,
+                      gap: 6,
                       backgroundColor:
                         selectedCategory === category.id
                           ? colors.highlight
@@ -577,6 +578,15 @@ export default function ListingsScreen({ navigation }: ListingsScreenProps) {
                     }}
                     onPress={() => toggleCategory(category.id)}
                   >
+                    <FontAwesome
+                      name={category.icon}
+                      size={16}
+                      color={
+                        selectedCategory === category.id
+                          ? colors.primary
+                          : colors.textTertiary
+                      }
+                    />
                     <Text
                       style={{
                         color:

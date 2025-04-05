@@ -5,13 +5,13 @@ export const categories: {
 }[] = [
   { id: 'all', icon: 'folder', name: 'All Categories' },
   { id: 'home-garden', icon: 'home', name: 'Home & Garden' },
-  { id: 'fashion', icon: 'shirt', name: 'Fashion' },
+  { id: 'fashion', icon: 'shopping-bag', name: 'Fashion' },
   { id: 'electronics', icon: 'laptop', name: 'Electronics' },
   { id: 'vehicles', icon: 'car', name: 'Vehicles' },
-  { id: 'books', icon: 'books', name: 'Books' },
+  { id: 'books', icon: 'book', name: 'Books' },
   { id: 'jewerly', icon: 'diamond', name: 'Jewerly' },
   { id: 'toys-games', icon: 'gamepad', name: 'Toys & Games' },
-  { id: 'other', icon: 'question_mark', name: 'Other' },
+  { id: 'other', icon: 'question', name: 'Other' },
 ]
 
 export const findCategory = (id: string) => {
