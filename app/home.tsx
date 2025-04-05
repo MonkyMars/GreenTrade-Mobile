@@ -1,210 +1,384 @@
-import { useState } from 'react'
-import { View, Text, TouchableOpacity, ScrollView } from 'react-native'
+import { useState, useEffect } from 'react'
+import { View, Text, TouchableOpacity, ScrollView, StyleSheet, Image, ActivityIndicator } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
-import FontAwesome from "react-native-vector-icons/FontAwesome"
 import BottomNavigation from '../components/BottomNavigation'
-
-// Mock data for sustainability metrics
-const sustainabilityData = [
-  { id: 1, title: 'Carbon Saved', value: '125 kg', change: '+12%' },
-  { id: 2, title: 'Items Recycled', value: '37', change: '+5' },
-  { id: 3, title: 'Green Points', value: '1,450', change: '+230' },
-]
-
-// Mock data for recent transactions
-const recentTransactions = [
-  {
-    id: 1,
-    title: 'Recycled Glass Bottles',
-    date: '2 Apr 2025',
-    points: 45,
-    amount: '+€2.25',
-  },
-  {
-    id: 2,
-    title: 'Recycled Paper',
-    date: '1 Apr 2025',
-    points: 30,
-    amount: '+€1.50',
-  },
-  {
-    id: 3,
-    title: 'Purchased Eco Bag',
-    date: '31 Mar 2025',
-    points: -20,
-    amount: '-€4.99',
-  },
-]
-
-// Mock data for featured products
-const featuredProducts = [
-  { id: 1, name: 'Eco-friendly Water Bottle', price: '€19.99', image: '🍶' },
-  { id: 2, name: 'Bamboo Toothbrush Set', price: '€12.50', image: '🪥' },
-  { id: 3, name: 'Organic Cotton Tote', price: '€8.99', image: '👜' },
-]
+import { useTheme } from '../lib/theme/ThemeContext'
+import { Feather, FontAwesome } from '@expo/vector-icons'
+import { useNavigation } from '@react-navigation/native'
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack'
+import type { RootStackParamList } from './navigation'
+import { FetchedListing } from 'lib/types/main'
+import { getListings } from 'lib/backend/listings/getListings'
+import { findCategory } from '../lib/functions/category'
 
 export default function HomeScreen() {
+  const { colors, isDark } = useTheme()
+  const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>()
   const [activeTab, setActiveTab] = useState('home')
+  const [username, setUsername] = useState('User')
+  const [recentListings, setRecentListings] = useState<FetchedListing[]>([])
+  const [loading, setLoading] = useState(false)
+
+  // Fetch user data and recent listings
+  useEffect(() => {
+    const fetchData = async () => {
+      setLoading(true)
+      try {
+        // Simulate fetching user data
+        setUsername('Levi Noppers'.split(' ')[0])
+
+        // Fetch recent listings from API
+        const listings = await getListings() as FetchedListing[]
+        // Get only the 3 most recent listings
+        setRecentListings(listings.slice(0, 3))
+      } catch (error) {
+        console.error('Error fetching home page data:', error)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchData()
+  }, [])
+
+  // Handler for navigating to listing details
+  const handleListingPress = (id: number) => {
+    // In a real app, you would navigate to the listing details screen
+    console.log(`Navigating to listing ${id}`)
+    // For now, we'll navigate to listings page
+    navigation.navigate('Listings')
+  }
 
   return (
-    <SafeAreaView className={styles.container}>
-      {/* Header */}
-      <View className={styles.header}>
-        <View className={styles.headerLogo}>
-          <FontAwesome name="leaf" size={24} color="#16a34a" />
-          <Text className={styles.headerTitle}>GreenTrade</Text>
-        </View>
-        <View className={styles.headerIcons}>
-          <TouchableOpacity className={styles.iconButton}>
-            <FontAwesome name="bell" size={20} color="#4b5563" />
-          </TouchableOpacity>
-          <TouchableOpacity className={styles.iconButton}>
-            <FontAwesome name="user" size={20} color="#4b5563" />
-          </TouchableOpacity>
+    <SafeAreaView
+      style={{
+        flex: 1,
+        backgroundColor: colors.background,
+        position: 'relative',
+        width: '100%',
+      }}
+    >
+      {/* App Header */}
+      <View
+        style={{
+          backgroundColor: colors.card,
+          padding: 16,
+          borderBottomWidth: 1,
+          borderBottomColor: colors.borderLight,
+          shadowColor: colors.shadow,
+          shadowOffset: { width: 0, height: 1 },
+          shadowOpacity: 0.05,
+          shadowRadius: 2,
+          elevation: 1,
+        }}
+      >
+        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+          <FontAwesome name="leaf" size={24} color={colors.primary} />
+          <Text
+            style={{
+              fontSize: 22,
+              fontWeight: '700',
+              color: colors.text,
+              marginLeft: 10
+            }}
+          >
+            GreenTrade
+          </Text>
         </View>
       </View>
 
-      {/* Main Content */}
-      <ScrollView className={styles.scrollView}>
-        {/* Welcome Section */}
-        <View className={styles.welcomeSection}>
-          <Text className={styles.welcomeText}>Welcome back, User!</Text>
-          <Text className={styles.dateText}>April 4, 2025</Text>
-        </View>
-
-        {/* Sustainability Metrics */}
-        <View className={styles.metricsContainer}>
-          <Text className={styles.sectionTitle}>
-            Your Sustainability Impact
-          </Text>
-          <View className={styles.metricsGrid}>
-            {sustainabilityData.map(metric => (
-              <View key={metric.id} className={styles.metricCard}>
-                <Text className={styles.metricTitle}>{metric.title}</Text>
-                <Text className={styles.metricValue}>{metric.value}</Text>
-                <Text className={styles.metricChange}>{metric.change}</Text>
-              </View>
-            ))}
+      <View
+        style={{
+          flex: 1,
+          backgroundColor: colors.background,
+        }}
+      >
+        <ScrollView
+          style={{
+            flex: 1,
+          }}
+          showsVerticalScrollIndicator={false}
+        >
+          {/* Greeting Section */}
+          <View style={styles.section}>
+            <Text
+              style={{
+                fontSize: 28,
+                fontWeight: 'bold',
+                color: colors.text,
+              }}
+            >
+              Hello, {username}!
+            </Text>
+            <Text
+              style={{
+                fontSize: 16,
+                color: colors.textSecondary,
+                marginTop: 5,
+              }}
+            >
+              Welcome to your sustainable marketplace
+            </Text>
           </View>
-        </View>
 
-        {/* Quick Actions */}
-        <View className={styles.actionSection}>
-          <Text className={styles.sectionTitle}>Quick Actions</Text>
-          <View className={styles.actionButtons}>
-            <TouchableOpacity className={styles.actionButton}>
-              <View className={styles.actionIconContainer}>
-                <FontAwesome name="recycle" size={20} color="#ffffff" />
-              </View>
-              <Text className={styles.actionText}>Recycle</Text>
+          {/* Quick Actions */}
+          <View style={[styles.section, styles.quickActionsContainer]}>
+            <TouchableOpacity
+              style={{
+                ...styles.actionButton,
+                backgroundColor: colors.primary,
+              }}
+              onPress={() => navigation.navigate('Listings')}
+            >
+              <Feather name="search" size={24} color="#fff" />
+              <Text style={styles.actionButtonText}>Browse Listings</Text>
             </TouchableOpacity>
 
-            <TouchableOpacity className={styles.actionButton}>
-              <View className={styles.actionIconContainer}>
-                <FontAwesome name="shopping-bag" size={20} color="#ffffff" />
-              </View>
-              <Text className={styles.actionText}>Shop</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity className={styles.actionButton}>
-              <View className={styles.actionIconContainer}>
-                <FontAwesome name="line-chart" size={20} color="#ffffff" />
-              </View>
-              <Text className={styles.actionText}>Stats</Text>
+            <TouchableOpacity
+              style={{
+                ...styles.actionButton,
+                backgroundColor: isDark ? colors.primaryLight : colors.card,
+              }}
+              onPress={() => navigation.navigate('Post')}
+            >
+              <Feather name="plus-circle" size={24} color="#fff" />
+              <Text style={styles.actionButtonText}>Post a Listing</Text>
             </TouchableOpacity>
           </View>
-        </View>
 
-        {/* Recent Activity */}
-        <View className={styles.recentActivity}>
-          <Text className={styles.sectionTitle}>Recent Activity</Text>
-          <View className={styles.transactionsList}>
-            {recentTransactions.map(transaction => (
-              <View key={transaction.id} className={styles.transactionItem}>
-                <View>
-                  <Text className={styles.transactionTitle}>
-                    {transaction.title}
-                  </Text>
-                  <Text className={styles.transactionDate}>
-                    {transaction.date}
-                  </Text>
-                </View>
-                <View>
-                  <Text className={styles.transactionAmount}>
-                    {transaction.amount}
-                  </Text>
-                  <Text className={styles.transactionPoints}>
-                    {transaction.points > 0
-                      ? `+${transaction.points}`
-                      : transaction.points}{' '}
-                    pts
-                  </Text>
-                </View>
+          {/* Recent Listings Section */}
+          <View style={styles.section}>
+            <View style={styles.sectionHeader}>
+              <Text
+                style={{
+                  fontSize: 20,
+                  fontWeight: 'bold',
+                  color: colors.text,
+                }}
+              >
+                Recent Listings
+              </Text>
+              <TouchableOpacity onPress={() => navigation.navigate('Listings')}>
+                <Text
+                  style={{
+                    color: colors.primary,
+                    fontSize: 14,
+                    fontWeight: '500',
+                  }}
+                >
+                  View All
+                </Text>
+              </TouchableOpacity>
+            </View>
+
+            {/* Listings */}
+            {loading ? (
+              <View style={{ paddingVertical: 30, alignItems: 'center' }}>
+                <ActivityIndicator size="large" color={colors.primary} />
               </View>
-            ))}
+            ) : (
+              <View style={styles.listingsContainer}>
+                {recentListings.length > 0 ? (
+                  recentListings.map(item => {
+                    const category = findCategory(item.category);
+                    return (
+                      <TouchableOpacity
+                        key={item.id}
+                        style={{
+                          ...styles.listingCard,
+                          backgroundColor: colors.card,
+                          borderColor: colors.border,
+                        }}
+                        onPress={() => handleListingPress(item.id)}
+                      >
+                        <Image
+                          source={{ uri: item.imageUrl[0] || 'https://via.placeholder.com/300x200' }}
+                          style={styles.listingImage}
+                        />
+                        <View
+                          style={{
+                            position: 'absolute',
+                            top: 10,
+                            right: 10,
+                            backgroundColor: isDark
+                              ? 'rgba(31, 41, 55, 0.8)'
+                              : 'rgba(255, 255, 255, 0.8)',
+                            borderRadius: 4,
+                            paddingHorizontal: 6,
+                            paddingVertical: 4,
+                            flexDirection: 'row',
+                            alignItems: 'center',
+                          }}
+                        >
+                          <FontAwesome name="leaf" size={14} color={colors.primary} />
+                          <Text
+                            style={{ marginLeft: 4, fontWeight: '600', color: colors.text }}
+                          >
+                            {item.ecoScore}
+                          </Text>
+                        </View>
+                        <View style={styles.listingDetails}>
+                          <Text
+                            style={{
+                              fontSize: 16,
+                              fontWeight: '600',
+                              color: colors.text,
+                              marginBottom: 4,
+                            }}
+                            numberOfLines={1}
+                          >
+                            {item.title}
+                          </Text>
+                          <Text
+                            style={{
+                              fontSize: 18,
+                              fontWeight: 'bold',
+                              color: colors.primary,
+                              marginBottom: 4,
+                            }}
+                          >
+                            €{item.price}
+                          </Text>
+
+                          <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 4 }}>
+                            <Text
+                              style={{
+                                fontSize: 14,
+                                color: colors.textTertiary,
+                              }}
+                            >
+                              <Feather name="map-pin" size={12} color={colors.textTertiary} /> {item.location}
+                            </Text>
+
+                            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                              <FontAwesome
+                                name={category.icon as any}
+                                size={12}
+                                color={colors.primary}
+                                style={{ marginRight: 4 }}
+                              />
+                              <Text style={{ fontSize: 12, color: colors.primary }}>
+                                {category.name}
+                              </Text>
+                            </View>
+                          </View>
+                        </View>
+                      </TouchableOpacity>
+                    );
+                  })
+                ) : (
+                  <View style={{ alignItems: 'center', paddingVertical: 20 }}>
+                    <Text style={{ color: colors.textTertiary }}>No listings found</Text>
+                  </View>
+                )}
+              </View>
+            )}
           </View>
-        </View>
 
-        {/* Featured Products */}
-        <View className={styles.featuredProducts}>
-          <Text className={styles.sectionTitle}>Featured Eco Products</Text>
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            className={styles.productsScroll}
-          >
-            {featuredProducts.map(product => (
-              <View key={product.id} className={styles.productCard}>
-                <Text className={styles.productImage}>{product.image}</Text>
-                <Text className={styles.productName}>{product.name}</Text>
-                <Text className={styles.productPrice}>{product.price}</Text>
+          {/* Featured Section */}
+          <View style={[styles.section, { marginBottom: 20 }]}>
+            <View style={styles.featuredCard}>
+              <View
+                style={{
+                  backgroundColor: isDark ? colors.primaryLight : colors.primaryLight,
+                  borderRadius: 8,
+                  padding: 16,
+                }}
+              >
+                <Text
+                  style={{
+                    fontSize: 18,
+                    fontWeight: 'bold',
+                    color: isDark ? colors.text : colors.primaryDark,
+                    marginBottom: 10,
+                  }}
+                >
+                  Make an Impact
+                </Text>
+                <Text
+                  style={{
+                    fontSize: 14,
+                    color: isDark ? colors.textSecondary : colors.primaryDark,
+                    marginBottom: 16,
+                    opacity: 0.8,
+                  }}
+                >
+                  Buying and selling sustainable goods helps reduce waste and promotes a circular economy. Join our community!
+                </Text>
+                <TouchableOpacity
+                  style={{
+                    backgroundColor: colors.primary,
+                    paddingVertical: 10,
+                    paddingHorizontal: 16,
+                    borderRadius: 6,
+                    alignSelf: 'flex-start',
+                  }}
+                  onPress={() => navigation.navigate('Post')}
+                >
+                  <Text style={{ color: 'white', fontWeight: '600' }}>
+                    Get Started
+                  </Text>
+                </TouchableOpacity>
               </View>
-            ))}
-          </ScrollView>
-        </View>
-      </ScrollView>
+            </View>
+          </View>
 
-      {/* Bottom Navigation */}
+        </ScrollView>
+      </View>
       <BottomNavigation activeTab={activeTab} onTabChange={setActiveTab} />
     </SafeAreaView>
   )
 }
 
-const styles = {
-  container: 'flex-1 bg-gray-100',
-  header: 'flex-row items-center justify-between px-4 py-3 bg-white shadow',
-  headerLogo: 'flex-row items-center',
-  headerTitle: 'ml-2 text-xl font-bold text-green-600',
-  headerIcons: 'flex-row',
-  iconButton: 'ml-4 p-2',
-  scrollView: 'flex-1',
-  welcomeSection: 'p-4 bg-green-50',
-  welcomeText: 'text-2xl font-bold text-gray-800',
-  dateText: 'text-gray-500 mt-1',
-  metricsContainer: 'p-4',
-  sectionTitle: 'text-lg font-semibold text-gray-800 mb-3',
-  metricsGrid: 'flex-row justify-between',
-  metricCard: 'bg-white p-3 rounded-lg shadow flex-1 mx-1 items-center',
-  metricTitle: 'text-gray-500 text-xs',
-  metricValue: 'text-xl font-bold text-gray-800 mt-1',
-  metricChange: 'text-green-500 text-xs mt-1',
-  actionSection: 'p-4',
-  actionButtons: 'flex-row justify-around mt-2',
-  actionButton: 'items-center',
-  actionIconContainer:
-    'w-12 h-12 bg-green-600 rounded-full items-center justify-center',
-  actionText: 'text-gray-800 mt-2 text-xs',
-  recentActivity: 'p-4',
-  transactionsList: 'bg-white rounded-lg shadow p-3',
-  transactionItem: 'flex-row justify-between py-2 border-b border-gray-100',
-  transactionTitle: 'font-medium text-gray-800',
-  transactionDate: 'text-xs text-gray-500',
-  transactionAmount: 'text-right font-bold text-gray-800',
-  transactionPoints: 'text-right text-xs text-green-600',
-  featuredProducts: 'p-4',
-  productsScroll: 'pt-2',
-  productCard: 'bg-white p-3 rounded-lg shadow mr-4 w-32 items-center',
-  productImage: 'text-4xl mb-2',
-  productName: 'text-center text-sm font-medium text-gray-800',
-  productPrice: 'text-center text-green-600 font-bold mt-1',
-}
+const styles = StyleSheet.create({
+  section: {
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+  },
+  quickActionsContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
+  actionButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 15,
+    paddingHorizontal: 20,
+    borderRadius: 12,
+    flex: 0.48,
+  },
+  actionButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '600',
+    marginLeft: 8,
+  },
+  sectionHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 15,
+  },
+  listingsContainer: {
+    gap: 15,
+  },
+  listingCard: {
+    borderRadius: 12,
+    overflow: 'hidden',
+    borderWidth: 1,
+    marginBottom: 10,
+  },
+  listingImage: {
+    width: '100%',
+    height: 180,
+    resizeMode: 'cover',
+  },
+  listingDetails: {
+    padding: 12,
+  },
+  featuredCard: {
+    borderRadius: 12,
+    overflow: 'hidden',
+  },
+});

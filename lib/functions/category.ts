@@ -1,6 +1,8 @@
+import FontAwesome from 'react-native-vector-icons/FontAwesome'
+
 export const categories: {
   id: string
-  icon: string
+  icon: (typeof FontAwesome)['name']
   name: string
 }[] = [
   { id: 'all', icon: 'folder', name: 'All Categories' },
