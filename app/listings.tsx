@@ -746,7 +746,7 @@ export default function ListingsScreen({ navigation }: ListingsScreenProps) {
                     }}
                     onPress={() => toggleCategory(category.id)}
                   >
-                    <MaterialCommunityIcons
+                    <FontAwesome
                       name={category.icon}
                       size={18}
                       color={
