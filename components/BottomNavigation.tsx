@@ -1,6 +1,5 @@
 import { View, Text, TouchableOpacity } from 'react-native'
-import { FaLeaf, FaUser, FaPlus } from 'react-icons/fa'
-import { HiOutlineViewGrid } from 'react-icons/hi'
+import FontAwesome from 'react-native-vector-icons/FontAwesome'
 import { useNavigation } from '@react-navigation/native'
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack'
 import type { RootStackParamList } from '../app/navigation'
@@ -65,7 +64,8 @@ export default function BottomNavigation({
         }}
         onPress={() => handleTabPress('home')}
       >
-        <FaLeaf
+        <FontAwesome
+          name="home"
           size={20}
           color={activeTab === 'home' ? colors.primary : colors.textTertiary}
         />
@@ -90,7 +90,8 @@ export default function BottomNavigation({
         }}
         onPress={() => handleTabPress('listings')}
       >
-        <HiOutlineViewGrid
+        <FontAwesome
+          name="list-alt"
           size={20}
           color={
             activeTab === 'listings' ? colors.primary : colors.textTertiary
@@ -117,7 +118,8 @@ export default function BottomNavigation({
         }}
         onPress={() => handleTabPress('post')}
       >
-        <FaPlus
+        <FontAwesome
+          name="plus-circle"
           size={20}
           color={activeTab === 'post' ? colors.primary : colors.textTertiary}
         />
@@ -142,7 +144,8 @@ export default function BottomNavigation({
         }}
         onPress={() => handleTabPress('profile')}
       >
-        <FaUser
+        <FontAwesome
+          name="user"
           size={20}
           color={activeTab === 'profile' ? colors.primary : colors.textTertiary}
         />

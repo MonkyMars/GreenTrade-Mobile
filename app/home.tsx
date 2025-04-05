@@ -1,19 +1,8 @@
 import { useState } from 'react'
 import { View, Text, TouchableOpacity, ScrollView } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
-import {
-  FaLeaf,
-  FaUser,
-  FaBell,
-  FaRecycle,
-  FaChartLine,
-  FaShoppingBag,
-} from 'react-icons/fa'
-import type { NativeStackScreenProps } from '@react-navigation/native-stack'
-import type { RootStackParamList } from './navigation'
+import FontAwesome from "react-native-vector-icons/FontAwesome"
 import BottomNavigation from '../components/BottomNavigation'
-
-type HomeScreenProps = NativeStackScreenProps<RootStackParamList, 'Home'>
 
 // Mock data for sustainability metrics
 const sustainabilityData = [
@@ -62,15 +51,15 @@ export default function HomeScreen() {
       {/* Header */}
       <View className={styles.header}>
         <View className={styles.headerLogo}>
-          <FaLeaf size={24} color="#16a34a" />
+          <FontAwesome name="leaf" size={24} color="#16a34a" />
           <Text className={styles.headerTitle}>GreenTrade</Text>
         </View>
         <View className={styles.headerIcons}>
           <TouchableOpacity className={styles.iconButton}>
-            <FaBell size={20} color="#4b5563" />
+            <FontAwesome name="bell" size={20} color="#4b5563" />
           </TouchableOpacity>
           <TouchableOpacity className={styles.iconButton}>
-            <FaUser size={20} color="#4b5563" />
+            <FontAwesome name="user" size={20} color="#4b5563" />
           </TouchableOpacity>
         </View>
       </View>
@@ -105,21 +94,21 @@ export default function HomeScreen() {
           <View className={styles.actionButtons}>
             <TouchableOpacity className={styles.actionButton}>
               <View className={styles.actionIconContainer}>
-                <FaRecycle size={20} color="#ffffff" />
+                <FontAwesome name="recycle" size={20} color="#ffffff" />
               </View>
               <Text className={styles.actionText}>Recycle</Text>
             </TouchableOpacity>
 
             <TouchableOpacity className={styles.actionButton}>
               <View className={styles.actionIconContainer}>
-                <FaShoppingBag size={20} color="#ffffff" />
+                <FontAwesome name="shopping-bag" size={20} color="#ffffff" />
               </View>
               <Text className={styles.actionText}>Shop</Text>
             </TouchableOpacity>
 
             <TouchableOpacity className={styles.actionButton}>
               <View className={styles.actionIconContainer}>
-                <FaChartLine size={20} color="#ffffff" />
+                <FontAwesome name="line-chart" size={20} color="#ffffff" />
               </View>
               <Text className={styles.actionText}>Stats</Text>
             </TouchableOpacity>

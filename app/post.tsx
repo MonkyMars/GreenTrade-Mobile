@@ -7,7 +7,7 @@ import {
   ScrollView,
 } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
-import { FaCamera, FaLeaf } from 'react-icons/fa'
+import FontAwesome from 'react-native-vector-icons/FontAwesome'
 import type { NativeStackScreenProps } from '@react-navigation/native-stack'
 import type { RootStackParamList } from './navigation'
 import BottomNavigation from '../components/BottomNavigation'
@@ -75,7 +75,7 @@ export default function PostScreen({ navigation }: PostScreenProps) {
                 borderStyle: 'dashed',
               }}
             >
-              <FaCamera size={24} color={colors.textTertiary} />
+              <FontAwesome name="camera" size={24} color={colors.textTertiary} />
               <Text
                 style={{
                   color: colors.textTertiary,
@@ -248,7 +248,7 @@ export default function PostScreen({ navigation }: PostScreenProps) {
               marginBottom: 16,
             }}
           >
-            <FaLeaf size={20} color={colors.primary} />
+            <FontAwesome name="leaf" size={20} color={colors.primary} />
             <Text style={{ marginLeft: 8, color: colors.primaryDark, flex: 1 }}>
               Rate the eco-friendliness of your item (1-5)
             </Text>

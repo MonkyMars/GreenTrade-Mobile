@@ -1,7 +1,7 @@
 import type { NativeStackScreenProps } from '@react-navigation/native-stack'
 import * as WebBrowser from 'expo-web-browser'
 import { useState } from 'react'
-import { FaEnvelope, FaGoogle, FaLeaf, FaLock } from 'react-icons/fa'
+import FontAwesome from 'react-native-vector-icons/FontAwesome'
 import {
   View,
   Text,
@@ -18,6 +18,7 @@ import { z } from 'zod'
 
 import { type RootStackParamList } from './navigation'
 import BottomNavigation from 'components/BottomNavigation'
+import { useTheme } from '../lib/theme/ThemeContext'
 
 // Define props type for the login screen using React Navigation
 type LoginScreenProps = NativeStackScreenProps<RootStackParamList, 'Login'>
@@ -52,6 +53,7 @@ const useAuth = () => {
 export default function LoginScreen({ navigation }: LoginScreenProps) {
   const [activeTab, setActiveTab] = useState('home')
   const { login } = useAuth()
+  const { colors, isDark } = useTheme()
   const [formData, setFormData] = useState<LoginFormData>({
     email: '',
     password: '',
@@ -146,31 +148,43 @@ export default function LoginScreen({ navigation }: LoginScreenProps) {
 
   return (
     <>
-      <SafeAreaView className={styles.safeArea}>
+      <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }}>
         <KeyboardAvoidingView
           behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-          className={styles.keyboardView}
+          style={{ flex: 1 }}
         >
           <ScrollView
-            className={styles.scrollContent}
+            style={{ flexGrow: 1, paddingHorizontal: 24, paddingVertical: 32 }}
             keyboardShouldPersistTaps="handled"
+            contentContainerStyle={{
+              justifyContent: 'center',
+            }}
           >
-            <View className={styles.header}>
-              <View className={styles.logoContainer}>
-                <FaLeaf size={40} color="#16a34a" />
-                <Text className={styles.logoText}>GreenTrade</Text>
+            <View style={{ marginBottom: 24, alignItems: 'center' }}>
+              <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                <FontAwesome name="leaf" size={40} color={colors.primary} />
+                <Text style={{ marginLeft: 8, fontSize: 30, fontWeight: 'bold', color: colors.primary }}>GreenTrade</Text>
               </View>
-              <Text className={styles.title}>Sign in to your account</Text>
+              <Text style={{ marginTop: 24, fontSize: 24, fontWeight: 'bold', color: colors.text }}>
+                Sign in to your account
+              </Text>
               <TouchableOpacity>
-                <Text className={styles.createAccount}>
+                <Text style={{ marginTop: 8, fontSize: 14, color: colors.primary }}>
                   Or create a new account
                 </Text>
               </TouchableOpacity>
             </View>
 
             {loginError ? (
-              <View className={styles.errorContainer}>
-                <Text className={styles.errorText}>
+              <View style={{
+                marginBottom: 16,
+                padding: 12,
+                borderRadius: 6,
+                borderWidth: 1,
+                borderColor: colors.error,
+                backgroundColor: isDark ? 'rgba(239, 68, 68, 0.2)' : 'rgba(254, 226, 226, 0.8)'
+              }}>
+                <Text style={{ color: colors.error }}>
                   {loginError === 'Invalid credentials'
                     ? 'Invalid email or password. Please try again.'
                     : loginError}
@@ -178,11 +192,11 @@ export default function LoginScreen({ navigation }: LoginScreenProps) {
               </View>
             ) : null}
 
-            <View className={styles.formContainer}>
+            <View style={{ gap: 16 }}>
               <View>
-                <View className={styles.inputWrapper}>
-                  <View className={styles.inputIcon}>
-                    <FaEnvelope size={16} color="#9ca3af" />
+                <View style={{ position: 'relative' }}>
+                  <View style={{ position: 'absolute', left: 12, top: 12, zIndex: 10 }}>
+                    <FontAwesome name="envelope" size={16} color={colors.textTertiary} />
                   </View>
                   <TextInput
                     placeholder="Email address"
@@ -190,35 +204,57 @@ export default function LoginScreen({ navigation }: LoginScreenProps) {
                     onChangeText={value => handleChange('email', value)}
                     keyboardType="email-address"
                     autoCapitalize="none"
-                    className={`${styles.textInput} ${errors.email ? styles.inputError : styles.inputBorder
-                      }`}
+                    placeholderTextColor={colors.textTertiary}
+                    style={{
+                      height: 48,
+                      borderRadius: 6,
+                      backgroundColor: colors.card,
+                      color: colors.text,
+                      paddingVertical: 8,
+                      paddingLeft: 40,
+                      paddingRight: 12,
+                      marginVertical: 8,
+                      borderWidth: 1,
+                      borderColor: errors.email ? colors.error : colors.border
+                    }}
                   />
                 </View>
                 {errors.email ? (
-                  <Text className={styles.fieldError}>{errors.email}</Text>
+                  <Text style={{ marginTop: 4, fontSize: 14, color: colors.error }}>{errors.email}</Text>
                 ) : null}
               </View>
               <View>
-                <View className={styles.inputWrapper}>
-                  <View className={styles.inputIcon}>
-                    <FaLock size={16} color="#9ca3af" />
+                <View style={{ position: 'relative' }}>
+                  <View style={{ position: 'absolute', left: 12, top: 12, zIndex: 10 }}>
+                    <FontAwesome name='lock' size={16} color={colors.textTertiary} />
                   </View>
                   <TextInput
                     placeholder="Password"
                     value={formData.password}
                     onChangeText={value => handleChange('password', value)}
                     secureTextEntry
-                    className={`${styles.textInput} ${errors.password ? styles.inputError : styles.inputBorder
-                      }`}
+                    placeholderTextColor={colors.textTertiary}
+                    style={{
+                      height: 48,
+                      borderRadius: 6,
+                      backgroundColor: colors.card,
+                      color: colors.text,
+                      paddingVertical: 8,
+                      paddingLeft: 40,
+                      paddingRight: 12,
+                      marginVertical: 8,
+                      borderWidth: 1,
+                      borderColor: errors.password ? colors.error : colors.border
+                    }}
                   />
                 </View>
                 {errors.password ? (
-                  <Text className={styles.fieldError}>{errors.password}</Text>
+                  <Text style={{ marginTop: 4, fontSize: 14, color: colors.error }}>{errors.password}</Text>
                 ) : null}
               </View>
 
               <TouchableOpacity>
-                <Text className={styles.forgotPassword}>
+                <Text style={{ fontSize: 14, fontWeight: '500', color: colors.primary }}>
                   Forgot your password?
                 </Text>
               </TouchableOpacity>
@@ -226,32 +262,48 @@ export default function LoginScreen({ navigation }: LoginScreenProps) {
               <TouchableOpacity
                 onPress={handleSubmit}
                 disabled={isLoading}
-                className={`${styles.submitButton} 
-              ${isLoading ? styles.buttonDisabled : ''}`}
+                style={{
+                  height: 48,
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  borderRadius: 6,
+                  backgroundColor: colors.primary,
+                  opacity: isLoading ? 0.5 : 1
+                }}
               >
                 {isLoading ? (
-                  <ActivityIndicator color="white" className={styles.spinner} />
+                  <ActivityIndicator color="white" style={{ marginRight: 8 }} />
                 ) : null}
-                <Text className={styles.submitButtonText}>Sign in</Text>
+                <Text style={{ fontWeight: '500', color: 'white' }}>Sign in</Text>
               </TouchableOpacity>
 
-              <View className={styles.dividerContainer}>
-                <View className={styles.dividerLine}>
-                  <View className={styles.divider} />
+              <View style={{ position: 'relative', paddingVertical: 16 }}>
+                <View style={{ position: 'absolute', inset: 0, flexDirection: 'row', alignItems: 'center', justifyContent: 'center' }}>
+                  <View style={{ flex: 1, borderTopWidth: 1, borderColor: colors.border }} />
                 </View>
-                <View className={styles.dividerTextContainer}>
-                  <View className={styles.dividerBackground}>
-                    <Text className={styles.dividerText}>Or continue with</Text>
+                <View style={{ position: 'relative', flexDirection: 'row', justifyContent: 'center' }}>
+                  <View style={{ backgroundColor: colors.background, paddingHorizontal: 16 }}>
+                    <Text style={{ fontSize: 14, color: colors.textTertiary }}>Or continue with</Text>
                   </View>
                 </View>
               </View>
 
               <TouchableOpacity
                 onPress={() => handleSocialLogin('google')}
-                className={styles.socialButton}
+                style={{
+                  height: 48,
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  borderRadius: 6,
+                  backgroundColor: colors.card,
+                  borderWidth: 1,
+                  borderColor: colors.border
+                }}
               >
-                <FaGoogle size={16} color="#000000" />
-                <Text className={styles.socialButtonText}>Google</Text>
+                <FontAwesome name='google' size={16} color={colors.text} />
+                <Text style={{ marginLeft: 8, color: colors.text }}>Google</Text>
               </TouchableOpacity>
             </View>
           </ScrollView>
@@ -260,39 +312,4 @@ export default function LoginScreen({ navigation }: LoginScreenProps) {
       <BottomNavigation activeTab={activeTab} onTabChange={setActiveTab} />
     </>
   )
-}
-
-const styles = {
-  safeArea: 'flex-1 bg-gray-100',
-  keyboardView: 'flex-1',
-  scrollContent: 'flex-grow justify-center px-6 py-8',
-  header: 'mb-6 items-center',
-  logoContainer: 'flex-row items-center',
-  logoText: 'ml-2 text-3xl font-bold text-green-600',
-  title: 'mt-6 text-2xl font-bold text-gray-900',
-  createAccount: 'mt-2 text-sm text-green-600',
-  errorContainer: 'mb-4 rounded-md border border-red-400 bg-red-100 p-3',
-  errorText: 'text-red-700',
-  formContainer: 'space-y-4',
-  inputWrapper: 'relative',
-  inputIcon: 'absolute left-3 top-3',
-  textInput: 'h-12 rounded-md bg-white text-gray-900 py-2 pl-10 pr-3',
-  inputBorder: 'border border-gray-300',
-  inputError: 'border border-red-300',
-  fieldError: 'mt-1 text-sm text-red-600',
-  forgotPassword: 'text-sm font-medium text-green-600',
-  submitButton:
-    'h-12 flex-row items-center justify-center rounded-md bg-green-600',
-  buttonDisabled: 'opacity-50',
-  spinner: 'mr-2',
-  submitButtonText: 'font-medium text-white',
-  dividerContainer: 'relative py-4',
-  dividerLine: 'absolute inset-0 flex items-center justify-center',
-  divider: 'w-full border-t border-gray-300',
-  dividerTextContainer: 'relative flex justify-center',
-  dividerBackground: 'bg-gray-100 px-4',
-  dividerText: 'text-sm text-gray-500',
-  socialButton:
-    'h-12 flex-row items-center justify-center rounded-md border border-gray-300 bg-white',
-  socialButtonText: 'ml-2 text-gray-700',
 }

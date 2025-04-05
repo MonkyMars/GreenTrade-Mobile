@@ -29,7 +29,7 @@ export interface UploadListing {
   negotiable: boolean
   imageUrl: string[]
   seller: {
-    id: number
+    id: string
     name: string
     rating: number
     verified: boolean

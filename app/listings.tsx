@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import {
   View,
   Text,
@@ -9,125 +9,23 @@ import {
   Image,
   useWindowDimensions,
   ActivityIndicator,
+  Animated,
 } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
-import {
-  FaLeaf,
-  FaUser,
-  FaMapMarkedAlt,
-  FaFilter,
-  FaStar,
-  FaEye,
-} from 'react-icons/fa'
-import { FiSearch, FiGrid, FiList, FiChevronDown, FiX } from 'react-icons/fi'
-import { TbFolder } from 'react-icons/tb'
+import FontAwesome from 'react-native-vector-icons/FontAwesome'
+import Feather from 'react-native-vector-icons/Feather'
+import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons'
 import type { NativeStackScreenProps } from '@react-navigation/native-stack'
 import type { RootStackParamList } from './navigation'
 import BottomNavigation from '../components/BottomNavigation'
 import { useTheme } from '../lib/theme/ThemeContext'
-
+import { categories, cleanCategory, findCategory } from "../lib/functions/category"
+import { FetchedListing } from 'lib/types/main'
+import { getListings } from 'lib/backend/listings/getListings'
 type ListingsScreenProps = NativeStackScreenProps<
   RootStackParamList,
   'Listings'
 >
-
-// Mock categories
-const categories = [
-  { id: 'all', name: 'All Categories', icon: TbFolder },
-  { id: 'clothing', name: 'Clothing', icon: TbFolder },
-  { id: 'furniture', name: 'Furniture', icon: TbFolder },
-  { id: 'electronics', name: 'Electronics', icon: TbFolder },
-  { id: 'books', name: 'Books', icon: TbFolder },
-  { id: 'toys', name: 'Toys', icon: TbFolder },
-]
-
-// Mock data for listings
-const mockListings = [
-  {
-    id: 1,
-    title: 'Organic Cotton T-Shirt',
-    description:
-      'Sustainable and eco-friendly t-shirt made from organic cotton.',
-    price: 29.99,
-    imageUrl: [
-      'https://images.unsplash.com/photo-1576566588028-4147f3842f27?ixlib=rb-4.0.3',
-    ],
-    category: 'clothing',
-    location: 'Berlin, Germany',
-    ecoScore: 4.8,
-    created_at: '2023-06-15T12:00:00Z',
-    seller: {
-      id: 'seller1',
-      name: 'EcoFashion',
-      rating: 4.9,
-      verified: true,
-    },
-  },
-  {
-    id: 2,
-    title: 'Recycled Wood Coffee Table',
-    description: 'Beautiful coffee table made from recycled wood.',
-    price: 149.99,
-    imageUrl: [
-      'https://images.unsplash.com/photo-1592078615290-033ee584e267?ixlib=rb-4.0.3',
-    ],
-    category: 'furniture',
-    location: 'Amsterdam, Netherlands',
-    ecoScore: 4.5,
-    created_at: '2023-06-10T10:00:00Z',
-    seller: {
-      id: 'seller2',
-      name: 'GreenHome',
-      rating: 4.7,
-      verified: true,
-    },
-  },
-  {
-    id: 3,
-    title: 'Solar Powered Charger',
-    description: 'Charge your devices with the power of the sun!',
-    price: 49.99,
-    imageUrl: [
-      'https://images.unsplash.com/photo-1742277666303-bbba7fa3fecf?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxmZWF0dXJlZC1waG90b3MtZmVlZHw0fHx8ZW58MHx8fHx8',
-    ],
-    category: 'electronics',
-    location: 'Madrid, Spain',
-    ecoScore: 4.9,
-    created_at: '2023-06-05T14:00:00Z',
-    seller: {
-      id: 'seller3',
-      name: 'EcoTech',
-      rating: 4.6,
-      verified: false,
-    },
-  },
-  {
-    id: 4,
-    title: 'Bamboo Toothbrushes (Set of 4)',
-    description:
-      'Eco-friendly bamboo toothbrushes, biodegradable and plastic-free.',
-    price: 12.99,
-    imageUrl: [
-      'https://images.unsplash.com/photo-1607613009820-a29f7bb81c04?ixlib=rb-4.0.3',
-    ],
-    category: 'health',
-    location: 'Paris, France',
-    ecoScore: 5.0,
-    created_at: '2023-06-01T09:00:00Z',
-    seller: {
-      id: 'seller4',
-      name: 'ZeroWaste',
-      rating: 4.8,
-      verified: true,
-    },
-  },
-]
-
-const findCategory = (categoryId: string) => {
-  return (
-    categories.find(cat => cat.id === categoryId.toLowerCase()) || categories[0]
-  )
-}
 
 export default function ListingsScreen({ navigation }: ListingsScreenProps) {
   const { width } = useWindowDimensions()
@@ -136,9 +34,53 @@ export default function ListingsScreen({ navigation }: ListingsScreenProps) {
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid')
   const [isFilterOpen, setIsFilterOpen] = useState(false)
   const [selectedCategory, setSelectedCategory] = useState('all')
-  const [listings, setListings] = useState(mockListings)
+  const [originalListings, setOriginalListings] = useState<FetchedListing[]>([])
+  const [listings, setListings] = useState<FetchedListing[]>([])
   const [loading, setLoading] = useState(false)
   const [sortBy, setSortBy] = useState('newest')
+  const slideAnim = useRef(new Animated.Value(width)).current
+
+  // Animation effect for sidebar
+  useEffect(() => {
+    if (isFilterOpen) {
+      // Slide in from right
+      Animated.spring(slideAnim, {
+        toValue: 0,
+        useNativeDriver: true,
+        tension: 80,
+        friction: 10,
+      }).start()
+    } else {
+      // Slide out to right
+      Animated.spring(slideAnim, {
+        toValue: width,
+        useNativeDriver: true,
+        tension: 100,
+        friction: 12,
+      }).start()
+    }
+  }, [isFilterOpen, slideAnim, width])
+
+  // Function to handle opening and closing the filter
+  const toggleFilter = () => {
+    setIsFilterOpen(!isFilterOpen)
+  }
+
+  useEffect(() => {
+    const fetchListings = async () => {
+      setLoading(true)
+      try {
+        const response = await getListings()
+        setOriginalListings(response as FetchedListing[])
+        setListings(response as FetchedListing[])
+      } catch (error) {
+        console.error('Error fetching listings:', error)
+      } finally {
+        setLoading(false)
+      }
+    }
+    fetchListings()
+  }, [])
 
   // Calculate column width for grid view
   const numColumns = 2
@@ -146,18 +88,17 @@ export default function ListingsScreen({ navigation }: ListingsScreenProps) {
 
   const toggleCategory = (categoryId: string) => {
     setSelectedCategory(categoryId)
-    // Filter listings based on category (if not 'all')
     if (categoryId === 'all') {
-      setListings(mockListings)
+      setListings(originalListings)
     } else {
       setListings(
-        mockListings.filter(item => item.category.toLowerCase() === categoryId),
+        originalListings.filter(item => cleanCategory(item.category) === cleanCategory(categoryId)),
       )
     }
   }
 
   // Render an item in grid view
-  const renderGridItem = ({ item }: { item: (typeof mockListings)[0] }) => {
+  const renderGridItem = ({ item }: { item: FetchedListing }) => {
     const category = findCategory(item.category)
 
     return (
@@ -197,7 +138,7 @@ export default function ListingsScreen({ navigation }: ListingsScreenProps) {
               alignItems: 'center',
             }}
           >
-            <FaLeaf size={14} color={colors.primary} />
+            <FontAwesome name="leaf" size={14} color={colors.primary} />
             <Text
               style={{ marginLeft: 4, fontWeight: '600', color: colors.text }}
             >
@@ -244,7 +185,8 @@ export default function ListingsScreen({ navigation }: ListingsScreenProps) {
 
           <View style={{ marginTop: 8, gap: 6 }}>
             <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-              <FaMapMarkedAlt
+              <FontAwesome
+                name="map-marker"
                 size={14}
                 color={colors.textTertiary}
                 style={{ marginRight: 8 }}
@@ -258,7 +200,8 @@ export default function ListingsScreen({ navigation }: ListingsScreenProps) {
             </View>
 
             <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-              <TbFolder
+              <MaterialCommunityIcons
+                name={category.icon}
                 size={14}
                 color={colors.primary}
                 style={{ marginRight: 8 }}
@@ -306,7 +249,7 @@ export default function ListingsScreen({ navigation }: ListingsScreenProps) {
                   marginLeft: 6,
                 }}
               >
-                <FaStar size={10} color={colors.rating} />
+                <FontAwesome name="star" size={10} color={colors.rating} />
                 <Text
                   style={{
                     fontSize: 12,
@@ -353,7 +296,7 @@ export default function ListingsScreen({ navigation }: ListingsScreenProps) {
               }}
               onPress={() => console.log(`View seller ${item.seller.id}`)}
             >
-              <FaUser size={12} color={colors.textSecondary} />
+              <FontAwesome name="user" size={12} color={colors.textSecondary} />
               <Text
                 style={{
                   marginLeft: 4,
@@ -377,7 +320,7 @@ export default function ListingsScreen({ navigation }: ListingsScreenProps) {
               }}
               onPress={() => console.log(`View details for item ${item.id}`)}
             >
-              <FaEye size={12} color="white" />
+              <FontAwesome name="eye" size={12} color="white" />
               <Text style={{ marginLeft: 4, fontSize: 12, color: 'white' }}>
                 Details
               </Text>
@@ -389,7 +332,7 @@ export default function ListingsScreen({ navigation }: ListingsScreenProps) {
   }
 
   // Render an item in list view
-  const renderListItem = ({ item }: { item: (typeof mockListings)[0] }) => {
+  const renderListItem = ({ item }: { item: FetchedListing }) => {
     const category = findCategory(item.category)
 
     return (
@@ -406,178 +349,66 @@ export default function ListingsScreen({ navigation }: ListingsScreenProps) {
           elevation: 2,
           overflow: 'hidden',
           flexDirection: 'row',
+          padding: 12, // Added padding for better spacing
         }}
       >
-        <View style={{ width: 120, position: 'relative' }}>
-          <Image
-            source={{ uri: item.imageUrl[0] }}
-            style={{ width: '100%', height: '100%' }}
-            resizeMode="cover"
-          />
-          <View
+        <Image
+          source={{ uri: item.imageUrl[0] }}
+          style={{
+            width: 100,
+            height: 100,
+            borderRadius: 8,
+            marginRight: 12, // Added margin for spacing
+          }}
+          resizeMode="cover"
+        />
+        <View style={{ flex: 1 }}>
+          <Text
+            numberOfLines={1}
             style={{
-              position: 'absolute',
-              bottom: 8,
-              left: 8,
-              backgroundColor: isDark
-                ? 'rgba(31, 41, 55, 0.8)'
-                : 'rgba(255, 255, 255, 0.8)',
-              borderRadius: 4,
-              paddingHorizontal: 6,
-              paddingVertical: 4,
-              flexDirection: 'row',
-              alignItems: 'center',
+              fontSize: 16,
+              fontWeight: '500',
+              color: colors.text,
+              marginBottom: 4,
             }}
           >
-            <FaLeaf size={14} color={colors.primary} />
+            {item.title}
+          </Text>
+          <Text
+            style={{
+              color: colors.primary,
+              fontSize: 16,
+              fontWeight: '700',
+              marginBottom: 4,
+            }}
+          >
+            €{item.price}
+          </Text>
+          <Text
+            style={{
+              fontSize: 13,
+              color: colors.textTertiary,
+              marginBottom: 4,
+            }}
+          >
+            {item.location} • {new Date(item.created_at).toLocaleDateString()}
+          </Text>
+          <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+            <MaterialCommunityIcons
+              name={category.icon}
+              size={14}
+              color={colors.primary}
+              style={{ marginRight: 8 }}
+            />
             <Text
-              style={{ marginLeft: 4, fontWeight: '600', color: colors.text }}
-            >
-              {item.ecoScore}
-            </Text>
-          </View>
-        </View>
-
-        <View style={{ flex: 1, padding: 12 }}>
-          <View
-            style={{ flexDirection: 'row', justifyContent: 'space-between' }}
-          >
-            <View style={{ flex: 1 }}>
-              <Text
-                numberOfLines={1}
-                style={{
-                  fontSize: 16,
-                  fontWeight: '500',
-                  color: colors.text,
-                }}
-              >
-                {item.title}
-              </Text>
-              <Text
-                style={{
-                  color: colors.primary,
-                  fontSize: 16,
-                  fontWeight: '700',
-                  marginTop: 4,
-                }}
-              >
-                €{item.price}
-              </Text>
-            </View>
-          </View>
-
-          <View style={{ marginTop: 8, gap: 6 }}>
-            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-              <FaMapMarkedAlt
-                size={14}
-                color={colors.textTertiary}
-                style={{ marginRight: 8 }}
-              />
-              <Text
-                style={{ fontSize: 13, color: colors.textTertiary }}
-                numberOfLines={1}
-              >
-                {item.location}
-              </Text>
-              <Text
-                style={{
-                  fontSize: 13,
-                  color: colors.textTertiary,
-                  marginHorizontal: 4,
-                }}
-              >
-                •
-              </Text>
-              <Text style={{ fontSize: 13, color: colors.textTertiary }}>
-                {new Date(item.created_at).toLocaleDateString()}
-              </Text>
-            </View>
-
-            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-              <TbFolder
-                size={14}
-                color={colors.primary}
-                style={{ marginRight: 8 }}
-              />
-              <Text
-                style={{
-                  fontSize: 13,
-                  fontWeight: '500',
-                  color: colors.primary,
-                }}
-              >
-                {category.name}
-              </Text>
-            </View>
-          </View>
-
-          <View
-            style={{
-              marginTop: 12,
-              flexDirection: 'row',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-            }}
-          >
-            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-              {item.seller.verified && (
-                <View
-                  style={{
-                    backgroundColor: colors.primaryLight,
-                    borderRadius: 10,
-                    paddingHorizontal: 5,
-                    paddingVertical: 2,
-                    marginRight: 4,
-                  }}
-                >
-                  <Text style={{ color: colors.primary, fontSize: 10 }}>✓</Text>
-                </View>
-              )}
-              <Text style={{ fontSize: 13, color: colors.text }}>
-                {item.seller.name}
-              </Text>
-              <View
-                style={{
-                  flexDirection: 'row',
-                  alignItems: 'center',
-                  marginLeft: 6,
-                }}
-              >
-                <FaStar size={10} color={colors.rating} />
-                <Text
-                  style={{
-                    fontSize: 12,
-                    marginLeft: 2,
-                    color: colors.textSecondary,
-                  }}
-                >
-                  {item.seller.rating}
-                </Text>
-              </View>
-            </View>
-
-            <TouchableOpacity
               style={{
-                flexDirection: 'row',
-                alignItems: 'center',
+                fontSize: 13,
+                fontWeight: '500',
+                color: colors.primary,
               }}
-              onPress={() => console.log(`View details for item ${item.id}`)}
             >
-              <Text
-                style={{
-                  color: colors.primary,
-                  fontSize: 13,
-                  fontWeight: '500',
-                }}
-              >
-                View Details
-              </Text>
-              <FiChevronDown
-                style={{ color: colors.primary, marginLeft: 4 }}
-                size={16}
-                transform="rotate(-90)"
-              />
-            </TouchableOpacity>
+              {category.name}
+            </Text>
           </View>
         </View>
       </TouchableOpacity>
@@ -639,9 +470,9 @@ export default function ListingsScreen({ navigation }: ListingsScreenProps) {
               borderColor: colors.border,
               borderRadius: 6,
             }}
-            onPress={() => setIsFilterOpen(!isFilterOpen)}
+            onPress={toggleFilter}
           >
-            <FaFilter size={16} color={colors.textSecondary} />
+            <FontAwesome name="filter" size={16} color={colors.textSecondary} />
             <Text
               style={{
                 marginLeft: 8,
@@ -669,8 +500,8 @@ export default function ListingsScreen({ navigation }: ListingsScreenProps) {
             style={{
               flexDirection: 'row',
               alignItems: 'center',
-              backgroundColor: 'black',
               maxWidth: '100%',
+              flex: 1,
             }}
           >
             <View
@@ -680,7 +511,6 @@ export default function ListingsScreen({ navigation }: ListingsScreenProps) {
                 borderColor: colors.border,
                 borderRadius: 6,
                 overflow: 'hidden',
-                maxWidth: '100%',
               }}
             >
               <TouchableOpacity
@@ -691,7 +521,8 @@ export default function ListingsScreen({ navigation }: ListingsScreenProps) {
                 }}
                 onPress={() => setViewMode('grid')}
               >
-                <FiGrid
+                <Feather
+                  name="grid"
                   size={20}
                   color={
                     viewMode === 'grid' ? colors.primary : colors.textTertiary
@@ -707,7 +538,8 @@ export default function ListingsScreen({ navigation }: ListingsScreenProps) {
                 }}
                 onPress={() => setViewMode('list')}
               >
-                <FiList
+                <Feather
+                  name="list"
                   size={20}
                   color={
                     viewMode === 'list' ? colors.primary : colors.textTertiary
@@ -716,323 +548,348 @@ export default function ListingsScreen({ navigation }: ListingsScreenProps) {
               </TouchableOpacity>
             </View>
 
-            <View style={{ marginLeft: 12 }}>
-              <View style={{ width: '100%', overflow: 'hidden' }}>
-                <ScrollView
-                  horizontal
-                  showsHorizontalScrollIndicator={false}
-                  contentContainerStyle={{
-                    flexDirection: 'row',
-                    flexGrow: 1,
-                  }}
-                  style={{
-                    width: '100%',
-                  }}
-                >
-                  {categories.map(category => (
-                    <TouchableOpacity
-                      key={category.id}
+            <View style={{ marginLeft: 12, flex: 1 }}>
+              <ScrollView
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                contentContainerStyle={{
+                  flexDirection: 'row',
+                }}
+                style={{
+                  borderColor: colors.border,
+                  borderWidth: 1,
+                  borderRadius: 6,
+                }}
+              >
+                {categories.map(category => (
+                  <TouchableOpacity
+                    key={category.id}
+                    style={{
+                      flexDirection: 'row',
+                      alignItems: 'center',
+                      paddingVertical: 8,
+                      paddingHorizontal: 12,
+                      backgroundColor:
+                        selectedCategory === category.id
+                          ? colors.highlight
+                          : 'transparent',
+                      borderRadius: 4,
+                    }}
+                    onPress={() => toggleCategory(category.id)}
+                  >
+                    <Text
                       style={{
-                        flexDirection: 'row',
-                        alignItems: 'center',
-                        paddingVertical: 8,
-                        paddingHorizontal: 12,
-                        backgroundColor:
+                        color:
                           selectedCategory === category.id
-                            ? colors.highlight
-                            : 'transparent',
-                        borderRadius: 4,
-                        marginRight: 4,
+                            ? colors.primary
+                            : colors.textSecondary,
+                        fontWeight: '500',
+                        fontSize: 14,
                       }}
-                      onPress={() => toggleCategory(category.id)}
                     >
-                      <Text
-                        style={{
-                          color:
-                            selectedCategory === category.id
-                              ? colors.primary
-                              : colors.textSecondary,
-                          fontWeight: '500',
-                          fontSize: 14,
-                        }}
-                      >
-                        {category.name}
-                      </Text>
-                    </TouchableOpacity>
-                  ))}
-                </ScrollView>
-              </View>
+                      {category.name}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </ScrollView>
             </View>
           </View>
         </View>
       </View>
 
-      {/* Filter sidebar (modal for mobile) */}
-      {isFilterOpen && (
-        <View
+      {/* Filter sidebar (modal for mobile) with animation */}
+      <View
+        style={{
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          backgroundColor: isFilterOpen ? colors.filterBackground : 'transparent',
+          zIndex: 10,
+          pointerEvents: isFilterOpen ? 'auto' : 'none',
+        }}
+      >
+        {/* Touchable area outside sidebar to close it */}
+        <TouchableOpacity
           style={{
             position: 'absolute',
             top: 0,
             left: 0,
             right: 0,
             bottom: 0,
-            backgroundColor: colors.filterBackground,
-            zIndex: 10,
+          }}
+          activeOpacity={0.7}
+          onPress={() => setIsFilterOpen(false)}
+        />
+
+        <Animated.View
+          style={{
+            position: 'absolute',
+            top: 0,
+            right: 0,
+            bottom: 0,
+            width: '80%',
+            backgroundColor: colors.card,
+            padding: 16,
+            shadowColor: colors.shadow,
+            shadowOffset: { width: -2, height: 0 },
+            shadowOpacity: 0.1,
+            shadowRadius: 4,
+            transform: [{ translateX: slideAnim }],
           }}
         >
           <View
             style={{
-              position: 'absolute',
-              top: 0,
-              right: 0,
-              bottom: 0,
-              width: '80%',
-              backgroundColor: colors.card,
-              padding: 16,
-              shadowColor: colors.shadow,
-              shadowOffset: { width: -2, height: 0 },
-              shadowOpacity: 0.1,
-              shadowRadius: 4,
+              flexDirection: 'row',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              marginBottom: 16,
+              marginTop: 22,
             }}
           >
-            <View
-              style={{
-                flexDirection: 'row',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-                marginBottom: 16,
-              }}
+            <Text
+              style={{ fontSize: 18, fontWeight: '600', color: colors.text }}
             >
+              Filters
+            </Text>
+            <TouchableOpacity
+              onPress={() => setIsFilterOpen(false)}
+              style={{
+                padding: 8,
+                backgroundColor: colors.border,
+                borderRadius: 20,
+                width: 36,
+                height: 36,
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+              hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+            >
+              <Feather name="x" size={20} color={colors.text} />
+            </TouchableOpacity>
+          </View>
+
+          <ScrollView showsVerticalScrollIndicator={false}>
+            {/* Search */}
+            <View style={{ marginBottom: 24 }}>
               <Text
-                style={{ fontSize: 18, fontWeight: '600', color: colors.text }}
+                style={{
+                  fontSize: 14,
+                  fontWeight: '500',
+                  color: colors.textSecondary,
+                  marginBottom: 8,
+                }}
               >
-                Filters
+                Search
               </Text>
-              <TouchableOpacity onPress={() => setIsFilterOpen(false)}>
-                <FiX size={24} color={colors.textTertiary} />
-              </TouchableOpacity>
+              <View
+                style={{
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  borderWidth: 1,
+                  borderColor: colors.border,
+                  borderRadius: 6,
+                  paddingHorizontal: 12,
+                }}
+              >
+                <Feather name="search" size={18} color={colors.textTertiary} />
+                <TextInput
+                  placeholder="What are you looking for?"
+                  placeholderTextColor={colors.textTertiary}
+                  style={{
+                    flex: 1,
+                    paddingVertical: 10,
+                    paddingLeft: 8,
+                    color: colors.text,
+                  }}
+                />
+              </View>
             </View>
 
-            <ScrollView showsVerticalScrollIndicator={false}>
-              {/* Search */}
-              <View style={{ marginBottom: 24 }}>
-                <Text
-                  style={{
-                    fontSize: 14,
-                    fontWeight: '500',
-                    color: colors.textSecondary,
-                    marginBottom: 8,
-                  }}
-                >
-                  Search
-                </Text>
-                <View
-                  style={{
-                    flexDirection: 'row',
-                    alignItems: 'center',
-                    borderWidth: 1,
-                    borderColor: colors.border,
-                    borderRadius: 6,
-                    paddingHorizontal: 12,
-                  }}
-                >
-                  <FiSearch size={18} color={colors.textTertiary} />
-                  <TextInput
-                    placeholder="What are you looking for?"
-                    placeholderTextColor={colors.textTertiary}
+            {/* Categories */}
+            <View style={{ marginBottom: 24 }}>
+              <Text
+                style={{
+                  fontSize: 14,
+                  fontWeight: '500',
+                  color: colors.textSecondary,
+                  marginBottom: 8,
+                }}
+              >
+                Categories
+              </Text>
+              <View style={{ gap: 8 }}>
+                {categories.map(category => (
+                  <TouchableOpacity
+                    key={category.id}
                     style={{
-                      flex: 1,
-                      paddingVertical: 10,
-                      paddingLeft: 8,
-                      color: colors.text,
+                      flexDirection: 'row',
+                      alignItems: 'center',
+                      paddingVertical: 8,
+                      paddingHorizontal: 12,
+                      backgroundColor:
+                        selectedCategory === category.id
+                          ? colors.highlight
+                          : 'transparent',
+                      borderRadius: 8,
                     }}
-                  />
-                </View>
-              </View>
-
-              {/* Categories */}
-              <View style={{ marginBottom: 24 }}>
-                <Text
-                  style={{
-                    fontSize: 14,
-                    fontWeight: '500',
-                    color: colors.textSecondary,
-                    marginBottom: 8,
-                  }}
-                >
-                  Categories
-                </Text>
-                <View style={{ gap: 8 }}>
-                  {categories.map(category => (
-                    <TouchableOpacity
-                      key={category.id}
+                    onPress={() => toggleCategory(category.id)}
+                  >
+                    <MaterialCommunityIcons
+                      name={category.icon}
+                      size={18}
+                      color={
+                        selectedCategory === category.id
+                          ? colors.primary
+                          : colors.textTertiary
+                      }
+                    />
+                    <Text
                       style={{
-                        flexDirection: 'row',
-                        alignItems: 'center',
-                        paddingVertical: 8,
-                        paddingHorizontal: 12,
-                        backgroundColor:
-                          selectedCategory === category.id
-                            ? colors.highlight
-                            : 'transparent',
-                        borderRadius: 8,
-                      }}
-                      onPress={() => toggleCategory(category.id)}
-                    >
-                      <category.icon
-                        size={18}
-                        color={
+                        marginLeft: 12,
+                        color:
                           selectedCategory === category.id
                             ? colors.primary
-                            : colors.textTertiary
-                        }
-                      />
+                            : colors.textSecondary,
+                        fontWeight: '500',
+                        fontSize: 14,
+                      }}
+                    >
+                      {category.name}
+                    </Text>
+                    {selectedCategory === category.id && (
                       <Text
-                        style={{
-                          marginLeft: 12,
-                          color:
-                            selectedCategory === category.id
-                              ? colors.primary
-                              : colors.textSecondary,
-                          fontWeight: '500',
-                          fontSize: 14,
-                        }}
+                        style={{ marginLeft: 'auto', color: colors.primary }}
                       >
-                        {category.name}
+                        ✓
                       </Text>
-                      {selectedCategory === category.id && (
-                        <Text
-                          style={{ marginLeft: 'auto', color: colors.primary }}
-                        >
-                          ✓
-                        </Text>
-                      )}
-                    </TouchableOpacity>
-                  ))}
-                </View>
+                    )}
+                  </TouchableOpacity>
+                ))}
               </View>
+            </View>
 
-              {/* Price Range */}
-              <View style={{ marginBottom: 24 }}>
-                <Text
-                  style={{
-                    fontSize: 14,
-                    fontWeight: '500',
-                    color: colors.textSecondary,
-                    marginBottom: 8,
-                  }}
-                >
-                  Price Range
-                </Text>
-                <View
-                  style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}
-                >
-                  <TextInput
-                    placeholder="Min"
-                    placeholderTextColor={colors.textTertiary}
-                    keyboardType="number-pad"
-                    style={{
-                      flex: 1,
-                      borderWidth: 1,
-                      borderColor: colors.border,
-                      borderRadius: 6,
-                      paddingHorizontal: 12,
-                      paddingVertical: 8,
-                      color: colors.text,
-                      backgroundColor: colors.card,
-                    }}
-                  />
-                  <Text style={{ color: colors.textTertiary }}>-</Text>
-                  <TextInput
-                    placeholder="Max"
-                    placeholderTextColor={colors.textTertiary}
-                    keyboardType="number-pad"
-                    style={{
-                      flex: 1,
-                      borderWidth: 1,
-                      borderColor: colors.border,
-                      borderRadius: 6,
-                      paddingHorizontal: 12,
-                      paddingVertical: 8,
-                      color: colors.text,
-                      backgroundColor: colors.card,
-                    }}
-                  />
-                </View>
-              </View>
-
-              {/* Eco Score */}
-              <View style={{ marginBottom: 24 }}>
-                <Text
-                  style={{
-                    fontSize: 14,
-                    fontWeight: '500',
-                    color: colors.textSecondary,
-                    marginBottom: 8,
-                  }}
-                >
-                  Minimum Eco Score
-                </Text>
-                <View
-                  style={{
-                    borderWidth: 1,
-                    borderColor: colors.border,
-                    borderRadius: 6,
-                    paddingHorizontal: 12,
-                    paddingVertical: 10,
-                    backgroundColor: colors.card,
-                  }}
-                >
-                  <Text style={{ color: colors.text }}>Any Score</Text>
-                </View>
-              </View>
-
-              {/* Location */}
-              <View style={{ marginBottom: 24 }}>
-                <Text
-                  style={{
-                    fontSize: 14,
-                    fontWeight: '500',
-                    color: colors.textSecondary,
-                    marginBottom: 8,
-                  }}
-                >
-                  Location
-                </Text>
-                <View
-                  style={{
-                    borderWidth: 1,
-                    borderColor: colors.border,
-                    borderRadius: 6,
-                    paddingHorizontal: 12,
-                    paddingVertical: 10,
-                    backgroundColor: colors.card,
-                  }}
-                >
-                  <Text style={{ color: colors.text }}>All Europe</Text>
-                </View>
-              </View>
-
-              <TouchableOpacity
+            {/* Price Range */}
+            <View style={{ marginBottom: 24 }}>
+              <Text
                 style={{
-                  backgroundColor: colors.primary,
-                  paddingVertical: 12,
-                  borderRadius: 6,
-                  alignItems: 'center',
-                  marginTop: 8,
+                  fontSize: 14,
+                  fontWeight: '500',
+                  color: colors.textSecondary,
+                  marginBottom: 8,
                 }}
-                onPress={() => setIsFilterOpen(false)}
               >
-                <Text
-                  style={{ color: 'white', fontWeight: '600', fontSize: 16 }}
-                >
-                  Apply Filters
-                </Text>
-              </TouchableOpacity>
-            </ScrollView>
-          </View>
-        </View>
-      )}
+                Price Range
+              </Text>
+              <View
+                style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}
+              >
+                <TextInput
+                  placeholder="Min"
+                  placeholderTextColor={colors.textTertiary}
+                  keyboardType="number-pad"
+                  style={{
+                    flex: 1,
+                    borderWidth: 1,
+                    borderColor: colors.border,
+                    borderRadius: 6,
+                    paddingHorizontal: 12,
+                    paddingVertical: 8,
+                    color: colors.text,
+                    backgroundColor: colors.card,
+                  }}
+                />
+                <Text style={{ color: colors.textTertiary }}>-</Text>
+                <TextInput
+                  placeholder="Max"
+                  placeholderTextColor={colors.textTertiary}
+                  keyboardType="number-pad"
+                  style={{
+                    flex: 1,
+                    borderWidth: 1,
+                    borderColor: colors.border,
+                    borderRadius: 6,
+                    paddingHorizontal: 12,
+                    paddingVertical: 8,
+                    color: colors.text,
+                    backgroundColor: colors.card,
+                  }}
+                />
+              </View>
+            </View>
+
+            {/* Eco Score */}
+            <View style={{ marginBottom: 24 }}>
+              <Text
+                style={{
+                  fontSize: 14,
+                  fontWeight: '500',
+                  color: colors.textSecondary,
+                  marginBottom: 8,
+                }}
+              >
+                Minimum Eco Score
+              </Text>
+              <View
+                style={{
+                  borderWidth: 1,
+                  borderColor: colors.border,
+                  borderRadius: 6,
+                  paddingHorizontal: 12,
+                  paddingVertical: 10,
+                  backgroundColor: colors.card,
+                }}
+              >
+                <Text style={{ color: colors.text }}>Any Score</Text>
+              </View>
+            </View>
+
+            {/* Location */}
+            <View style={{ marginBottom: 24 }}>
+              <Text
+                style={{
+                  fontSize: 14,
+                  fontWeight: '500',
+                  color: colors.textSecondary,
+                  marginBottom: 8,
+                }}
+              >
+                Location
+              </Text>
+              <View
+                style={{
+                  borderWidth: 1,
+                  borderColor: colors.border,
+                  borderRadius: 6,
+                  paddingHorizontal: 12,
+                  paddingVertical: 10,
+                  backgroundColor: colors.card,
+                }}
+              >
+                <Text style={{ color: colors.text }}>All Europe</Text>
+              </View>
+            </View>
+
+            <TouchableOpacity
+              style={{
+                backgroundColor: colors.primary,
+                paddingVertical: 12,
+                borderRadius: 6,
+                alignItems: 'center',
+                marginTop: 8,
+              }}
+              onPress={() => setIsFilterOpen(false)}
+            >
+              <Text
+                style={{ color: 'white', fontWeight: '600', fontSize: 16 }}
+              >
+                Apply Filters
+              </Text>
+            </TouchableOpacity>
+          </ScrollView>
+        </Animated.View>
+      </View>
 
       {/* Listings */}
       {loading ? (

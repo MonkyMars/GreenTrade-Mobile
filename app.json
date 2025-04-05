@@ -3,7 +3,7 @@
     "name": "GreenTrade.eu",
     "slug": "GreenTrade.eu",
     "version": "1.0.0",
-
+    "newArchEnabled": true,
     "web": {
       "favicon": "./assets/favicon.png"
     },
