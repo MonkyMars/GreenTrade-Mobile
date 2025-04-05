@@ -14,7 +14,6 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context'
 import FontAwesome from 'react-native-vector-icons/FontAwesome'
 import Feather from 'react-native-vector-icons/Feather'
-import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons'
 import type { NativeStackScreenProps } from '@react-navigation/native-stack'
 import type { RootStackParamList } from './navigation'
 import BottomNavigation from '../components/BottomNavigation'
@@ -22,6 +21,7 @@ import { useTheme } from '../lib/theme/ThemeContext'
 import { categories, cleanCategory, findCategory } from "../lib/functions/category"
 import { FetchedListing } from 'lib/types/main'
 import { getListings } from 'lib/backend/listings/getListings'
+
 type ListingsScreenProps = NativeStackScreenProps<
   RootStackParamList,
   'Listings'
@@ -200,7 +200,7 @@ export default function ListingsScreen({ navigation }: ListingsScreenProps) {
             </View>
 
             <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-              <MaterialCommunityIcons
+              <FontAwesome
                 name={category.icon}
                 size={14}
                 color={colors.primary}
@@ -394,7 +394,7 @@ export default function ListingsScreen({ navigation }: ListingsScreenProps) {
             {item.location} • {new Date(item.created_at).toLocaleDateString()}
           </Text>
           <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-            <MaterialCommunityIcons
+            <FontAwesome
               name={category.icon}
               size={14}
               color={colors.primary}
