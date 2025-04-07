@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import {
     View, Text, ScrollView, TouchableOpacity, Image,
     TextInput, Alert, Animated, Dimensions,
@@ -13,6 +13,7 @@ import { useAuth } from 'lib/auth/AuthContext'
 import { User } from 'lib/types/user'
 import { useTheme } from 'lib/theme/ThemeContext'
 import { RootStackParamList } from './navigation'
+import { isUrl } from 'lib/functions/isUrl'
 
 type ActiveTab = 'profile' | 'seller' | 'security' | 'delete'
 
@@ -210,7 +211,7 @@ export default function AccountScreen() {
                         elevation: 3,
                     }}>
                         <Text style={{ fontSize: 24, fontWeight: '700', color: colors.text }}>
-                            My Account
+                            <FontAwesome name="leaf" color={colors.primary} size={24} /> My GreenTrade Account
                         </Text>
                     </View>
 
@@ -237,7 +238,7 @@ export default function AccountScreen() {
                                 marginBottom: 12,
                                 overflow: 'hidden'
                             }}>
-                                {user.profileUrl ? (
+                                {isUrl(user.profileImage as string) ? (
                                     <Image
                                         source={{ uri: user.profileUrl }}
                                         style={{ width: 80, height: 80 }}
@@ -248,7 +249,7 @@ export default function AccountScreen() {
                                         fontWeight: '700',
                                         color: colors.primary
                                     }}>
-                                        {user?.name?.charAt(0)?.toUpperCase() || 'U'}
+                                        {user.name.charAt(0).toLocaleUpperCase() || 'U'}
                                     </Text>
                                 )}
                             </View>
@@ -331,8 +332,10 @@ export default function AccountScreen() {
                                         paddingVertical: 12,
                                         paddingHorizontal: 16,
                                         borderRadius: 6,
-                                        backgroundColor: activeTab === tab ?
-                                            colors.primaryLight : 'transparent',
+                                        backgroundColor:
+                                            activeTab === tab && tab === 'delete' ? (isDark ? 'rgba(220, 38, 38, 0.2)' : 'rgba(254, 226, 226, 0.8)') :
+                                                activeTab === tab ? colors.primaryLight :
+                                                    colors.card,
                                     }}
                                     onPress={() => handleTabPress(tab as ActiveTab)}
                                 >
@@ -594,7 +597,7 @@ export default function AccountScreen() {
                                             marginRight: 16,
                                             overflow: 'hidden'
                                         }}>
-                                            {user.profileUrl ? (
+                                            {isUrl(user.profileImage as string) ? (
                                                 <Image
                                                     source={{ uri: user.profileUrl }}
                                                     style={{ width: 60, height: 60 }}
@@ -613,17 +616,25 @@ export default function AccountScreen() {
                                             style={{
                                                 flexDirection: 'row',
                                                 alignItems: 'center',
-                                                paddingVertical: 8,
-                                                paddingHorizontal: 12,
-                                                borderRadius: 6,
-                                                borderWidth: 1,
-                                                borderColor: colors.border,
-                                                backgroundColor: colors.background,
+                                                paddingVertical: 10,
+                                                paddingHorizontal: 14,
+                                                borderRadius: 8,
+                                                backgroundColor: colors.primaryLight,
+                                                shadowColor: colors.shadow,
+                                                shadowOffset: { width: 0, height: 2 },
+                                                shadowOpacity: 0.1,
+                                                shadowRadius: 3,
+                                                elevation: 1,
                                             }}
                                         >
-                                            <FontAwesome name="pencil" size={14} color={colors.textSecondary} />
-                                            <Text style={{ marginLeft: 8, color: colors.textSecondary }}>
-                                                Change Image
+                                            <FontAwesome name="camera" size={16} color={colors.primary} />
+                                            <Text style={{
+                                                marginLeft: 8,
+                                                color: colors.primary,
+                                                fontWeight: '600',
+                                                fontSize: 14
+                                            }}>
+                                                Upload Photo
                                             </Text>
                                         </TouchableOpacity>
                                     </View>
