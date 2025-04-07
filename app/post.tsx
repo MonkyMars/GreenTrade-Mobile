@@ -23,7 +23,7 @@ import { useTheme } from '../lib/theme/ThemeContext'
 import ProtectedRoute from 'components/ProtectedRoute'
 import { calculateEcoScore } from 'lib/functions/calculateEcoScore'
 import { useAuth } from 'lib/auth/AuthContext'
-import { Link, useNavigation } from '@react-navigation/native'
+import { useNavigation } from '@react-navigation/native'
 import { uploadListing } from 'lib/backend/listings/uploadListing';
 import { type UploadListing } from 'lib/types/main'
 import { uploadImage } from 'lib/backend/listings/uploadImage'
