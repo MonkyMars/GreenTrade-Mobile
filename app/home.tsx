@@ -138,11 +138,14 @@ export default function HomeScreen() {
               style={{
                 ...styles.actionButton,
                 backgroundColor: isDark ? colors.primaryLight : colors.card,
+                borderColor: colors.border,
+                borderWidth: 1,
+                borderStyle: 'solid'
               }}
               onPress={() => navigation.navigate('Post')}
             >
-              <Feather name="plus-circle" size={24} color="#fff" />
-              <Text style={styles.actionButtonText}>Post a Listing</Text>
+              <Feather name="plus" size={24} color={isDark ? '#fff' : colors.textTertiary} />
+              <Text style={{ ...styles.actionButtonText, color: isDark ? colors.text : colors.textTertiary }}>Post a Listing</Text>
             </TouchableOpacity>
           </View>
 
