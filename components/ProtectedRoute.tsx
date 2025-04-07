@@ -2,6 +2,7 @@ import { useNavigation } from '@react-navigation/native';
 import { useEffect, useState } from 'react';
 import { useAuth } from 'lib/auth/AuthContext';
 import { ActivityIndicator, View } from 'react-native';
+import { useRoute } from '@react-navigation/native';
 
 interface ProtectedRouteProps {
     children: React.ReactNode;
@@ -9,9 +10,11 @@ interface ProtectedRouteProps {
 
 const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
     const { loading, isAuthenticated, user } = useAuth();
-    const router = useNavigation();
+    const navigation = useNavigation();
     const [redirecting, setRedirecting] = useState(false);
     const [waitingForAuth, setWaitingForAuth] = useState(true);
+
+    const route = useRoute(); // Get the current route
 
     useEffect(() => {
         // Track if we're waiting for authentication
@@ -37,10 +40,11 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
         // Only redirect if auth check is complete, not authenticated, and not already redirecting
         if (!loading && !waitingForAuth && !isAuthenticated && !redirecting) {
             setRedirecting(true);
-            const path = window.location.pathname;
-            router.navigate(`/login?redirect=${path}` as never);
+            // Get current route name and pass it in the redirect URL
+            const path = route.name;
+            navigation.navigate('Login' as never);
         }
-    }, [loading, isAuthenticated, user, router, redirecting, waitingForAuth]);
+    }, [loading, isAuthenticated, user, navigation, redirecting, waitingForAuth, route]);
 
     // Show loading if still checking auth or waiting for auth
     if (loading || waitingForAuth) {

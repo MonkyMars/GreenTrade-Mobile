@@ -30,11 +30,12 @@ export default function BottomNavigation({
       case 'home':
         navigation.navigate('Home')
         break
-      case 'profile':
+      case 'account':
         navigation.navigate('Account')
         break
       case 'login':
         navigation.navigate('Login')
+        break
       case 'listings':
         navigation.navigate('Listings')
         break
@@ -142,37 +143,28 @@ export default function BottomNavigation({
         style={{
           alignItems: 'center',
           padding: 8,
-          borderTopWidth: activeTab === 'profile' ? 2 : 0,
+          borderTopWidth: activeTab === 'account' || 'login' ? 2 : 0,
           borderTopColor:
-            activeTab === 'profile' ? colors.primary : 'transparent',
+            activeTab === 'account' || activeTab === 'login' ? colors.primary : 'transparent',
         }}
-        onPress={() => handleTabPress(isAuthenticated ? 'profile' : 'login')}
+        onPress={() => handleTabPress(isAuthenticated ? 'account' : 'login')}
       >
         <FontAwesome
           name="user"
           size={20}
-          color={activeTab === 'profile' ? colors.primary : colors.textTertiary}
+          color={activeTab === 'account' || activeTab === 'login' ? colors.primary : colors.textTertiary}
         />
         <Text
           style={{
             fontSize: 12,
             color:
-              activeTab === 'profile' ? colors.primary : colors.textTertiary,
+              activeTab === 'account' || activeTab === 'login' ? colors.primary : colors.textTertiary,
             marginTop: 4,
           }}
         >
-          {isAuthenticated ? 'Profile' : 'Login'}
+          {isAuthenticated ? 'Account' : 'Login'}
         </Text>
       </TouchableOpacity>
     </View>
   )
-}
-
-const styles = {
-  bottomNav:
-    'flex-row justify-around pt-2 pb-1 bg-white border-t border-gray-200',
-  navButton: 'items-center p-2',
-  activeNavButton: 'border-t-2 border-green-600',
-  navText: 'text-xs text-gray-500 mt-1',
-  activeNavText: 'text-xs text-green-600 mt-1',
 }

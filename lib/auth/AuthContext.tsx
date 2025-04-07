@@ -42,7 +42,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
             // Call refresh endpoint with the refresh token
             const response = await api.post(
                 `/auth/refresh`,
-                { refreshToken }
+                {
+                    body: {
+                        refreshToken,
+                    }
+                }
             );
 
             if (!response.data || !response.data.accessToken) {

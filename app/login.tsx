@@ -36,7 +36,7 @@ const loginSchema = z.object({
 type LoginFormData = z.infer<typeof loginSchema>
 
 export default function LoginScreen({ navigation }: LoginScreenProps) {
-  const [activeTab, setActiveTab] = useState('home')
+  const [activeTab, setActiveTab] = useState('login')
   const { login } = useAuth()
   const { colors, isDark } = useTheme()
   const [formData, setFormData] = useState<LoginFormData>({

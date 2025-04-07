@@ -36,6 +36,7 @@ export default function AccountScreen() {
     const [deleteText, setDeleteText] = useState('')
     const [updateSuccess, setUpdateSuccess] = useState("")
     const [activeInnerTab, setActiveInnerTab] = useState('listings')
+    const [activeAppTab, setActiveAppTab] = useState('account')
     const animationLock = useRef(false)
     const previousTab = useRef({ activeTab, activeInnerTab })
 
@@ -1219,7 +1220,7 @@ export default function AccountScreen() {
                     </Animated.View>
                 </ScrollView>
 
-                <BottomNavigation activeTab="profile" onTabChange={() => { }} />
+                <BottomNavigation activeTab={activeAppTab} onTabChange={() => setActiveAppTab} />
             </SafeAreaView>
         </ProtectedRoute>
     )
