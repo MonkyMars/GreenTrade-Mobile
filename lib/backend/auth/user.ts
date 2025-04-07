@@ -8,7 +8,6 @@ export const getUser = async (uuid: string) => {
   }
   api.defaults.headers['Authorization'] = `Bearer ${token}`
   const response = await api.get(`/api/auth/user/${uuid}`)
-  console.log('User response:', response.data)
   const user = response.data.data.user
   return user
 }
