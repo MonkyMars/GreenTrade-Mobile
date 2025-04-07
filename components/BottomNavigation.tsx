@@ -4,6 +4,7 @@ import { useNavigation } from '@react-navigation/native'
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack'
 import type { RootStackParamList } from '../app/navigation'
 import { useTheme } from '../lib/theme/ThemeContext'
+import { useAuth } from 'lib/auth/AuthContext'
 
 type BottomNavigationProps = {
   activeTab?: string
@@ -14,6 +15,7 @@ export default function BottomNavigation({
   activeTab = 'home',
   onTabChange,
 }: BottomNavigationProps) {
+  const { isAuthenticated } = useAuth()
   const navigation =
     useNavigation<NativeStackNavigationProp<RootStackParamList>>()
   const { colors } = useTheme()
@@ -29,8 +31,10 @@ export default function BottomNavigation({
         navigation.navigate('Home')
         break
       case 'profile':
-        navigation.navigate('Login')
+        navigation.navigate('Account')
         break
+      case 'login':
+        navigation.navigate('Login')
       case 'listings':
         navigation.navigate('Listings')
         break
@@ -142,7 +146,7 @@ export default function BottomNavigation({
           borderTopColor:
             activeTab === 'profile' ? colors.primary : 'transparent',
         }}
-        onPress={() => handleTabPress('profile')}
+        onPress={() => handleTabPress(isAuthenticated ? 'profile' : 'login')}
       >
         <FontAwesome
           name="user"
@@ -157,7 +161,7 @@ export default function BottomNavigation({
             marginTop: 4,
           }}
         >
-          Profile
+          {isAuthenticated ? 'Profile' : 'Login'}
         </Text>
       </TouchableOpacity>
     </View>

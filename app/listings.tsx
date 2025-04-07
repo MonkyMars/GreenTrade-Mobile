@@ -21,6 +21,7 @@ import { useTheme } from '../lib/theme/ThemeContext'
 import { categories, cleanCategory, findCategory } from "../lib/functions/category"
 import { FetchedListing } from 'lib/types/main'
 import { getListings } from 'lib/backend/listings/getListings'
+import { formatDistanceToNow } from "date-fns";
 
 type ListingsScreenProps = NativeStackScreenProps<
   RootStackParamList,
@@ -37,7 +38,6 @@ export default function ListingsScreen({ navigation }: ListingsScreenProps) {
   const [originalListings, setOriginalListings] = useState<FetchedListing[]>([])
   const [listings, setListings] = useState<FetchedListing[]>([])
   const [loading, setLoading] = useState(false)
-  const [sortBy, setSortBy] = useState('newest')
   const slideAnim = useRef(new Animated.Value(width)).current
 
   // Animation effect for sidebar
@@ -263,15 +263,18 @@ export default function ListingsScreen({ navigation }: ListingsScreenProps) {
             </View>
           </View>
           <View style={{ marginTop: 4 }}>
-            <Text
-              style={{
-                fontSize: 12,
-                color: colors.textTertiary,
-                display: 'flex',
-              }}
-            >
-              {new Date(item.created_at).toLocaleDateString()}
-            </Text>
+            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+              <Feather name='clock' size={12} color={colors.textTertiary} />
+              <Text
+                style={{
+                  fontSize: 12,
+                  color: colors.textTertiary,
+                  marginLeft: 4
+                }}
+              >
+                {formatDistanceToNow(new Date(item.created_at), { addSuffix: true })}
+              </Text>
+            </View>
           </View>
 
           <View
@@ -391,7 +394,7 @@ export default function ListingsScreen({ navigation }: ListingsScreenProps) {
               marginBottom: 4,
             }}
           >
-            {item.location} • {new Date(item.created_at).toLocaleDateString()}
+            {item.location} • {formatDistanceToNow(new Date(item.created_at), { addSuffix: true })}
           </Text>
           <View style={{ flexDirection: 'row', alignItems: 'center' }}>
             <FontAwesome

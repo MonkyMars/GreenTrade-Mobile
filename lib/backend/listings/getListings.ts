@@ -1,19 +1,16 @@
 import { FetchedListing } from 'lib/types/main'
+import api from '../api/axiosConfig'
 
 export const getListings = async (
   id?: number,
 ): Promise<FetchedListing | FetchedListing[]> => {
   try {
     if (id) {
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_BACKEND_URL_PUBLIC}/listings/${id}`,
-      )
-      const data = await response.json()
-      return data.data as FetchedListing
+      const response = await api.get(`/listings/${id}`)
+      return response.data as FetchedListing
     } else {
-      const response = await fetch(`http://192.168.178.10:8080/listings`)
-      const data = await response.json()
-      return data.data as FetchedListing[]
+      const response = await api.get(`/listings`)
+      return response.data.data as FetchedListing[]
     }
   } catch (error) {
     console.error('Error fetching listings:', error)

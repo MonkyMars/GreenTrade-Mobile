@@ -3,6 +3,7 @@ import { SafeAreaProvider } from 'react-native-safe-area-context'
 import { ThemeProvider, useTheme } from './lib/theme/ThemeContext'
 import { Navigation } from './app/navigation'
 import './global.css'
+import { AuthProvider } from 'lib/auth/AuthContext'
 
 // Wrapper component to access theme context for StatusBar
 const Main = () => {
@@ -19,7 +20,9 @@ const Main = () => {
 export default function App() {
   return (
     <ThemeProvider>
-      <Main />
+      <AuthProvider>
+        <Main />
+      </AuthProvider>
     </ThemeProvider>
   )
 }

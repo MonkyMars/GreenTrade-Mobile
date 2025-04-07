@@ -19,6 +19,7 @@ import { z } from 'zod'
 import { type RootStackParamList } from './navigation'
 import BottomNavigation from 'components/BottomNavigation'
 import { useTheme } from '../lib/theme/ThemeContext'
+import { useAuth } from '../lib/auth/AuthContext'
 
 // Define props type for the login screen using React Navigation
 type LoginScreenProps = NativeStackScreenProps<RootStackParamList, 'Login'>
@@ -33,22 +34,6 @@ const loginSchema = z.object({
 })
 
 type LoginFormData = z.infer<typeof loginSchema>
-
-// Mock authentication context (will be replaced with actual implementation)
-const useAuth = () => {
-  const login = async (email: string, password: string) => {
-    // Simulate API call delay
-    await new Promise(resolve => setTimeout(resolve, 1000))
-
-    // For demo purposes, accept any login with valid format
-    if (email && password.length >= 8) {
-      return true
-    }
-    throw new Error('Invalid credentials')
-  }
-
-  return { login }
-}
 
 export default function LoginScreen({ navigation }: LoginScreenProps) {
   const [activeTab, setActiveTab] = useState('home')
@@ -109,7 +94,6 @@ export default function LoginScreen({ navigation }: LoginScreenProps) {
 
     try {
       await login(formData.email, formData.password)
-      Alert.alert('Success', 'You have successfully logged in!')
       // Navigate to Home screen after successful login
       navigation.navigate('Home')
     } catch (error) {
@@ -195,7 +179,7 @@ export default function LoginScreen({ navigation }: LoginScreenProps) {
             <View style={{ gap: 16 }}>
               <View>
                 <View style={{ position: 'relative' }}>
-                  <View style={{ position: 'absolute', left: 12, top: 12, zIndex: 10 }}>
+                  <View style={{ position: 'absolute', left: 12, top: 22, zIndex: 10 }}>
                     <FontAwesome name="envelope" size={16} color={colors.textTertiary} />
                   </View>
                   <TextInput
@@ -225,7 +209,7 @@ export default function LoginScreen({ navigation }: LoginScreenProps) {
               </View>
               <View>
                 <View style={{ position: 'relative' }}>
-                  <View style={{ position: 'absolute', left: 12, top: 12, zIndex: 10 }}>
+                  <View style={{ position: 'absolute', left: 12, top: 22, zIndex: 10 }}>
                     <FontAwesome name='lock' size={16} color={colors.textTertiary} />
                   </View>
                   <TextInput

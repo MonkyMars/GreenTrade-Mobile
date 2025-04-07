@@ -12,9 +12,11 @@
   },
   "dependencies": {
     "@expo/metro-runtime": "~4.0.1",
+    "@react-native-async-storage/async-storage": "^2.1.2",
     "@react-navigation/native": "^7.1.4",
     "@react-navigation/native-stack": "^7.3.8",
     "axios": "^1.8.4",
+    "date-fns": "^4.1.0",
     "expo": "^52.0.44",
     "expo-auth-session": "^6.0.3",
     "expo-status-bar": "~2.0.1",

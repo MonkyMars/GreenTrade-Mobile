@@ -10,6 +10,8 @@ import type { RootStackParamList } from './navigation'
 import { FetchedListing } from 'lib/types/main'
 import { getListings } from 'lib/backend/listings/getListings'
 import { findCategory } from '../lib/functions/category'
+import { useAuth } from 'lib/auth/AuthContext'
+import { greeting } from 'lib/functions/greeting'
 
 export default function HomeScreen() {
   const { colors, isDark } = useTheme()
@@ -18,15 +20,14 @@ export default function HomeScreen() {
   const [username, setUsername] = useState('User')
   const [recentListings, setRecentListings] = useState<FetchedListing[]>([])
   const [loading, setLoading] = useState(false)
+  const { user, loading: authLoading } = useAuth()
 
   // Fetch user data and recent listings
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true)
       try {
-        // Simulate fetching user data
-        setUsername('Levi Noppers'.split(' ')[0])
-
+        setUsername(user?.name as string)
         // Fetch recent listings from API
         const listings = await getListings() as FetchedListing[]
         // Get only the 3 most recent listings
@@ -108,7 +109,7 @@ export default function HomeScreen() {
                 color: colors.text,
               }}
             >
-              Hello, {username}!
+              {username ? greeting() + ', ' + username.split(" ")[0] + '!' : 'Welcome!'}
             </Text>
             <Text
               style={{
