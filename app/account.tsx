@@ -5,21 +5,19 @@ import {
 } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { FontAwesome, MaterialCommunityIcons } from '@expo/vector-icons'
-import { useNavigation } from '@react-navigation/native'
-import { NativeStackNavigationProp } from '@react-navigation/native-stack'
 import BottomNavigation from '../components/BottomNavigation'
 import ProtectedRoute from 'components/ProtectedRoute'
 import { useAuth } from 'lib/auth/AuthContext'
 import { User } from 'lib/types/user'
 import { useTheme } from 'lib/theme/ThemeContext'
-import { RootStackParamList } from './navigation'
 import { isUrl } from 'lib/functions/isUrl'
+import { useNavigation } from '@react-navigation/native'
 
 type ActiveTab = 'profile' | 'seller' | 'security' | 'delete'
 
 export default function AccountScreen() {
     const { colors, isDark } = useTheme()
-    const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>()
+    const navigation = useNavigation()
     const { user: authUser, logout, loading: authLoading } = useAuth()
     const [user, setUser] = useState<User>({
         id: "",

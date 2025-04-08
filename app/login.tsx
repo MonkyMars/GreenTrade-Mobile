@@ -20,9 +20,9 @@ import { type RootStackParamList } from './navigation'
 import BottomNavigation from 'components/BottomNavigation'
 import { useTheme } from '../lib/theme/ThemeContext'
 import { useAuth } from '../lib/auth/AuthContext'
-
+import { NativeStackNavigationProp } from '@react-navigation/native-stack/lib/typescript/src/types'
 // Define props type for the login screen using React Navigation
-type LoginScreenProps = NativeStackScreenProps<RootStackParamList, 'Login'>
+type LoginScreenProps = NativeStackNavigationProp<RootStackParamList, 'Login'>
 
 // Ensure authentication redirect is handled properly
 WebBrowser.maybeCompleteAuthSession()

@@ -1,6 +1,6 @@
 import { NavigationContainer } from '@react-navigation/native'
 import { createNativeStackNavigator } from '@react-navigation/native-stack'
-import { useState, useEffect } from 'react'
+import { NativeStackNavigationProp } from '@react-navigation/native-stack/lib/typescript/src/types'
 import HomeScreen from './home'
 import LoginScreen from './login'
 import ListingsScreen from './listings'
@@ -18,7 +18,8 @@ export type RootStackParamList = {
   Listings: undefined
 }
 
-const Stack = createNativeStackNavigator<RootStackParamList>()
+// Create the stack navigator without generic type parameter
+const Stack = createNativeStackNavigator()
 
 export function Navigation() {
   const { isAuthenticated, loading } = useAuth()
@@ -42,3 +43,6 @@ export function Navigation() {
     </NavigationContainer>
   )
 }
+
+// Export type for using navigation in components
+export type NavigationProp = NativeStackNavigationProp<RootStackParamList>

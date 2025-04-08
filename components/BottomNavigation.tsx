@@ -1,8 +1,6 @@
 import { View, Text, TouchableOpacity } from 'react-native'
 import FontAwesome from 'react-native-vector-icons/FontAwesome'
 import { useNavigation } from '@react-navigation/native'
-import type { NativeStackNavigationProp } from '@react-navigation/native-stack'
-import type { RootStackParamList } from '../app/navigation'
 import { useTheme } from '../lib/theme/ThemeContext'
 import { useAuth } from 'lib/auth/AuthContext'
 
@@ -17,7 +15,7 @@ export default function BottomNavigation({
 }: BottomNavigationProps) {
   const { isAuthenticated } = useAuth()
   const navigation =
-    useNavigation<NativeStackNavigationProp<RootStackParamList>>()
+    useNavigation()
   const { colors } = useTheme()
 
   const handleTabPress = (tab: string) => {

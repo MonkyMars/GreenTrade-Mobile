@@ -14,7 +14,6 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context'
 import FontAwesome from 'react-native-vector-icons/FontAwesome'
 import Feather from 'react-native-vector-icons/Feather'
-import type { NativeStackScreenProps } from '@react-navigation/native-stack'
 import type { RootStackParamList } from './navigation'
 import BottomNavigation from '../components/BottomNavigation'
 import { useTheme } from '../lib/theme/ThemeContext'
@@ -26,8 +25,9 @@ import {
 import { FetchedListing } from 'lib/types/main'
 import { getListings } from 'lib/backend/listings/getListings'
 import { formatDistanceToNow } from 'date-fns'
+import { NativeStackNavigationProp } from '@react-navigation/native-stack/lib/typescript/src/types'
 
-type ListingsScreenProps = NativeStackScreenProps<
+type ListingsScreenProps = NativeStackNavigationProp<
   RootStackParamList,
   'Listings'
 >

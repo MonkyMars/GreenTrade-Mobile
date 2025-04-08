@@ -13,8 +13,6 @@ import BottomNavigation from '../components/BottomNavigation'
 import { useTheme } from '../lib/theme/ThemeContext'
 import { Feather, FontAwesome } from '@expo/vector-icons'
 import { useNavigation } from '@react-navigation/native'
-import type { NativeStackNavigationProp } from '@react-navigation/native-stack'
-import type { RootStackParamList } from './navigation'
 import { FetchedListing } from 'lib/types/main'
 import { getListings } from 'lib/backend/listings/getListings'
 import { findCategory } from '../lib/functions/category'
@@ -23,8 +21,7 @@ import { greeting } from 'lib/functions/greeting'
 
 export default function HomeScreen() {
   const { colors, isDark } = useTheme()
-  const navigation =
-    useNavigation<NativeStackNavigationProp<RootStackParamList>>()
+  const navigation = useNavigation()
   const [activeTab, setActiveTab] = useState('home')
   const [username, setUsername] = useState('User')
   const [recentListings, setRecentListings] = useState<FetchedListing[]>([])
