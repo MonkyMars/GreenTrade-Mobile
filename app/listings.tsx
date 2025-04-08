@@ -1,4 +1,5 @@
 import { useEffect, useState, useRef } from 'react'
+import { useRoute } from '@react-navigation/native';
 import {
   View,
   Text,
@@ -34,6 +35,9 @@ type ListingsScreenProps = NativeStackNavigationProp<
 
 export default function ListingsScreen({ navigation }: ListingsScreenProps) {
   const { width } = useWindowDimensions()
+  const route = useRoute();
+  const params = route.params || {};
+  const category = params.category;
   const { colors, isDark } = useTheme()
   const [activeTab, setActiveTab] = useState('listings')
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('list')
@@ -43,6 +47,12 @@ export default function ListingsScreen({ navigation }: ListingsScreenProps) {
   const [listings, setListings] = useState<FetchedListing[]>([])
   const [loading, setLoading] = useState(false)
   const slideAnim = useRef(new Animated.Value(width)).current
+
+  useEffect(() => {
+    if (category) {
+      setSelectedCategory(category)
+    }
+  }, [category])
 
   // Animation effect for sidebar
   useEffect(() => {
@@ -76,7 +86,18 @@ export default function ListingsScreen({ navigation }: ListingsScreenProps) {
       try {
         const response = await getListings()
         setOriginalListings(response as FetchedListing[])
-        setListings(response as FetchedListing[])
+
+        // Apply category filter if one is selected
+        if (selectedCategory && selectedCategory !== 'all') {
+          setListings(
+            (response as FetchedListing[]).filter(
+              item => cleanCategory(item.category) === cleanCategory(selectedCategory),
+            )
+          )
+        } else {
+          setListings(response as FetchedListing[])
+        }
+
       } catch (error) {
         console.error('Error fetching listings:', error)
       } finally {
@@ -84,7 +105,7 @@ export default function ListingsScreen({ navigation }: ListingsScreenProps) {
       }
     }
     fetchListings()
-  }, [])
+  }, [selectedCategory])
 
   // Calculate column width for grid view
   const numColumns = 2

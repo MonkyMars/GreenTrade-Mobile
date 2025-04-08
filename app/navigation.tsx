@@ -16,7 +16,7 @@ export type RootStackParamList = {
   Home: undefined
   Navigation: undefined
   Post: undefined
-  Listings: undefined
+  Listings: { category?: string }
   ListingDetail: { id: number }
 }
 
