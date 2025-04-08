@@ -1,5 +1,13 @@
 import { useState, useEffect } from 'react'
-import { View, Text, TouchableOpacity, ScrollView, StyleSheet, Image, ActivityIndicator } from 'react-native'
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  ScrollView,
+  StyleSheet,
+  Image,
+  ActivityIndicator,
+} from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import BottomNavigation from '../components/BottomNavigation'
 import { useTheme } from '../lib/theme/ThemeContext'
@@ -15,7 +23,8 @@ import { greeting } from 'lib/functions/greeting'
 
 export default function HomeScreen() {
   const { colors, isDark } = useTheme()
-  const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>()
+  const navigation =
+    useNavigation<NativeStackNavigationProp<RootStackParamList>>()
   const [activeTab, setActiveTab] = useState('home')
   const [username, setUsername] = useState('User')
   const [recentListings, setRecentListings] = useState<FetchedListing[]>([])
@@ -68,14 +77,16 @@ export default function HomeScreen() {
 
   // Safe function to get category - handles null case
   const getSafeCategory = (categoryName: string) => {
-    if (!categoryName) return { name: "Unknown", icon: "tag" };
-    const category = findCategory(categoryName);
-    return category || { name: "Unknown", icon: "tag" };
+    if (!categoryName) return { name: 'Unknown', icon: 'tag' }
+    const category = findCategory(categoryName)
+    return category || { name: 'Unknown', icon: 'tag' }
   }
 
   if (authLoading) {
     return (
-      <SafeAreaView style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+      <SafeAreaView
+        style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}
+      >
         <ActivityIndicator size="large" color="#10b981" />
         <Text style={{ marginTop: 10, color: '#9ca3af' }}>Loading...</Text>
       </SafeAreaView>
@@ -112,7 +123,7 @@ export default function HomeScreen() {
               fontSize: 22,
               fontWeight: '700',
               color: colors.text,
-              marginLeft: 10
+              marginLeft: 10,
             }}
           >
             GreenTrade
@@ -141,7 +152,9 @@ export default function HomeScreen() {
                 color: colors.text,
               }}
             >
-              {username ? greeting() + ', ' + username.split(" ")[0] + '!' : 'Welcome!'}
+              {username
+                ? greeting() + ', ' + username.split(' ')[0] + '!'
+                : 'Welcome!'}
             </Text>
             <Text
               style={{
@@ -173,12 +186,23 @@ export default function HomeScreen() {
                 backgroundColor: isDark ? colors.primaryLight : colors.card,
                 borderColor: colors.border,
                 borderWidth: 1,
-                borderStyle: 'solid'
+                borderStyle: 'solid',
               }}
               onPress={() => navigation.navigate('Post')}
             >
-              <Feather name="plus" size={24} color={isDark ? '#fff' : colors.textTertiary} />
-              <Text style={{ ...styles.actionButtonText, color: isDark ? colors.text : colors.textTertiary }}>Post a Listing</Text>
+              <Feather
+                name="plus"
+                size={24}
+                color={isDark ? '#fff' : colors.textTertiary}
+              />
+              <Text
+                style={{
+                  ...styles.actionButtonText,
+                  color: isDark ? colors.text : colors.textTertiary,
+                }}
+              >
+                Post a Listing
+              </Text>
             </TouchableOpacity>
           </View>
 
@@ -217,7 +241,7 @@ export default function HomeScreen() {
                 {recentListings.length > 0 ? (
                   recentListings.map(item => {
                     // Using our safe function to get category
-                    const category = getSafeCategory(item.category);
+                    const category = getSafeCategory(item.category)
                     return (
                       <TouchableOpacity
                         key={item.id}
@@ -229,7 +253,13 @@ export default function HomeScreen() {
                         onPress={() => handleListingPress(item.id)}
                       >
                         <Image
-                          source={{ uri: item.imageUrl[0] || 'https://via.placeholder.com/300x200' }}
+                          source={{
+                            uri: Array.isArray(item.imageUrl)
+                              ? item.imageUrl[0]
+                              : item.imageUrl.urls && item.imageUrl.urls[0]
+                                ? item.imageUrl.urls[0]
+                                : 'https://via.placeholder.com/300x200',
+                          }}
                           style={styles.listingImage}
                         />
                         <View
@@ -247,9 +277,17 @@ export default function HomeScreen() {
                             alignItems: 'center',
                           }}
                         >
-                          <FontAwesome name="leaf" size={14} color={colors.primary} />
+                          <FontAwesome
+                            name="leaf"
+                            size={14}
+                            color={colors.primary}
+                          />
                           <Text
-                            style={{ marginLeft: 4, fontWeight: '600', color: colors.text }}
+                            style={{
+                              marginLeft: 4,
+                              fontWeight: '600',
+                              color: colors.text,
+                            }}
                           >
                             {item.ecoScore}
                           </Text>
@@ -277,35 +315,55 @@ export default function HomeScreen() {
                             €{item.price}
                           </Text>
 
-                          <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 4 }}>
+                          <View
+                            style={{
+                              flexDirection: 'row',
+                              justifyContent: 'space-between',
+                              marginTop: 4,
+                            }}
+                          >
                             <Text
                               style={{
                                 fontSize: 14,
                                 color: colors.textTertiary,
                               }}
                             >
-                              <Feather name="map-pin" size={12} color={colors.textTertiary} /> {item.location}
+                              <Feather
+                                name="map-pin"
+                                size={12}
+                                color={colors.textTertiary}
+                              />{' '}
+                              {item.location}
                             </Text>
 
-                            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                            <View
+                              style={{
+                                flexDirection: 'row',
+                                alignItems: 'center',
+                              }}
+                            >
                               <FontAwesome
                                 name={category.icon as any}
                                 size={12}
                                 color={colors.primary}
                                 style={{ marginRight: 4 }}
                               />
-                              <Text style={{ fontSize: 12, color: colors.primary }}>
+                              <Text
+                                style={{ fontSize: 12, color: colors.primary }}
+                              >
                                 {category.name}
                               </Text>
                             </View>
                           </View>
                         </View>
                       </TouchableOpacity>
-                    );
+                    )
                   })
                 ) : (
                   <View style={{ alignItems: 'center', paddingVertical: 20 }}>
-                    <Text style={{ color: colors.textTertiary }}>No listings found</Text>
+                    <Text style={{ color: colors.textTertiary }}>
+                      No listings found
+                    </Text>
                   </View>
                 )}
               </View>
@@ -317,7 +375,9 @@ export default function HomeScreen() {
             <View style={styles.featuredCard}>
               <View
                 style={{
-                  backgroundColor: isDark ? colors.primaryLight : colors.primaryLight,
+                  backgroundColor: isDark
+                    ? colors.primaryLight
+                    : colors.primaryLight,
                   borderRadius: 8,
                   padding: 16,
                 }}
@@ -340,7 +400,8 @@ export default function HomeScreen() {
                     opacity: 0.8,
                   }}
                 >
-                  Buying and selling sustainable goods helps reduce waste and promotes a circular economy. Join our community!
+                  Buying and selling sustainable goods helps reduce waste and
+                  promotes a circular economy. Join our community!
                 </Text>
                 <TouchableOpacity
                   style={{
@@ -359,7 +420,6 @@ export default function HomeScreen() {
               </View>
             </View>
           </View>
-
         </ScrollView>
       </View>
       <BottomNavigation activeTab={activeTab} onTabChange={setActiveTab} />
@@ -418,4 +478,4 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     overflow: 'hidden',
   },
-});
+})

@@ -27,7 +27,7 @@ export interface UploadListing {
   ecoAttributes: string[]
   ecoScore: number
   negotiable: boolean
-  imageUrl: string[]
+  imageUrl: string[] | { urls: string[] }
   seller: {
     id: string
     name: string

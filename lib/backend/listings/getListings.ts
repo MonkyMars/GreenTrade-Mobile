@@ -7,13 +7,19 @@ export const getListings = async (
 ): Promise<FetchedListing | FetchedListing[]> => {
   try {
     if (id) {
-      const response = await api.get(`/listings/${id}`)
-      if (!isFetchedListing(response.data)) {
+      const response = await api.get(`/listing/${id}`)
+      if (!response.data || !response.data.success) {
+        throw new Error('Failed to fetch listing')
+      }
+      if (!isFetchedListing(response.data.data)) {
         throw new Error('Invalid listing format')
       }
-      return response.data
+      return response.data.data
     } else {
       const response = await api.get(`/listings`)
+      if (!response.data || !response.data.success) {
+        throw new Error('Failed to fetch listings')
+      }
       const all = response.data.data as any[]
       const validListings = all.filter(isFetchedListing)
       return validListings

@@ -18,10 +18,14 @@ import type { NativeStackScreenProps } from '@react-navigation/native-stack'
 import type { RootStackParamList } from './navigation'
 import BottomNavigation from '../components/BottomNavigation'
 import { useTheme } from '../lib/theme/ThemeContext'
-import { categories, cleanCategory, findCategory } from "../lib/functions/category"
+import {
+  categories,
+  cleanCategory,
+  findCategory,
+} from '../lib/functions/category'
 import { FetchedListing } from 'lib/types/main'
 import { getListings } from 'lib/backend/listings/getListings'
-import { formatDistanceToNow } from "date-fns";
+import { formatDistanceToNow } from 'date-fns'
 
 type ListingsScreenProps = NativeStackScreenProps<
   RootStackParamList,
@@ -92,7 +96,9 @@ export default function ListingsScreen({ navigation }: ListingsScreenProps) {
       setListings(originalListings)
     } else {
       setListings(
-        originalListings.filter(item => cleanCategory(item.category) === cleanCategory(categoryId)),
+        originalListings.filter(
+          item => cleanCategory(item.category) === cleanCategory(categoryId),
+        ),
       )
     }
   }
@@ -100,6 +106,16 @@ export default function ListingsScreen({ navigation }: ListingsScreenProps) {
   // Render an item in grid view
   const renderGridItem = ({ item }: { item: FetchedListing }) => {
     const category = findCategory(item.category)
+
+    // Helper function to get the first image URL
+    const getFirstImageUrl = (imageUrl: string[] | { urls: string[] }) => {
+      if (Array.isArray(imageUrl)) {
+        return imageUrl[0] || 'https://via.placeholder.com/300x200'
+      } else if (imageUrl.urls && Array.isArray(imageUrl.urls)) {
+        return imageUrl.urls[0] || 'https://via.placeholder.com/300x200'
+      }
+      return 'https://via.placeholder.com/300x200'
+    }
 
     return (
       <TouchableOpacity
@@ -119,7 +135,7 @@ export default function ListingsScreen({ navigation }: ListingsScreenProps) {
       >
         <View style={{ height: 150, position: 'relative' }}>
           <Image
-            source={{ uri: item.imageUrl[0] }}
+            source={{ uri: getFirstImageUrl(item.imageUrl) }}
             style={{ width: '100%', height: '100%' }}
             resizeMode="cover"
           />
@@ -264,15 +280,17 @@ export default function ListingsScreen({ navigation }: ListingsScreenProps) {
           </View>
           <View style={{ marginTop: 4 }}>
             <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-              <Feather name='clock' size={12} color={colors.textTertiary} />
+              <Feather name="clock" size={12} color={colors.textTertiary} />
               <Text
                 style={{
                   fontSize: 12,
                   color: colors.textTertiary,
-                  marginLeft: 4
+                  marginLeft: 4,
                 }}
               >
-                {formatDistanceToNow(new Date(item.created_at), { addSuffix: true })}
+                {formatDistanceToNow(new Date(item.created_at), {
+                  addSuffix: true,
+                })}
               </Text>
             </View>
           </View>
@@ -338,6 +356,16 @@ export default function ListingsScreen({ navigation }: ListingsScreenProps) {
   const renderListItem = ({ item }: { item: FetchedListing }) => {
     const category = findCategory(item.category)
 
+    // Helper function to get the first image URL
+    const getFirstImageUrl = (imageUrl: string[] | { urls: string[] }) => {
+      if (Array.isArray(imageUrl)) {
+        return imageUrl[0] || 'https://via.placeholder.com/300x200'
+      } else if (imageUrl.urls && Array.isArray(imageUrl.urls)) {
+        return imageUrl.urls[0] || 'https://via.placeholder.com/300x200'
+      }
+      return 'https://via.placeholder.com/300x200'
+    }
+
     return (
       <TouchableOpacity
         onPress={() => navigation.navigate('Home')} // Replace with detail screen when available
@@ -351,67 +379,65 @@ export default function ListingsScreen({ navigation }: ListingsScreenProps) {
           shadowRadius: 4,
           elevation: 2,
           overflow: 'hidden',
-          flexDirection: 'row',
-          padding: 12, // Added padding for better spacing
         }}
       >
-        <Image
-          source={{ uri: item.imageUrl[0] }}
-          style={{
-            width: 100,
-            height: 100,
-            borderRadius: 8,
-            marginRight: 12, // Added margin for spacing
-          }}
-          resizeMode="cover"
-        />
-        <View style={{ flex: 1 }}>
-          <Text
-            numberOfLines={1}
-            style={{
-              fontSize: 16,
-              fontWeight: '500',
-              color: colors.text,
-              marginBottom: 4,
-            }}
-          >
-            {item.title}
-          </Text>
-          <Text
-            style={{
-              color: colors.primary,
-              fontSize: 16,
-              fontWeight: '700',
-              marginBottom: 4,
-            }}
-          >
-            €{item.price}
-          </Text>
-          <Text
-            style={{
-              fontSize: 13,
-              color: colors.textTertiary,
-              marginBottom: 4,
-            }}
-          >
-            {item.location} • {formatDistanceToNow(new Date(item.created_at), { addSuffix: true })}
-          </Text>
-          <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-            <FontAwesome
-              name={category.icon}
-              size={14}
-              color={colors.primary}
-              style={{ marginRight: 8 }}
-            />
+        <View style={{ flexDirection: 'row' }}>
+          <Image
+            source={{ uri: getFirstImageUrl(item.imageUrl) }}
+            style={{ width: 120, height: 120 }}
+            resizeMode="cover"
+          />
+          <View style={{ flex: 1 }}>
+            <Text
+              numberOfLines={1}
+              style={{
+                fontSize: 16,
+                fontWeight: '500',
+                color: colors.text,
+                marginBottom: 4,
+              }}
+            >
+              {item.title}
+            </Text>
+            <Text
+              style={{
+                color: colors.primary,
+                fontSize: 16,
+                fontWeight: '700',
+                marginBottom: 4,
+              }}
+            >
+              €{item.price}
+            </Text>
             <Text
               style={{
                 fontSize: 13,
-                fontWeight: '500',
-                color: colors.primary,
+                color: colors.textTertiary,
+                marginBottom: 4,
               }}
             >
-              {category.name}
+              {item.location} •{' '}
+              {formatDistanceToNow(new Date(item.created_at), {
+                addSuffix: true,
+              })}
             </Text>
+            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+              <FontAwesome
+                name={category.icon}
+                size={14}
+                color={colors.primary}
+                style={{ marginRight: 8 }}
+              />
+              <Text
+                style={{
+                  fontSize: 13,
+                  fontWeight: '500',
+                  color: colors.primary,
+                }}
+              >
+                {category.name}
+              </Text>
+            </View>
           </View>
         </View>
       </TouchableOpacity>
@@ -618,7 +644,9 @@ export default function ListingsScreen({ navigation }: ListingsScreenProps) {
           left: 0,
           right: 0,
           bottom: 0,
-          backgroundColor: isFilterOpen ? colors.filterBackground : 'transparent',
+          backgroundColor: isFilterOpen
+            ? colors.filterBackground
+            : 'transparent',
           zIndex: 10,
           pointerEvents: isFilterOpen ? 'auto' : 'none',
         }}
@@ -894,9 +922,7 @@ export default function ListingsScreen({ navigation }: ListingsScreenProps) {
               }}
               onPress={() => setIsFilterOpen(false)}
             >
-              <Text
-                style={{ color: 'white', fontWeight: '600', fontSize: 16 }}
-              >
+              <Text style={{ color: 'white', fontWeight: '600', fontSize: 16 }}>
                 Apply Filters
               </Text>
             </TouchableOpacity>

@@ -10,26 +10,28 @@ export const uploadImage = async (
     throw new Error('No images provided')
   }
 
-  const formData = new FormData()
-  formData.append('listing_title', listing_title)
-
-  images.forEach((image, index) => {
-    const file = {
-      uri: image.uri,
-      type: image.type || 'image/jpeg',
-      name: image.name || `image-${index}.jpg`,
-    }
-    formData.append(`file${index}`, file as any)
-  })
-
   try {
     const token = await AsyncStorage.getItem('accessToken')
     if (!token) {
       throw new Error('Authentication required. Please log in.')
     }
 
+    // Create a single FormData object for all images
+    const formData = new FormData()
+    formData.append('listing_title', listing_title)
+
+    // The backend expects files with the key "file" (not "file0", "file1", etc.)
+    images.forEach(image => {
+      formData.append('file', {
+        uri: image.uri,
+        type: image.type || 'image/jpeg',
+        name: image.name || `image-${Date.now()}.jpg`,
+      } as any)
+    })
+
     console.log('Uploading images to /api/upload/listing_image')
 
+    // Use the correct endpoint that matches the backend Go code
     const response = await api.post('/api/upload/listing_image', formData, {
       headers: {
         Authorization: `Bearer ${token}`,
@@ -39,29 +41,43 @@ export const uploadImage = async (
 
     console.log('Image upload response:', response.data)
 
-    if (!response.data.success) {
-      throw new Error(
-        'Failed to upload image: Server returned unsuccessful response',
-      )
+    // Check if the response has the expected format
+    if (!response.data || !response.data.success) {
+      console.error('Unexpected response format:', response.data)
+      throw new Error('Invalid response format from server')
     }
 
-    // If the response data is empty but success is true, return the original image URIs
+    // Extract URLs from the response
+    let urls: string[] = []
+
+    // If the response data is empty but success is true, use the original image URIs
     if (!response.data.data || response.data.data.length === 0) {
       console.log('No URLs returned from server, using original image URIs')
-      return images.map(img => img.uri)
+      urls = images.map(img => img.uri)
+    }
+    // If we have URLs in the response as an array
+    else if (Array.isArray(response.data.data)) {
+      urls = response.data.data
+    }
+    // If we have a different format with urls property
+    else if (
+      response.data.data.urls &&
+      Array.isArray(response.data.data.urls)
+    ) {
+      urls = response.data.data.urls
+    }
+    // If we have a single URL string
+    else if (typeof response.data.data === 'string') {
+      urls = [response.data.data]
+    } else {
+      console.error('Unexpected response format:', response.data)
+      throw new Error('Invalid response format from server')
     }
 
-    // If we have URLs in the response, use those
-    if (Array.isArray(response.data.data)) {
-      return response.data.data
-    }
+    console.log('Successfully uploaded images, received URLs:', urls)
 
-    // If we have a different format, try to extract URLs
-    if (response.data.data.urls && Array.isArray(response.data.data.urls)) {
-      return response.data.data.urls
-    }
-
-    throw new Error('Invalid response format from server')
+    // Return the URLs in the format expected by the listing creation
+    return { urls }
   } catch (error) {
     console.error('Image upload error:', error)
     throw error

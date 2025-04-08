@@ -73,13 +73,13 @@ export default function PostScreen() {
     name: string
     iconName: string
   }[] = [
-    { name: 'New', iconName: 'FaBoxOpen' },
-    { name: 'Like New', iconName: 'MdCheckCircleOutline' },
-    { name: 'Very Good', iconName: 'FaStar' },
-    { name: 'Good', iconName: 'MdThumbUp' },
-    { name: 'Acceptable', iconName: 'RiCheckboxBlankCircleLine' },
-    { name: 'For Parts/Not Working', iconName: 'MdBuild' },
-  ]
+      { name: 'New', iconName: 'FaBoxOpen' },
+      { name: 'Like New', iconName: 'MdCheckCircleOutline' },
+      { name: 'Very Good', iconName: 'FaStar' },
+      { name: 'Good', iconName: 'MdThumbUp' },
+      { name: 'Acceptable', iconName: 'RiCheckboxBlankCircleLine' },
+      { name: 'For Parts/Not Working', iconName: 'MdBuild' },
+    ]
 
   // Eco-friendly attributes
   const ecoAttributes: string[] = [
@@ -272,21 +272,25 @@ export default function PostScreen() {
       }
 
       // 1. Upload the images first
-      let imageUrls
+      let imageUrlData
       try {
         if (images.length === 0) {
           throw new Error('Please add at least one image')
         }
 
         console.log('Starting image upload with', images.length, 'images')
-        imageUrls = await uploadImage(images, formData.title)
+        imageUrlData = await uploadImage(images, formData.title)
 
-        if (!imageUrls || !Array.isArray(imageUrls) || imageUrls.length === 0) {
-          console.error('Invalid image URLs received:', imageUrls)
+        if (
+          !imageUrlData ||
+          !imageUrlData.urls ||
+          !Array.isArray(imageUrlData.urls) ||
+          imageUrlData.urls.length === 0
+        ) {
+          console.error('Invalid image URLs received:', imageUrlData)
           throw new Error('Failed to get image URLs from server')
         }
 
-        console.log('Successfully uploaded images, received URLs:', imageUrls)
       } catch (error) {
         console.error('Image upload error:', error)
         throw new Error(
@@ -307,7 +311,7 @@ export default function PostScreen() {
         negotiable: formData.negotiable,
         ecoAttributes: formData.ecoAttributes,
         ecoScore: calculateEcoScore(formData.ecoAttributes),
-        imageUrl: imageUrls,
+        imageUrl: imageUrlData.urls,
         seller: {
           id: user.id,
           name: user.name,
