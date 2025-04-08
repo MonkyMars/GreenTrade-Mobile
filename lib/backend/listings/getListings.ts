@@ -7,7 +7,7 @@ export const getListings = async (
 ): Promise<FetchedListing | FetchedListing[]> => {
   try {
     if (id) {
-      const response = await api.get(`/listing/${id}`)
+      const response = await api.get(`/listings/${id}`)
       if (!response.data || !response.data.success) {
         throw new Error('Failed to fetch listing')
       }

@@ -66,10 +66,7 @@ export default function HomeScreen() {
 
   // Handler for navigating to listing details
   const handleListingPress = (id: number) => {
-    // In a real app, you would navigate to the listing details screen
-    console.log(`Navigating to listing ${id}`)
-    // For now, we'll navigate to listings page
-    navigation.navigate('Listings')
+    navigation.navigate(`ListingDetail`, { id })
   }
 
   // Safe function to get category - handles null case

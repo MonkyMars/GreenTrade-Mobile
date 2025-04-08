@@ -119,7 +119,7 @@ export default function ListingsScreen({ navigation }: ListingsScreenProps) {
 
     return (
       <TouchableOpacity
-        onPress={() => navigation.navigate('Home')} // Replace with detail screen when available
+        onPress={() => navigation.navigate(`ListingDetail`, { id: item.id })} // Replace with detail screen when available
         style={{
           width: columnWidth,
           backgroundColor: colors.card,
@@ -368,7 +368,7 @@ export default function ListingsScreen({ navigation }: ListingsScreenProps) {
 
     return (
       <TouchableOpacity
-        onPress={() => navigation.navigate('Home')} // Replace with detail screen when available
+        onPress={() => navigation.navigate(`ListingDetail`, { id: item.id })}
         style={{
           backgroundColor: colors.card,
           marginBottom: 16,

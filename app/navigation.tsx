@@ -4,6 +4,7 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack/lib/ty
 import HomeScreen from './home'
 import LoginScreen from './login'
 import ListingsScreen from './listings'
+import ListingDetailScreen from './listing/[id]';
 import PostScreen from './post'
 import AccountScreen from './account'
 import { useAuth } from 'lib/auth/AuthContext'
@@ -16,6 +17,7 @@ export type RootStackParamList = {
   Navigation: undefined
   Post: undefined
   Listings: undefined
+  ListingDetail: { id: number }
 }
 
 // Create the stack navigator without generic type parameter
@@ -37,6 +39,7 @@ export function Navigation() {
         <Stack.Screen name="Login" component={LoginScreen} />
         <Stack.Screen name="Home" component={HomeScreen} />
         <Stack.Screen name="Listings" component={ListingsScreen} />
+        <Stack.Screen name="ListingDetail" component={ListingDetailScreen} />
         <Stack.Screen name="Post" component={PostScreen} />
         <Stack.Screen name="Account" component={AccountScreen} />
       </Stack.Navigator>
