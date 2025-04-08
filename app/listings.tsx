@@ -36,7 +36,7 @@ export default function ListingsScreen({ navigation }: ListingsScreenProps) {
   const { width } = useWindowDimensions()
   const { colors, isDark } = useTheme()
   const [activeTab, setActiveTab] = useState('listings')
-  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid')
+  const [viewMode, setViewMode] = useState<'grid' | 'list'>('list')
   const [isFilterOpen, setIsFilterOpen] = useState(false)
   const [selectedCategory, setSelectedCategory] = useState('all')
   const [originalListings, setOriginalListings] = useState<FetchedListing[]>([])
@@ -546,23 +546,6 @@ export default function ListingsScreen({ navigation }: ListingsScreenProps) {
                 style={{
                   padding: 8,
                   backgroundColor:
-                    viewMode === 'grid' ? colors.highlight : colors.card,
-                }}
-                onPress={() => setViewMode('grid')}
-              >
-                <Feather
-                  name="grid"
-                  size={20}
-                  color={
-                    viewMode === 'grid' ? colors.primary : colors.textTertiary
-                  }
-                />
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                style={{
-                  padding: 8,
-                  backgroundColor:
                     viewMode === 'list' ? colors.highlight : colors.card,
                 }}
                 onPress={() => setViewMode('list')}
@@ -572,6 +555,23 @@ export default function ListingsScreen({ navigation }: ListingsScreenProps) {
                   size={20}
                   color={
                     viewMode === 'list' ? colors.primary : colors.textTertiary
+                  }
+                />
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={{
+                  padding: 8,
+                  backgroundColor:
+                    viewMode === 'grid' ? colors.highlight : colors.card,
+                }}
+                onPress={() => setViewMode('grid')}
+              >
+                <Feather
+                  name="grid"
+                  size={20}
+                  color={
+                    viewMode === 'grid' ? colors.primary : colors.textTertiary
                   }
                 />
               </TouchableOpacity>

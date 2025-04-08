@@ -10,7 +10,24 @@
     "experiments": {
       "tsconfigPaths": true
     },
-    "plugins": [],
+    "plugins": [
+      "expo-router",
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/splash-light.png",
+          "resizeMode": "contain",
+          "backgroundColor": "#10b880",
+          "imageWidth": 200,
+          "dark": {
+            "image": "./assets/splash-dark.png",
+            "resizeMode": "contain",
+            "backgroundColor": "#10b880",
+            "imageWidth": 200
+          }
+        }
+      ]
+    ],
     "orientation": "portrait",
     "icon": "./assets/icons/playstore.png",
     "userInterfaceStyle": "automatic",
@@ -26,7 +43,9 @@
     "android": {
       "package": "com.greentrade.android",
       "adaptiveIcon": {
-        "foregroundImage": "./assets/icons/playstore.png",
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "monochromeImage": "./assets/adaptive-icon.png",
+        "backgroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#10b880"
       }
     },
