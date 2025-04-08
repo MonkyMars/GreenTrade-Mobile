@@ -141,7 +141,34 @@ export default function BottomNavigation({
         style={{
           alignItems: 'center',
           padding: 8,
-          borderTopWidth: activeTab === 'account' || 'login' ? 2 : 0,
+          borderTopWidth: activeTab === 'messages' ? 2 : 0,
+          borderTopColor:
+            activeTab === 'messages' ? colors.primary : 'transparent',
+        }}
+        onPress={() => handleTabPress('messages')}
+      >
+        <FontAwesome
+          name="comment"
+          size={20}
+          color={activeTab === 'messages' ? colors.primary : colors.textTertiary}
+        />
+        <Text
+          style={{
+            fontSize: 12,
+            color:
+              activeTab === 'messages' ? colors.primary : colors.textTertiary,
+            marginTop: 4,
+          }}
+        >
+          Messages
+        </Text>
+      </TouchableOpacity>
+
+      <TouchableOpacity
+        style={{
+          alignItems: 'center',
+          padding: 8,
+          borderTopWidth: activeTab === 'account' || activeTab === 'login' ? 2 : 0,
           borderTopColor:
             activeTab === 'account' || activeTab === 'login' ? colors.primary : 'transparent',
         }}
