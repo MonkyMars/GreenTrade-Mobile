@@ -384,10 +384,10 @@ export default function ListingsScreen({ navigation }: ListingsScreenProps) {
         <View style={{ flexDirection: 'row' }}>
           <Image
             source={{ uri: getFirstImageUrl(item.imageUrl) }}
-            style={{ width: 120, height: 120 }}
+            style={{ width: 120, height: 120, marginRight: 8 }}
             resizeMode="cover"
           />
-          <View style={{ flex: 1 }}>
+          <View style={{ flex: 1, marginLeft: 8, paddingVertical: 8 }}>
             <Text
               numberOfLines={1}
               style={{
