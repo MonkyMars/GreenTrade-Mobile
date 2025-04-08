@@ -165,7 +165,7 @@ export default function PostScreen() {
         mediaTypes: ['images'],
         allowsEditing: true,
         aspect: [4, 3],
-        quality: 0.8, // Slightly reduce quality to help with upload size
+        quality: 1,
       })
 
       if (!result.canceled) {
