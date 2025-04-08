@@ -1,37 +1,69 @@
+import AsyncStorage from '@react-native-async-storage/async-storage'
 import { UploadListing } from '../../types/main'
 import api from '../api/axiosConfig'
 
 export const uploadImage = async (
-  files: File[],
+  images: { uri: string; type?: string; name?: string }[],
   listing_title: UploadListing['title'],
 ) => {
+  if (!images || images.length === 0) {
+    throw new Error('No images provided')
+  }
+
   const formData = new FormData()
   formData.append('listing_title', listing_title)
 
-  files.forEach((file: File) => {
-    formData.append('file', file) // backends expects files to be in "file" field
+  images.forEach((image, index) => {
+    const file = {
+      uri: image.uri,
+      type: image.type || 'image/jpeg',
+      name: image.name || `image-${index}.jpg`,
+    }
+    formData.append(`file${index}`, file as any)
   })
 
   try {
-    const token = localStorage.getItem('accessToken')
+    const token = await AsyncStorage.getItem('accessToken')
     if (!token) {
       throw new Error('Authentication required. Please log in.')
     }
 
-    const response = await api.post(`/upload/listing_image`, {
-      method: 'POST',
+    console.log('Uploading images to /api/upload/listing_image')
+
+    const response = await api.post('/api/upload/listing_image', formData, {
       headers: {
         Authorization: `Bearer ${token}`,
-        // Note: Do not set Content-Type header with FormData as browser will set it with boundary
+        'Content-Type': 'multipart/form-data',
       },
-      body: formData,
     })
 
-    if (!response.data.success) throw new Error('Failed to upload image')
-    const data = await response.data.data
-    return await data // Should return { urls: string[] }
+    console.log('Image upload response:', response.data)
+
+    if (!response.data.success) {
+      throw new Error(
+        'Failed to upload image: Server returned unsuccessful response',
+      )
+    }
+
+    // If the response data is empty but success is true, return the original image URIs
+    if (!response.data.data || response.data.data.length === 0) {
+      console.log('No URLs returned from server, using original image URIs')
+      return images.map(img => img.uri)
+    }
+
+    // If we have URLs in the response, use those
+    if (Array.isArray(response.data.data)) {
+      return response.data.data
+    }
+
+    // If we have a different format, try to extract URLs
+    if (response.data.data.urls && Array.isArray(response.data.data.urls)) {
+      return response.data.data.urls
+    }
+
+    throw new Error('Invalid response format from server')
   } catch (error) {
-    console.error(error)
-    throw error // Re-throw to be handled by the caller
+    console.error('Image upload error:', error)
+    throw error
   }
 }

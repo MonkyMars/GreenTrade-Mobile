@@ -27,11 +27,24 @@ export default function HomeScreen() {
     const fetchData = async () => {
       setLoading(true)
       try {
-        setUsername(user?.name as string)
-        // Fetch recent listings from API
-        const listings = await getListings() as FetchedListing[]
-        // Get only the 3 most recent listings
-        setRecentListings(listings.slice(0, 3))
+        if (user?.name) {
+          setUsername(user.name)
+        }
+
+        try {
+          // Fetch recent listings from API
+          const listings = await getListings()
+          // Get only the 3 most recent listings
+          if (Array.isArray(listings)) {
+            setRecentListings(listings.slice(0, 3))
+          } else {
+            console.error('Listings is not an array:', listings)
+            setRecentListings([])
+          }
+        } catch (listingError) {
+          console.error('Error fetching listings:', listingError)
+          setRecentListings([])
+        }
       } catch (error) {
         console.error('Error fetching home page data:', error)
       } finally {
@@ -39,8 +52,11 @@ export default function HomeScreen() {
       }
     }
 
-    fetchData()
-  }, [])
+    // Only run the effect if auth is not loading
+    if (!authLoading) {
+      fetchData()
+    }
+  }, [user, authLoading])
 
   // Handler for navigating to listing details
   const handleListingPress = (id: number) => {
@@ -48,6 +64,22 @@ export default function HomeScreen() {
     console.log(`Navigating to listing ${id}`)
     // For now, we'll navigate to listings page
     navigation.navigate('Listings')
+  }
+
+  // Safe function to get category - handles null case
+  const getSafeCategory = (categoryName: string) => {
+    if (!categoryName) return { name: "Unknown", icon: "tag" };
+    const category = findCategory(categoryName);
+    return category || { name: "Unknown", icon: "tag" };
+  }
+
+  if (authLoading) {
+    return (
+      <SafeAreaView style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+        <ActivityIndicator size="large" color="#10b981" />
+        <Text style={{ marginTop: 10, color: '#9ca3af' }}>Loading...</Text>
+      </SafeAreaView>
+    )
   }
 
   return (
@@ -184,7 +216,8 @@ export default function HomeScreen() {
               <View style={styles.listingsContainer}>
                 {recentListings.length > 0 ? (
                   recentListings.map(item => {
-                    const category = findCategory(item.category);
+                    // Using our safe function to get category
+                    const category = getSafeCategory(item.category);
                     return (
                       <TouchableOpacity
                         key={item.id}

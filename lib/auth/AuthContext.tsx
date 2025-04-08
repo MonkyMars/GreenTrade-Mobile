@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from "react";
+import React, { createContext, useContext, useState, useEffect, useRef } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import axios from "axios";
 import { User } from "../types/user";
@@ -29,8 +29,39 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     const [loading, setLoading] = useState(true);
     const [tokenRefreshing, setTokenRefreshing] = useState(false);
 
+    // Add refs to track refresh state
+    const refreshInProgress = useRef(false);
+    const refreshAttempts = useRef(0);
+    const maxRefreshAttempts = 3;
+    const lastRefreshTime = useRef(0);
+
     // Function to refresh access token
     const refreshTokens = async (): Promise<boolean> => {
+        // Prevent concurrent refresh attempts
+        if (refreshInProgress.current) {
+            console.log("Token refresh already in progress, skipping...");
+            return false;
+        }
+
+        // Implement rate limiting
+        const now = new Date().getTime();
+        const timeSinceLastRefresh = now - lastRefreshTime.current;
+        if (lastRefreshTime.current > 0 && timeSinceLastRefresh < 5000) { // Increased to 5 seconds
+            console.log(`Rate limiting refresh (${timeSinceLastRefresh}ms since last attempt)`);
+            return false;
+        }
+        lastRefreshTime.current = now;
+
+        // Check max attempts
+        if (refreshAttempts.current >= maxRefreshAttempts) {
+            console.error(`Maximum refresh attempts (${maxRefreshAttempts}) reached. Logging out.`);
+            await logout();
+            return false;
+        }
+
+        refreshAttempts.current += 1;
+        refreshInProgress.current = true;
+
         try {
             setTokenRefreshing(true);
             const refreshToken = await AsyncStorage.getItem("refreshToken");
@@ -39,22 +70,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
                 throw new Error("No refresh token found");
             }
 
-            // Call refresh endpoint with the refresh token
+            console.log("Attempting to refresh token with:", refreshToken.substring(0, 10) + "...");
+
+            // Match the backend's expected format exactly
             const response = await api.post(
                 `/auth/refresh`,
-                {
-                    body: {
-                        refreshToken,
-                    }
-                }
+                { refreshToken } // This needs to match your backend's expected structure
             );
 
-            if (!response.data || !response.data.accessToken) {
+            // Match your backend response structure
+            const { accessToken, refreshToken: newRefreshToken, expiresIn } = response.data.data;
+
+            if (!accessToken || !newRefreshToken) {
                 throw new Error("Invalid refresh token response");
             }
-
-            // Update tokens in storage
-            const { accessToken, refreshToken: newRefreshToken, expiresIn } = response.data;
 
             await AsyncStorage.setItem("accessToken", accessToken);
             await AsyncStorage.setItem("refreshToken", newRefreshToken);
@@ -63,42 +92,63 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
             const expirationTime = new Date().getTime() + expiresIn * 1000;
             await AsyncStorage.setItem("tokenExpiration", expirationTime.toString());
 
-            // Update authorization header
+            // Update authorization header - match your backend's expected format
             api.defaults.headers.common["Authorization"] = `Bearer ${accessToken}`;
+
+            console.log("Token refresh successful");
+            // Reset attempt counter on success
+            refreshAttempts.current = 0;
 
             return true;
         } catch (error) {
             console.error("Token refresh failed:", error);
 
-            // Clear auth state on refresh failure
-            await AsyncStorage.multiRemove(["accessToken", "refreshToken", "userId", "tokenExpiration"]);
-            delete api.defaults.headers.common["Authorization"];
-            setUser(null);
+            // Progressive backoff on failures
+            await new Promise(resolve =>
+                setTimeout(resolve, Math.min(1000 * refreshAttempts.current, 5000))
+            );
+
+            // Only clear auth state after max attempts
+            if (refreshAttempts.current >= maxRefreshAttempts) {
+                console.log("Max refresh attempts reached, logging out");
+                await AsyncStorage.multiRemove(["accessToken", "refreshToken", "userId", "tokenExpiration"]);
+                delete api.defaults.headers.common["Authorization"];
+                setUser(null);
+            }
 
             return false;
         } finally {
             setTokenRefreshing(false);
+            refreshInProgress.current = false;
         }
     };
 
-    // Set up axios interceptor for token refresh
+    // Fix the axios interceptor to avoid infinite refresh loops
     useEffect(() => {
         const interceptor = api.interceptors.response.use(
             response => response,
             async error => {
                 const originalRequest = error.config;
 
-                // If error is 401 and we haven't tried refreshing token yet
-                if (error.response?.status === 401 && !originalRequest._retry) {
+                // Prevent infinite retry loops - check retry flag and status code
+                if (
+                    error.response?.status === 401 &&
+                    !originalRequest._retry &&
+                    refreshAttempts.current < maxRefreshAttempts
+                ) {
                     originalRequest._retry = true;
 
                     try {
+                        console.log("401 error detected, attempting token refresh");
                         const refreshSuccess = await refreshTokens();
                         if (refreshSuccess) {
                             // Retry the original request with new token
                             const token = await AsyncStorage.getItem("accessToken");
+                            // Ensure token format matches what your backend expects
                             originalRequest.headers["Authorization"] = `Bearer ${token}`;
                             return api(originalRequest);
+                        } else {
+                            console.log("Token refresh failed, rejecting original request");
                         }
                     } catch (refreshError) {
                         console.error("Error during token refresh:", refreshError);
@@ -283,16 +333,24 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
         console.log('Logging out user');
 
         try {
+            // Reset refresh attempts and tracking
+            refreshAttempts.current = 0;
+            refreshInProgress.current = false;
+            lastRefreshTime.current = 0;
+
             // Clear stored data
-            await AsyncStorage.multiRemove(["accessToken", "refreshToken", "userId", "tokenExpiration"]);
+            await AsyncStorage.multiRemove([
+                "accessToken",
+                "refreshToken",
+                "userId",
+                "tokenExpiration"
+            ]);
 
             // Clear auth headers
             delete api.defaults.headers.common["Authorization"];
 
             // Clear user state
             setUser(null);
-
-            // Note: Navigation will be handled in the component that calls this function
         } catch (error) {
             console.error("Logout error:", error);
         }

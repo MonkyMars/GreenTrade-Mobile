@@ -1,27 +1,27 @@
+import AsyncStorage from '@react-native-async-storage/async-storage'
 import { UploadListing } from '../../types/main'
 import api from '../api/axiosConfig'
 
 export const uploadListing = async (listing: UploadListing) => {
   try {
-    const token = localStorage.getItem('accessToken')
+    const token = await AsyncStorage.getItem('accessToken')
     if (!token) {
       throw new Error('Authentication required. Please log in.')
     }
 
-    const response = await api.post(`/listings`, {
-      method: 'POST',
+    const response = await api.post('/api/listings', listing, {
       headers: {
         'Content-Type': 'application/json',
         Authorization: `Bearer ${token}`,
       },
-      body: JSON.stringify(listing),
     })
 
-    if (!response.data.sucess) throw new Error('Failed to upload listing')
+    console.log('Upload response:', response.data)
+    if (!response.data.success) throw new Error('Failed to upload listing')
 
-    return await response.data.data
+    return response.data.data
   } catch (error) {
-    console.error(error)
-    throw error // Re-throw the error to be handled by the caller
+    console.error('Upload listing error:', error)
+    throw error
   }
 }

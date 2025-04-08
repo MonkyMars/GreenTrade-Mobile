@@ -1,9 +1,10 @@
+import AsyncStorage from '@react-native-async-storage/async-storage'
 import { UploadListing } from '../../types/main'
 import api from '../api/axiosConfig'
 
 export const uploadListing = async (listing: UploadListing) => {
   try {
-    const token = localStorage.getItem('accessToken')
+    const token = AsyncStorage.getItem('accessToken')
     if (!token) {
       throw new Error('Authentication required. Please log in.')
     }
