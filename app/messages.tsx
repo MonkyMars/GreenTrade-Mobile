@@ -98,90 +98,90 @@ const mockChatThreads: ChatThread[] = [
 
 // Mock data for chat messages
 const mockMessages: { [key: string]: Message[] } = {
-    // '1': [
-    //     {
-    //         id: '1-1',
-    //         text: 'Hello, I saw your listing for the eco-friendly plant pot. Is it still available?',
-    //         senderId: 'user1',
-    //         receiverId: 'currentUser',
-    //         timestamp: new Date(Date.now() - 1000 * 60 * 10), // 10 minutes ago
-    //         read: true
-    //     },
-    //     {
-    //         id: '1-2',
-    //         text: 'Yes, it is! Are you interested in purchasing it?',
-    //         senderId: 'currentUser',
-    //         receiverId: 'user1',
-    //         timestamp: new Date(Date.now() - 1000 * 60 * 8), // 8 minutes ago
-    //         read: true
-    //     },
-    //     {
-    //         id: '1-3',
-    //         text: 'Definitely! I love that it\'s made from recycled materials.',
-    //         senderId: 'user1',
-    //         receiverId: 'currentUser',
-    //         timestamp: new Date(Date.now() - 1000 * 60 * 7), // 7 minutes ago
-    //         read: true
-    //     },
-    //     {
-    //         id: '1-4',
-    //         text: 'Great! Would you like to arrange a pickup or would you prefer shipping?',
-    //         senderId: 'currentUser',
-    //         receiverId: 'user1',
-    //         timestamp: new Date(Date.now() - 1000 * 60 * 6), // 6 minutes ago
-    //         read: true
-    //     },
-    //     {
-    //         id: '1-5',
-    //         text: 'Is this plant pot still available?',
-    //         senderId: 'user1',
-    //         receiverId: 'currentUser',
-    //         timestamp: new Date(Date.now() - 1000 * 60 * 5), // 5 minutes ago
-    //         read: false
-    //     },
-    // ],
-    // '2': [
-    //     {
-    //         id: '2-1',
-    //         text: 'Hi there, I\'m interested in the bamboo cutlery set you have listed.',
-    //         senderId: 'user2',
-    //         receiverId: 'currentUser',
-    //         timestamp: new Date(Date.now() - 1000 * 60 * 120), // 2 hours ago
-    //         read: true
-    //     },
-    //     {
-    //         id: '2-2',
-    //         text: 'Hello! Yes, I still have it. It\'s a complete set with a carrying case.',
-    //         senderId: 'currentUser',
-    //         receiverId: 'user2',
-    //         timestamp: new Date(Date.now() - 1000 * 60 * 115), // 1 hour 55 minutes ago
-    //         read: true
-    //     },
-    //     {
-    //         id: '2-3',
-    //         text: 'Perfect! I\'d like to buy it. How much is shipping?',
-    //         senderId: 'user2',
-    //         receiverId: 'currentUser',
-    //         timestamp: new Date(Date.now() - 1000 * 60 * 90), // 1 hour 30 minutes ago
-    //         read: true
-    //     },
-    //     {
-    //         id: '2-4',
-    //         text: 'Shipping would be €3.50, or you can pick it up for free if you\'re local.',
-    //         senderId: 'currentUser',
-    //         receiverId: 'user2',
-    //         timestamp: new Date(Date.now() - 1000 * 60 * 70), // 1 hour 10 minutes ago
-    //         read: true
-    //     },
-    //     {
-    //         id: '2-5',
-    //         text: 'Great! I can pick it up tomorrow',
-    //         senderId: 'user2',
-    //         receiverId: 'currentUser',
-    //         timestamp: new Date(Date.now() - 1000 * 60 * 60), // 1 hour ago
-    //         read: true
-    //     },
-    // ]
+    '1': [
+        {
+            id: '1-1',
+            text: 'Hello, I saw your listing for the eco-friendly plant pot. Is it still available?',
+            senderId: 'user1',
+            receiverId: 'currentUser',
+            timestamp: new Date(Date.now() - 1000 * 60 * 10), // 10 minutes ago
+            read: true
+        },
+        {
+            id: '1-2',
+            text: 'Yes, it is! Are you interested in purchasing it?',
+            senderId: 'currentUser',
+            receiverId: 'user1',
+            timestamp: new Date(Date.now() - 1000 * 60 * 8), // 8 minutes ago
+            read: true
+        },
+        {
+            id: '1-3',
+            text: 'Definitely! I love that it\'s made from recycled materials.',
+            senderId: 'user1',
+            receiverId: 'currentUser',
+            timestamp: new Date(Date.now() - 1000 * 60 * 7), // 7 minutes ago
+            read: true
+        },
+        {
+            id: '1-4',
+            text: 'Great! Would you like to arrange a pickup or would you prefer shipping?',
+            senderId: 'currentUser',
+            receiverId: 'user1',
+            timestamp: new Date(Date.now() - 1000 * 60 * 6), // 6 minutes ago
+            read: true
+        },
+        {
+            id: '1-5',
+            text: 'Is this plant pot still available?',
+            senderId: 'user1',
+            receiverId: 'currentUser',
+            timestamp: new Date(Date.now() - 1000 * 60 * 5), // 5 minutes ago
+            read: false
+        },
+    ],
+    '2': [
+        {
+            id: '2-1',
+            text: 'Hi there, I\'m interested in the bamboo cutlery set you have listed.',
+            senderId: 'user2',
+            receiverId: 'currentUser',
+            timestamp: new Date(Date.now() - 1000 * 60 * 120), // 2 hours ago
+            read: true
+        },
+        {
+            id: '2-2',
+            text: 'Hello! Yes, I still have it. It\'s a complete set with a carrying case.',
+            senderId: 'currentUser',
+            receiverId: 'user2',
+            timestamp: new Date(Date.now() - 1000 * 60 * 115), // 1 hour 55 minutes ago
+            read: true
+        },
+        {
+            id: '2-3',
+            text: 'Perfect! I\'d like to buy it. How much is shipping?',
+            senderId: 'user2',
+            receiverId: 'currentUser',
+            timestamp: new Date(Date.now() - 1000 * 60 * 90), // 1 hour 30 minutes ago
+            read: true
+        },
+        {
+            id: '2-4',
+            text: 'Shipping would be €3.50, or you can pick it up for free if you\'re local.',
+            senderId: 'currentUser',
+            receiverId: 'user2',
+            timestamp: new Date(Date.now() - 1000 * 60 * 70), // 1 hour 10 minutes ago
+            read: true
+        },
+        {
+            id: '2-5',
+            text: 'Great! I can pick it up tomorrow',
+            senderId: 'user2',
+            receiverId: 'currentUser',
+            timestamp: new Date(Date.now() - 1000 * 60 * 60), // 1 hour ago
+            read: true
+        },
+    ]
 };
 
 export default function MessagesScreen() {
