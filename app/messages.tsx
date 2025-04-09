@@ -19,6 +19,7 @@ import {
 } from "react-native";
 import { FontAwesome, Feather, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useNavigation } from "@react-navigation/native";
+import ProtectedRoute from "components/ProtectedRoute";
 
 // Types for our messages
 interface Message {
@@ -553,287 +554,289 @@ export default function MessagesScreen() {
 
     return (
         <>
-            <SafeAreaView style={{
-                flex: 1,
-                backgroundColor: colors.background,
-                position: 'relative',
-                width: '100%',
-            }}>
-                <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} />
+            <ProtectedRoute>
+                <SafeAreaView style={{
+                    flex: 1,
+                    backgroundColor: colors.background,
+                    position: 'relative',
+                    width: '100%',
+                }}>
+                    <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} />
 
-                {/* Threads List View */}
-                {!selectedThreadId && (
-                    <Animated.View
-                        style={{
-                            flex: 1,
-                            opacity: fadeAnim,
-                            transform: [{ translateY: slideAnim }]
-                        }}
-                    >
-                        {/* Header */}
-                        <View style={{
-                            backgroundColor: colors.card,
-                            padding: 16,
-                            paddingTop: 32,
-                            borderBottomWidth: 1,
-                            borderBottomColor: colors.borderLight,
-                            shadowColor: colors.shadow,
-                            shadowOffset: { width: 0, height: 1 },
-                            shadowOpacity: 0.05,
-                            shadowRadius: 2,
-                            elevation: 1,
-                        }}>
-                            <Text style={{ fontSize: 24, fontWeight: '700', color: colors.text }}>
-                                Messages
-                            </Text>
-                            <Text style={{ fontSize: 14, color: colors.textTertiary, marginTop: 4 }}>
-                                Connect with eco-conscious buyers and sellers
-                            </Text>
-                        </View>
-
-                        {/* Search Input */}
-                        <View style={{ padding: 16 }}>
+                    {/* Threads List View */}
+                    {!selectedThreadId && (
+                        <Animated.View
+                            style={{
+                                flex: 1,
+                                opacity: fadeAnim,
+                                transform: [{ translateY: slideAnim }]
+                            }}
+                        >
+                            {/* Header */}
                             <View style={{
-                                flexDirection: 'row',
-                                alignItems: 'center',
                                 backgroundColor: colors.card,
-                                borderRadius: 12,
-                                borderWidth: 1,
-                                borderColor: colors.border,
-                                paddingHorizontal: 12,
-                                paddingVertical: 10,
+                                padding: 16,
+                                paddingTop: 32,
+                                borderBottomWidth: 1,
+                                borderBottomColor: colors.borderLight,
+                                shadowColor: colors.shadow,
+                                shadowOffset: { width: 0, height: 1 },
+                                shadowOpacity: 0.05,
+                                shadowRadius: 2,
+                                elevation: 1,
                             }}>
-                                <Feather name="search" size={20} color={colors.textTertiary} />
-                                <TextInput
-                                    placeholder="Search messages..."
-                                    placeholderTextColor={colors.textTertiary}
-                                    value={searchQuery}
-                                    onChangeText={setSearchQuery}
-                                    style={{
-                                        flex: 1,
-                                        marginLeft: 8,
-                                        color: colors.text,
-                                        fontSize: 15,
-                                    }}
-                                />
-                                {searchQuery.length > 0 && (
-                                    <TouchableOpacity onPress={() => setSearchQuery('')}>
-                                        <Feather name="x" size={18} color={colors.textTertiary} />
-                                    </TouchableOpacity>
-                                )}
-                            </View>
-                        </View>
-
-                        {/* Chat Threads List */}
-                        {chatThreads.length > 0 ? (
-                            <FlatList
-                                data={filteredThreads}
-                                renderItem={renderThreadItem}
-                                keyExtractor={item => item.id}
-                                contentContainerStyle={{
-                                    paddingBottom: 100, // extra padding for bottom nav
-                                }}
-                                ListEmptyComponent={
-                                    searchQuery.length > 0 ? (
-                                        <View style={{ padding: 32, alignItems: 'center' }}>
-                                            <Text style={{ color: colors.textSecondary, textAlign: 'center' }}>
-                                                No messages found matching "{searchQuery}"
-                                            </Text>
-                                        </View>
-                                    ) : null
-                                }
-                            />
-                        ) : (
-                            renderEmptyState()
-                        )}
-                    </Animated.View>
-                )}
-
-                {/* Chat Detail View */}
-                {selectedThreadId && (
-                    <Animated.View
-                        style={{
-                            flex: 1,
-                            position: 'absolute',
-                            top: 0,
-                            left: 0,
-                            right: 0,
-                            bottom: 0,
-                            paddingTop: 42,
-                            backgroundColor: colors.background,
-                            transform: [{ translateX: chatSlideAnim }]
-                        }}
-                    >
-                        {/* Chat Header */}
-                        <View style={{
-                            backgroundColor: colors.card,
-                            padding: 16,
-                            borderBottomWidth: 1,
-                            borderBottomColor: colors.borderLight,
-                            shadowColor: colors.shadow,
-                            shadowOffset: { width: 0, height: 1 },
-                            shadowOpacity: 0.05,
-                            shadowRadius: 2,
-                            elevation: 1,
-                            flexDirection: 'row',
-                            alignItems: 'center',
-                        }}>
-                            <TouchableOpacity
-                                onPress={handleBackToThreads}
-                                style={{ marginRight: 12 }}
-                            >
-                                <Feather name="arrow-left" size={24} color={colors.text} />
-                            </TouchableOpacity>
-
-                            <View style={{
-                                width: 40,
-                                height: 40,
-                                borderRadius: 20,
-                                backgroundColor: colors.primaryLight,
-                                justifyContent: 'center',
-                                alignItems: 'center',
-                                marginRight: 12,
-                                position: 'relative'
-                            }}>
-                                {chatThreads.find(t => t.id === selectedThreadId)?.participantImage ? (
-                                    <Image
-                                        source={{ uri: chatThreads.find(t => t.id === selectedThreadId)?.participantImage || undefined }}
-                                        style={{ width: 40, height: 40, borderRadius: 20 }}
-                                    />
-                                ) : (
-                                    <Text style={{ fontSize: 16, fontWeight: '700', color: colors.primary }}>
-                                        {chatThreads.find(t => t.id === selectedThreadId)?.participantName.charAt(0).toUpperCase()}
-                                    </Text>
-                                )}
-
-                                {chatThreads.find(t => t.id === selectedThreadId)?.online && (
-                                    <View style={{
-                                        position: 'absolute',
-                                        bottom: 0,
-                                        right: 0,
-                                        width: 12,
-                                        height: 12,
-                                        borderRadius: 6,
-                                        backgroundColor: '#4CAF50',
-                                        borderWidth: 2,
-                                        borderColor: colors.card
-                                    }} />
-                                )}
-                            </View>
-
-                            <View style={{ flex: 1 }}>
-                                <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                                    <Text style={{ fontSize: 16, fontWeight: '600', color: colors.text, marginRight: 6 }}>
-                                        {chatThreads.find(t => t.id === selectedThreadId)?.participantName}
-                                    </Text>
-
-                                    {chatThreads.find(t => t.id === selectedThreadId)?.verified && (
-                                        <View style={{
-                                            backgroundColor: colors.primaryLight,
-                                            borderRadius: 10,
-                                            paddingHorizontal: 5,
-                                            paddingVertical: 2,
-                                        }}>
-                                            <Text style={{ color: colors.primary, fontSize: 10 }}>✓</Text>
-                                        </View>
-                                    )}
-                                </View>
-
-                                <Text style={{ fontSize: 12, color: colors.textTertiary }}>
-                                    {chatThreads.find(t => t.id === selectedThreadId)?.online ? 'Online now' : 'Last active recently'}
+                                <Text style={{ fontSize: 24, fontWeight: '700', color: colors.text }}>
+                                    Messages
+                                </Text>
+                                <Text style={{ fontSize: 14, color: colors.textTertiary, marginTop: 4 }}>
+                                    Connect with eco-conscious buyers and sellers
                                 </Text>
                             </View>
 
-                            <TouchableOpacity style={{ marginLeft: 8, padding: 8 }}>
-                                <MaterialCommunityIcons name="dots-vertical" size={24} color={colors.text} />
-                            </TouchableOpacity>
-                        </View>
-
-                        {/* Messages List */}
-                        {loading ? (
-                            <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-                                <ActivityIndicator size="large" color={colors.primary} />
-                                <Text style={{ marginTop: 16, color: colors.textSecondary }}>Loading messages...</Text>
+                            {/* Search Input */}
+                            <View style={{ padding: 16 }}>
+                                <View style={{
+                                    flexDirection: 'row',
+                                    alignItems: 'center',
+                                    backgroundColor: colors.card,
+                                    borderRadius: 12,
+                                    borderWidth: 1,
+                                    borderColor: colors.border,
+                                    paddingHorizontal: 12,
+                                    paddingVertical: 10,
+                                }}>
+                                    <Feather name="search" size={20} color={colors.textTertiary} />
+                                    <TextInput
+                                        placeholder="Search messages..."
+                                        placeholderTextColor={colors.textTertiary}
+                                        value={searchQuery}
+                                        onChangeText={setSearchQuery}
+                                        style={{
+                                            flex: 1,
+                                            marginLeft: 8,
+                                            color: colors.text,
+                                            fontSize: 15,
+                                        }}
+                                    />
+                                    {searchQuery.length > 0 && (
+                                        <TouchableOpacity onPress={() => setSearchQuery('')}>
+                                            <Feather name="x" size={18} color={colors.textTertiary} />
+                                        </TouchableOpacity>
+                                    )}
+                                </View>
                             </View>
-                        ) : (
-                            <FlatList
-                                ref={listRef}
-                                data={messages}
-                                renderItem={renderMessageItem}
-                                keyExtractor={item => item.id}
-                                contentContainerStyle={{
-                                    flexGrow: 1,
-                                    paddingVertical: 16,
-                                    justifyContent: messages.length === 0 ? 'center' : undefined,
-                                }}
-                                ListEmptyComponent={
-                                    <View style={{ padding: 32, alignItems: 'center' }}>
-                                        <Text style={{ color: colors.textSecondary, textAlign: 'center' }}>
-                                            No messages yet. Start the conversation!
-                                        </Text>
-                                    </View>
-                                }
-                            />
-                        )}
 
-                        {/* Message Input */}
-                        <KeyboardAvoidingView
-                            behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-                            keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}
+                            {/* Chat Threads List */}
+                            {chatThreads.length > 0 ? (
+                                <FlatList
+                                    data={filteredThreads}
+                                    renderItem={renderThreadItem}
+                                    keyExtractor={item => item.id}
+                                    contentContainerStyle={{
+                                        paddingBottom: 100, // extra padding for bottom nav
+                                    }}
+                                    ListEmptyComponent={
+                                        searchQuery.length > 0 ? (
+                                            <View style={{ padding: 32, alignItems: 'center' }}>
+                                                <Text style={{ color: colors.textSecondary, textAlign: 'center' }}>
+                                                    No messages found matching "{searchQuery}"
+                                                </Text>
+                                            </View>
+                                        ) : null
+                                    }
+                                />
+                            ) : (
+                                renderEmptyState()
+                            )}
+                        </Animated.View>
+                    )}
+
+                    {/* Chat Detail View */}
+                    {selectedThreadId && (
+                        <Animated.View
+                            style={{
+                                flex: 1,
+                                position: 'absolute',
+                                top: 0,
+                                left: 0,
+                                right: 0,
+                                bottom: 0,
+                                paddingTop: 42,
+                                backgroundColor: colors.background,
+                                transform: [{ translateX: chatSlideAnim }]
+                            }}
                         >
+                            {/* Chat Header */}
                             <View style={{
+                                backgroundColor: colors.card,
+                                padding: 16,
+                                borderBottomWidth: 1,
+                                borderBottomColor: colors.borderLight,
+                                shadowColor: colors.shadow,
+                                shadowOffset: { width: 0, height: 1 },
+                                shadowOpacity: 0.05,
+                                shadowRadius: 2,
+                                elevation: 1,
                                 flexDirection: 'row',
                                 alignItems: 'center',
-                                padding: 12,
-                                backgroundColor: colors.card,
-                                borderTopWidth: 1,
-                                borderTopColor: colors.border,
                             }}>
-                                <TouchableOpacity style={{ padding: 8, marginRight: 8 }}>
-                                    <Feather name="plus-circle" size={24} color={colors.primary} />
+                                <TouchableOpacity
+                                    onPress={handleBackToThreads}
+                                    style={{ marginRight: 12 }}
+                                >
+                                    <Feather name="arrow-left" size={24} color={colors.text} />
                                 </TouchableOpacity>
 
                                 <View style={{
-                                    flex: 1,
-                                    backgroundColor: colors.background,
+                                    width: 40,
+                                    height: 40,
                                     borderRadius: 20,
-                                    borderWidth: 1,
-                                    borderColor: colors.border,
-                                    paddingHorizontal: 16,
-                                    paddingVertical: Platform.OS === 'ios' ? 10 : 2,
-                                    minHeight: 40,
+                                    backgroundColor: colors.primaryLight,
+                                    justifyContent: 'center',
+                                    alignItems: 'center',
+                                    marginRight: 12,
+                                    position: 'relative'
                                 }}>
-                                    <TextInput
-                                        placeholder="Type a message..."
-                                        placeholderTextColor={colors.textTertiary}
-                                        value={newMessage}
-                                        onChangeText={setNewMessage}
-                                        multiline
-                                        style={{
-                                            color: colors.text,
-                                            fontSize: 15,
-                                            maxHeight: 100,
-                                        }}
-                                    />
+                                    {chatThreads.find(t => t.id === selectedThreadId)?.participantImage ? (
+                                        <Image
+                                            source={{ uri: chatThreads.find(t => t.id === selectedThreadId)?.participantImage || undefined }}
+                                            style={{ width: 40, height: 40, borderRadius: 20 }}
+                                        />
+                                    ) : (
+                                        <Text style={{ fontSize: 16, fontWeight: '700', color: colors.primary }}>
+                                            {chatThreads.find(t => t.id === selectedThreadId)?.participantName.charAt(0).toUpperCase()}
+                                        </Text>
+                                    )}
+
+                                    {chatThreads.find(t => t.id === selectedThreadId)?.online && (
+                                        <View style={{
+                                            position: 'absolute',
+                                            bottom: 0,
+                                            right: 0,
+                                            width: 12,
+                                            height: 12,
+                                            borderRadius: 6,
+                                            backgroundColor: '#4CAF50',
+                                            borderWidth: 2,
+                                            borderColor: colors.card
+                                        }} />
+                                    )}
                                 </View>
 
-                                <TouchableOpacity
-                                    style={{
-                                        padding: 8,
-                                        marginLeft: 8,
-                                        opacity: newMessage.trim().length > 0 ? 1 : 0.5
-                                    }}
-                                    onPress={handleSendMessage}
-                                    disabled={newMessage.trim().length === 0}
-                                >
-                                    <Feather name="send" size={24} color={colors.primary} />
+                                <View style={{ flex: 1 }}>
+                                    <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                                        <Text style={{ fontSize: 16, fontWeight: '600', color: colors.text, marginRight: 6 }}>
+                                            {chatThreads.find(t => t.id === selectedThreadId)?.participantName}
+                                        </Text>
+
+                                        {chatThreads.find(t => t.id === selectedThreadId)?.verified && (
+                                            <View style={{
+                                                backgroundColor: colors.primaryLight,
+                                                borderRadius: 10,
+                                                paddingHorizontal: 5,
+                                                paddingVertical: 2,
+                                            }}>
+                                                <Text style={{ color: colors.primary, fontSize: 10 }}>✓</Text>
+                                            </View>
+                                        )}
+                                    </View>
+
+                                    <Text style={{ fontSize: 12, color: colors.textTertiary }}>
+                                        {chatThreads.find(t => t.id === selectedThreadId)?.online ? 'Online now' : 'Last active recently'}
+                                    </Text>
+                                </View>
+
+                                <TouchableOpacity style={{ marginLeft: 8, padding: 8 }}>
+                                    <MaterialCommunityIcons name="dots-vertical" size={24} color={colors.text} />
                                 </TouchableOpacity>
                             </View>
-                        </KeyboardAvoidingView>
-                    </Animated.View>
-                )}
-            </SafeAreaView>
-            <BottomNavigation activeTab={activeTab} onTabChange={setActiveTab} />
+
+                            {/* Messages List */}
+                            {loading ? (
+                                <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+                                    <ActivityIndicator size="large" color={colors.primary} />
+                                    <Text style={{ marginTop: 16, color: colors.textSecondary }}>Loading messages...</Text>
+                                </View>
+                            ) : (
+                                <FlatList
+                                    ref={listRef}
+                                    data={messages}
+                                    renderItem={renderMessageItem}
+                                    keyExtractor={item => item.id}
+                                    contentContainerStyle={{
+                                        flexGrow: 1,
+                                        paddingVertical: 16,
+                                        justifyContent: messages.length === 0 ? 'center' : undefined,
+                                    }}
+                                    ListEmptyComponent={
+                                        <View style={{ padding: 32, alignItems: 'center' }}>
+                                            <Text style={{ color: colors.textSecondary, textAlign: 'center' }}>
+                                                No messages yet. Start the conversation!
+                                            </Text>
+                                        </View>
+                                    }
+                                />
+                            )}
+
+                            {/* Message Input */}
+                            <KeyboardAvoidingView
+                                behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+                                keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}
+                            >
+                                <View style={{
+                                    flexDirection: 'row',
+                                    alignItems: 'center',
+                                    padding: 12,
+                                    backgroundColor: colors.card,
+                                    borderTopWidth: 1,
+                                    borderTopColor: colors.border,
+                                }}>
+                                    <TouchableOpacity style={{ padding: 8, marginRight: 8 }}>
+                                        <Feather name="plus-circle" size={24} color={colors.primary} />
+                                    </TouchableOpacity>
+
+                                    <View style={{
+                                        flex: 1,
+                                        backgroundColor: colors.background,
+                                        borderRadius: 20,
+                                        borderWidth: 1,
+                                        borderColor: colors.border,
+                                        paddingHorizontal: 16,
+                                        paddingVertical: Platform.OS === 'ios' ? 10 : 2,
+                                        minHeight: 40,
+                                    }}>
+                                        <TextInput
+                                            placeholder="Type a message..."
+                                            placeholderTextColor={colors.textTertiary}
+                                            value={newMessage}
+                                            onChangeText={setNewMessage}
+                                            multiline
+                                            style={{
+                                                color: colors.text,
+                                                fontSize: 15,
+                                                maxHeight: 100,
+                                            }}
+                                        />
+                                    </View>
+
+                                    <TouchableOpacity
+                                        style={{
+                                            padding: 8,
+                                            marginLeft: 8,
+                                            opacity: newMessage.trim().length > 0 ? 1 : 0.5
+                                        }}
+                                        onPress={handleSendMessage}
+                                        disabled={newMessage.trim().length === 0}
+                                    >
+                                        <Feather name="send" size={24} color={colors.primary} />
+                                    </TouchableOpacity>
+                                </View>
+                            </KeyboardAvoidingView>
+                        </Animated.View>
+                    )}
+                </SafeAreaView>
+                <BottomNavigation activeTab={activeTab} onTabChange={setActiveTab} />
+            </ProtectedRoute>
         </>
     );
 }
