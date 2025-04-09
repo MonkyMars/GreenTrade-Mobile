@@ -3,7 +3,6 @@ import {
   View,
   Text,
   TouchableOpacity,
-  ScrollView,
   Image,
   ActivityIndicator,
   Dimensions,
@@ -164,6 +163,7 @@ export default function HomeScreen() {
 
     return (
       <TouchableOpacity
+        key={index}
         style={{
           width: screenWidth - 48,
           marginRight: 16,

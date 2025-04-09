@@ -27,6 +27,7 @@ import { FetchedListing } from 'lib/types/main'
 import { getListings } from 'lib/backend/listings/getListings'
 import { formatDistanceToNow } from 'date-fns'
 import { NativeStackNavigationProp } from '@react-navigation/native-stack/lib/typescript/src/types'
+import { useAuth } from 'lib/auth/AuthContext';
 
 type ListingsScreenProps = NativeStackNavigationProp<
   RootStackParamList,
@@ -47,6 +48,7 @@ export default function ListingsScreen({ navigation }: ListingsScreenProps) {
   const [listings, setListings] = useState<FetchedListing[]>([])
   const [loading, setLoading] = useState(false)
   const slideAnim = useRef(new Animated.Value(width)).current
+  const { user } = useAuth();
 
   useEffect(() => {
     if (category) {
@@ -140,7 +142,7 @@ export default function ListingsScreen({ navigation }: ListingsScreenProps) {
 
     return (
       <TouchableOpacity
-        onPress={() => navigation.navigate(`ListingDetail`, { id: item.id })} // Replace with detail screen when available
+        onPress={() => navigation.navigate(`ListingDetail`, { id: item.id })}
         style={{
           width: columnWidth,
           backgroundColor: colors.card,
@@ -186,7 +188,7 @@ export default function ListingsScreen({ navigation }: ListingsScreenProps) {
 
         <View style={{ padding: 12 }}>
           <Text
-            numberOfLines={2}
+            numberOfLines={1}
             style={{
               fontSize: 16,
               fontWeight: '500',
@@ -235,73 +237,12 @@ export default function ListingsScreen({ navigation }: ListingsScreenProps) {
                 {item.location}
               </Text>
             </View>
-
-            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-              <FontAwesome
-                name={category.icon}
-                size={14}
-                color={colors.primary}
-                style={{ marginRight: 8 }}
-              />
-              <Text style={{ fontSize: 13, color: colors.primary }}>
-                {item.category}
-              </Text>
-            </View>
           </View>
 
-          <View
-            style={{
-              marginTop: 12,
-              paddingTop: 12,
-              borderTopWidth: 1,
-              borderTopColor: isDark
-                ? 'rgba(55, 65, 81, 0.6)'
-                : 'rgba(209, 213, 219, 0.6)',
-              flexDirection: 'row',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-            }}
-          >
+
+          <View style={{ marginVertical: 4 }}>
             <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-              {item.seller.verified && (
-                <View
-                  style={{
-                    backgroundColor: colors.primaryLight,
-                    borderRadius: 10,
-                    paddingHorizontal: 5,
-                    paddingVertical: 2,
-                    marginRight: 4,
-                  }}
-                >
-                  <Text style={{ color: colors.primary, fontSize: 10 }}>✓</Text>
-                </View>
-              )}
-              <Text style={{ fontSize: 13, color: colors.primary }}>
-                {item.seller.name}
-              </Text>
-              <View
-                style={{
-                  flexDirection: 'row',
-                  alignItems: 'center',
-                  marginLeft: 6,
-                }}
-              >
-                <FontAwesome name="star" size={10} color={colors.rating} />
-                <Text
-                  style={{
-                    fontSize: 12,
-                    marginLeft: 2,
-                    color: colors.textSecondary,
-                  }}
-                >
-                  {item.seller.rating}
-                </Text>
-              </View>
-            </View>
-          </View>
-          <View style={{ marginTop: 4 }}>
-            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-              <Feather name="clock" size={12} color={colors.textTertiary} />
+              <Feather name="clock" size={14} color={colors.textTertiary} />
               <Text
                 style={{
                   fontSize: 12,
@@ -315,7 +256,17 @@ export default function ListingsScreen({ navigation }: ListingsScreenProps) {
               </Text>
             </View>
           </View>
-
+          <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 2 }}>
+            <FontAwesome
+              name={category.icon}
+              size={14}
+              color={colors.primary}
+              style={{ marginRight: 8 }}
+            />
+            <Text style={{ fontSize: 13, color: colors.primary }}>
+              {item.category}
+            </Text>
+          </View>
           <View
             style={{
               marginTop: 12,
@@ -324,7 +275,7 @@ export default function ListingsScreen({ navigation }: ListingsScreenProps) {
               gap: 8,
             }}
           >
-            <TouchableOpacity
+            {/* <TouchableOpacity
               style={{
                 flex: 1,
                 flexDirection: 'row',
@@ -348,9 +299,9 @@ export default function ListingsScreen({ navigation }: ListingsScreenProps) {
               >
                 Seller
               </Text>
-            </TouchableOpacity>
+            </TouchableOpacity> */}
 
-            <TouchableOpacity
+            {/* <TouchableOpacity
               style={{
                 flex: 1,
                 flexDirection: 'row',
@@ -360,13 +311,13 @@ export default function ListingsScreen({ navigation }: ListingsScreenProps) {
                 backgroundColor: colors.primary,
                 borderRadius: 6,
               }}
-              onPress={() => console.log(`View details for item ${item.id}`)}
+              onPress={() => navigation.navigate(`ListingDetail`, { id: item.id })}
             >
-              <FontAwesome name="eye" size={12} color="white" />
+              <FontAwesome name="eye" size={14} color="white" />
               <Text style={{ marginLeft: 4, fontSize: 12, color: 'white' }}>
                 Details
               </Text>
-            </TouchableOpacity>
+            </TouchableOpacity> */}
           </View>
         </View>
       </TouchableOpacity>
