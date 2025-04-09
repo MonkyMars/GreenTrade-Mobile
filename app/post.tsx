@@ -935,8 +935,7 @@ export default function PostScreen() {
                   marginBottom: 16,
                 }}
               >
-                This cannot be edited. Your location is received from your
-                account.
+                This cannot be edited. Your location is retrieved from your account.
               </Text>
               <Text
                 style={{

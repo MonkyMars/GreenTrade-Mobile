@@ -1,4 +1,3 @@
-import type { NativeStackScreenProps } from '@react-navigation/native-stack'
 import * as WebBrowser from 'expo-web-browser'
 import { useState } from 'react'
 import FontAwesome from 'react-native-vector-icons/FontAwesome'
@@ -153,7 +152,7 @@ export default function LoginScreen({ navigation }: LoginScreenProps) {
                 Sign in to your account
               </Text>
               <TouchableOpacity>
-                <Text style={{ marginTop: 8, fontSize: 14, color: colors.primary }}>
+                <Text onPress={() => navigation.navigate('Register')} style={{ marginTop: 8, fontSize: 14, color: colors.primary }}>
                   Or create a new account
                 </Text>
               </TouchableOpacity>

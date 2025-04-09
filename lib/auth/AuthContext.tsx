@@ -305,7 +305,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     ) => {
         try {
             setLoading(true);
-            await api.post(
+            const response = await api.post(
                 `/auth/register`,
                 {
                     name,
@@ -315,8 +315,42 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
                 }
             );
 
-            // After registration, log the user in
-            await login(email, password);
+            if (!response.data.success) {
+                throw new Error(response.data.message || "Registration failed");
+            }
+
+            const { accessToken, refreshToken, userId, expiresIn } = response.data.data;
+
+
+            if (!accessToken) {
+                throw new Error("Missing authentication token");
+            }
+
+            // Store tokens
+            await AsyncStorage.setItem("accessToken", accessToken);
+            if (refreshToken) {
+                await AsyncStorage.setItem("refreshToken", refreshToken);
+            }
+            await AsyncStorage.setItem("userId", userId);
+
+            // Store token expiration time if provided
+            if (expiresIn) {
+                const expirationTime = new Date().getTime() + expiresIn * 1000;
+                await AsyncStorage.setItem("tokenExpiration", expirationTime.toString());
+            }
+
+            // Set auth header for future requests
+            api.defaults.headers.common["Authorization"] = `Bearer ${accessToken}`;
+
+            // Set user data
+            const user = await getUser(userId);
+
+            if (!user) {
+                throw new Error("User not found");
+            }
+
+            setUser(user);
+
         } catch (error) {
             console.error("Registration failed:", error);
             if (axios.isAxiosError(error) && error.response) {

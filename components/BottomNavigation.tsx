@@ -40,6 +40,9 @@ export default function BottomNavigation({
       case 'post':
         navigation.navigate('Post')
         break
+      case 'messages':
+        navigation.navigate('Messages')
+        break
       default:
         navigation.navigate('Home')
         break
@@ -168,7 +171,7 @@ export default function BottomNavigation({
         style={{
           alignItems: 'center',
           padding: 8,
-          borderTopWidth: activeTab === 'account' || activeTab === 'login' ? 2 : 0,
+          borderTopWidth: activeTab === 'account' || activeTab === 'login' || activeTab === 'register' ? 2 : 0,
           borderTopColor:
             activeTab === 'account' || activeTab === 'login' ? colors.primary : 'transparent',
         }}
@@ -177,13 +180,13 @@ export default function BottomNavigation({
         <FontAwesome
           name="user"
           size={20}
-          color={activeTab === 'account' || activeTab === 'login' ? colors.primary : colors.textTertiary}
+          color={activeTab === 'account' || activeTab === 'login' || activeTab === 'register' ? colors.primary : colors.textTertiary}
         />
         <Text
           style={{
             fontSize: 12,
             color:
-              activeTab === 'account' || activeTab === 'login' ? colors.primary : colors.textTertiary,
+              activeTab === 'account' || activeTab === 'login' || activeTab === 'register' ? colors.primary : colors.textTertiary,
             marginTop: 4,
           }}
         >

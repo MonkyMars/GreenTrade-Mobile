@@ -658,9 +658,6 @@ export default function ListingDetailScreen() {
                 left: 0,
                 right: 0,
                 padding: 16,
-                backgroundColor: colors.card,
-                borderTopWidth: 1,
-                borderTopColor: colors.borderLight,
                 flexDirection: 'row',
                 gap: 12,
             }}>
