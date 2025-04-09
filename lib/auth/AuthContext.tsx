@@ -85,6 +85,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
                 throw new Error("Invalid refresh token response");
             }
 
+            // Store the new tokens
             await AsyncStorage.setItem("accessToken", accessToken);
             await AsyncStorage.setItem("refreshToken", newRefreshToken);
 
@@ -92,8 +93,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
             const expirationTime = new Date().getTime() + expiresIn * 1000;
             await AsyncStorage.setItem("tokenExpiration", expirationTime.toString());
 
-            // Update authorization header - match your backend's expected format
-            api.defaults.headers.common["Authorization"] = `Bearer ${accessToken}`;
+            // Give a small delay to ensure the token is properly stored
+            // before the next request uses it
+            await new Promise(resolve => setTimeout(resolve, 50));
 
             console.log("Token refresh successful");
             // Reset attempt counter on success
@@ -143,9 +145,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
                         const refreshSuccess = await refreshTokens();
                         if (refreshSuccess) {
                             // Retry the original request with new token
+                            // Get the latest token to ensure we're using the most recent one
                             const token = await AsyncStorage.getItem("accessToken");
-                            // Ensure token format matches what your backend expects
+                            if (!token) {
+                                throw new Error("Failed to get new access token after refresh");
+                            }
+
+                            // Use the fresh token for the retried request
                             originalRequest.headers["Authorization"] = `Bearer ${token}`;
+
+                            // Small delay to ensure token is available
+                            await new Promise(resolve => setTimeout(resolve, 50));
+
+                            // Return the retried request
                             return api(originalRequest);
                         } else {
                             console.log("Token refresh failed, rejecting original request");

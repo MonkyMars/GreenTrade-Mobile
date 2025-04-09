@@ -3,14 +3,6 @@ import axios from 'axios'
 
 const BASE_URL = 'http://192.168.178.10:8080'
 
-axios.interceptors.request.use(config => {
-  const token = AsyncStorage.getItem('accessToken')
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`
-  }
-  return config
-})
-
 const api = axios.create({
   baseURL: BASE_URL,
   headers: {
@@ -18,5 +10,19 @@ const api = axios.create({
   },
   timeout: 10000,
 })
+
+// Add a request interceptor that properly handles async/await
+api.interceptors.request.use(
+  async config => {
+    const token = await AsyncStorage.getItem('accessToken')
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`
+    }
+    return config
+  },
+  error => {
+    return Promise.reject(error)
+  },
+)
 
 export default api
