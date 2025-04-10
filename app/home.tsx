@@ -41,7 +41,6 @@ export default function HomeScreen() {
 
   // Animation values
   const scrollY = useRef(new Animated.Value(0)).current
-  const headerOpacity = useRef(new Animated.Value(0)).current
   const fadeAnim = useRef(new Animated.Value(0)).current
   const slideAnim = useRef(new Animated.Value(30)).current
   const scaleAnim = useRef(new Animated.Value(0.95)).current

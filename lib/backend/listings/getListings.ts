@@ -29,3 +29,20 @@ export const getListings = async (
     throw new Error('Failed to fetch listings')
   }
 }
+
+export const getSellerListings = async (
+  sellerId: string,
+): Promise<FetchedListing[]> => {
+  try {
+    const response = await api.get(`/listings/seller/${sellerId}`)
+    if (!response.data || !response.data.success) {
+      throw new Error('Failed to fetch seller listings')
+    }
+    const all = response.data.data as any[]
+    const validListings = all.filter(isFetchedListing)
+    return validListings
+  } catch (error) {
+    console.error('Error fetching seller listings:', error)
+    throw new Error('Failed to fetch seller listings')
+  }
+}

@@ -7,7 +7,6 @@ import {
   ScrollView,
   TextInput,
   FlatList,
-  Image,
   useWindowDimensions,
   ActivityIndicator,
   Animated,
@@ -28,6 +27,7 @@ import { getListings } from 'lib/backend/listings/getListings'
 import { formatDistanceToNow } from 'date-fns'
 import { NativeStackNavigationProp } from '@react-navigation/native-stack/lib/typescript/src/types'
 import { useAuth } from 'lib/auth/AuthContext';
+import { ListingGridItem, ListingListItem } from '../components/ListingItem'
 
 type ListingsScreenProps = NativeStackNavigationProp<
   RootStackParamList,
@@ -126,294 +126,9 @@ export default function ListingsScreen({ navigation }: ListingsScreenProps) {
     }
   }
 
-  // Render an item in grid view
-  const renderGridItem = ({ item }: { item: FetchedListing }) => {
-    const category = findCategory(item.category)
-
-    // Helper function to get the first image URL
-    const getFirstImageUrl = (imageUrl: string[] | { urls: string[] }) => {
-      if (Array.isArray(imageUrl)) {
-        return imageUrl[0] || 'https://via.placeholder.com/300x200'
-      } else if (imageUrl.urls && Array.isArray(imageUrl.urls)) {
-        return imageUrl.urls[0] || 'https://via.placeholder.com/300x200'
-      }
-      return 'https://via.placeholder.com/300x200'
-    }
-
-    return (
-      <TouchableOpacity
-        onPress={() => navigation.navigate(`ListingDetail`, { id: item.id })}
-        style={{
-          width: columnWidth,
-          backgroundColor: colors.card,
-          marginBottom: 16,
-          borderRadius: 8,
-          shadowColor: colors.shadow,
-          shadowOffset: { width: 0, height: 2 },
-          shadowOpacity: 0.1,
-          shadowRadius: 4,
-          elevation: 2,
-          overflow: 'hidden',
-        }}
-      >
-        <View style={{ height: 150, position: 'relative' }}>
-          <Image
-            source={{ uri: getFirstImageUrl(item.imageUrl) }}
-            style={{ width: '100%', height: '100%' }}
-            resizeMode="cover"
-          />
-          <View
-            style={{
-              position: 'absolute',
-              bottom: 8,
-              left: 8,
-              backgroundColor: isDark
-                ? 'rgba(31, 41, 55, 0.8)'
-                : 'rgba(255, 255, 255, 0.8)',
-              borderRadius: 4,
-              paddingHorizontal: 6,
-              paddingVertical: 4,
-              flexDirection: 'row',
-              alignItems: 'center',
-            }}
-          >
-            <FontAwesome name="leaf" size={14} color={colors.primary} />
-            <Text
-              style={{ marginLeft: 4, fontWeight: '600', color: colors.text }}
-            >
-              {item.ecoScore}
-            </Text>
-          </View>
-        </View>
-
-        <View style={{ padding: 12 }}>
-          <Text
-            numberOfLines={1}
-            style={{
-              fontSize: 16,
-              fontWeight: '500',
-              marginBottom: 4,
-              color: colors.text,
-            }}
-          >
-            {item.title}
-          </Text>
-
-          <View
-            style={{
-              flexDirection: 'row',
-              alignItems: 'baseline',
-              marginTop: 4,
-            }}
-          >
-            <Text
-              style={{ color: colors.primary, fontSize: 16, fontWeight: '700' }}
-            >
-              €{item.price}
-            </Text>
-            <Text
-              style={{
-                fontSize: 12,
-                color: colors.textTertiary,
-                marginLeft: 4,
-              }}
-            >
-              Exc. Shipping
-            </Text>
-          </View>
-
-          <View style={{ marginTop: 8, gap: 6 }}>
-            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-              <FontAwesome
-                name="map-marker"
-                size={14}
-                color={colors.textTertiary}
-                style={{ marginRight: 8 }}
-              />
-              <Text
-                style={{ fontSize: 13, color: colors.textTertiary }}
-                numberOfLines={1}
-              >
-                {item.location}
-              </Text>
-            </View>
-          </View>
-
-
-          <View style={{ marginVertical: 4 }}>
-            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-              <Feather name="clock" size={14} color={colors.textTertiary} />
-              <Text
-                style={{
-                  fontSize: 12,
-                  color: colors.textTertiary,
-                  marginLeft: 4,
-                }}
-              >
-                {formatDistanceToNow(new Date(item.created_at), {
-                  addSuffix: true,
-                })}
-              </Text>
-            </View>
-          </View>
-          <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 2 }}>
-            <FontAwesome
-              name={category.icon}
-              size={14}
-              color={colors.primary}
-              style={{ marginRight: 8 }}
-            />
-            <Text style={{ fontSize: 13, color: colors.primary }}>
-              {item.category}
-            </Text>
-          </View>
-          <View
-            style={{
-              marginTop: 12,
-              flexDirection: 'row',
-              justifyContent: 'space-between',
-              gap: 8,
-            }}
-          >
-            {/* <TouchableOpacity
-              style={{
-                flex: 1,
-                flexDirection: 'row',
-                alignItems: 'center',
-                justifyContent: 'center',
-                paddingVertical: 8,
-                backgroundColor: 'transparent',
-                borderWidth: 1,
-                borderColor: colors.border,
-                borderRadius: 6,
-              }}
-              onPress={() => console.log(`View seller ${item.seller.id}`)}
-            >
-              <FontAwesome name="user" size={12} color={colors.textSecondary} />
-              <Text
-                style={{
-                  marginLeft: 4,
-                  fontSize: 12,
-                  color: colors.textSecondary,
-                }}
-              >
-                Seller
-              </Text>
-            </TouchableOpacity> */}
-
-            {/* <TouchableOpacity
-              style={{
-                flex: 1,
-                flexDirection: 'row',
-                alignItems: 'center',
-                justifyContent: 'center',
-                paddingVertical: 8,
-                backgroundColor: colors.primary,
-                borderRadius: 6,
-              }}
-              onPress={() => navigation.navigate(`ListingDetail`, { id: item.id })}
-            >
-              <FontAwesome name="eye" size={14} color="white" />
-              <Text style={{ marginLeft: 4, fontSize: 12, color: 'white' }}>
-                Details
-              </Text>
-            </TouchableOpacity> */}
-          </View>
-        </View>
-      </TouchableOpacity>
-    )
-  }
-
-  // Render an item in list view
-  const renderListItem = ({ item }: { item: FetchedListing }) => {
-    const category = findCategory(item.category)
-
-    // Helper function to get the first image URL
-    const getFirstImageUrl = (imageUrl: string[] | { urls: string[] }) => {
-      if (Array.isArray(imageUrl)) {
-        return imageUrl[0] || 'https://via.placeholder.com/300x200'
-      } else if (imageUrl.urls && Array.isArray(imageUrl.urls)) {
-        return imageUrl.urls[0] || 'https://via.placeholder.com/300x200'
-      }
-      return 'https://via.placeholder.com/300x200'
-    }
-
-    return (
-      <TouchableOpacity
-        onPress={() => navigation.navigate(`ListingDetail`, { id: item.id })}
-        style={{
-          backgroundColor: colors.card,
-          marginBottom: 16,
-          borderRadius: 8,
-          shadowColor: colors.shadow,
-          shadowOffset: { width: 0, height: 2 },
-          shadowOpacity: 0.1,
-          shadowRadius: 4,
-          elevation: 2,
-          overflow: 'hidden',
-        }}
-      >
-        <View style={{ flexDirection: 'row' }}>
-          <Image
-            source={{ uri: getFirstImageUrl(item.imageUrl) }}
-            style={{ width: 120, height: 120, marginRight: 8 }}
-            resizeMode="cover"
-          />
-          <View style={{ flex: 1, marginLeft: 8, paddingVertical: 8 }}>
-            <Text
-              numberOfLines={1}
-              style={{
-                fontSize: 16,
-                fontWeight: '500',
-                color: colors.text,
-                marginBottom: 4,
-              }}
-            >
-              {item.title}
-            </Text>
-            <Text
-              style={{
-                color: colors.primary,
-                fontSize: 16,
-                fontWeight: '700',
-                marginBottom: 4,
-              }}
-            >
-              €{item.price}
-            </Text>
-            <Text
-              style={{
-                fontSize: 13,
-                color: colors.textTertiary,
-                marginBottom: 4,
-              }}
-            >
-              {item.location} •{' '}
-              {formatDistanceToNow(new Date(item.created_at), {
-                addSuffix: true,
-              })}
-            </Text>
-            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-              <FontAwesome
-                name={category.icon}
-                size={14}
-                color={colors.primary}
-                style={{ marginRight: 8 }}
-              />
-              <Text
-                style={{
-                  fontSize: 13,
-                  fontWeight: '500',
-                  color: colors.primary,
-                }}
-              >
-                {category.name}
-              </Text>
-            </View>
-          </View>
-        </View>
-      </TouchableOpacity>
-    )
+  // Navigation handler for listings
+  const handleListingPress = (id: number) => {
+    navigation.navigate('ListingDetail', { id })
   }
 
   return (
@@ -530,7 +245,6 @@ export default function ListingsScreen({ navigation }: ListingsScreenProps) {
                   }
                 />
               </TouchableOpacity>
-
               <TouchableOpacity
                 style={{
                   padding: 8,
@@ -912,7 +626,11 @@ export default function ListingsScreen({ navigation }: ListingsScreenProps) {
       ) : (
         <FlatList
           data={listings}
-          renderItem={viewMode === 'grid' ? renderGridItem : renderListItem}
+          renderItem={({ item }) =>
+            viewMode === 'grid'
+              ? <ListingGridItem item={item} onPress={handleListingPress} columnWidth={columnWidth} />
+              : <ListingListItem item={item} onPress={handleListingPress} />
+          }
           keyExtractor={item => item.id.toString()}
           numColumns={viewMode === 'grid' ? numColumns : 1}
           key={viewMode === 'grid' ? 'grid' : 'list'}

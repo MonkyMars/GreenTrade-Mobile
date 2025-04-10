@@ -1,13 +1,12 @@
-import { useRoute } from '@react-navigation/native';
 import { getListings } from 'lib/backend/listings/getListings';
 import { FetchedListing } from 'lib/types/main';
 import { useEffect, useState, useRef } from 'react';
 import {
     View, Text, ActivityIndicator, SafeAreaView, Image,
-    ScrollView, TouchableOpacity, Dimensions, Animated,
-    StyleSheet, FlatList, Share, Platform, Pressable
+    TouchableOpacity, Dimensions, Animated,
+    FlatList, Share, Platform
 } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useRoute } from '@react-navigation/native';
 import BottomNavigation from '../../components/BottomNavigation';
 import { formatDistanceToNow } from "date-fns";
 import { useTheme } from 'lib/theme/ThemeContext';
@@ -545,6 +544,7 @@ export default function ListingDetailScreen() {
                                     backgroundColor: colors.primary,
                                     borderRadius: 6,
                                 }}
+                                onPress={() => navigation.navigate('SellerDetail', { id: listing.seller.id, seller: listing.seller })}
                             >
                                 <Text style={{ color: 'white', fontWeight: '600' }}>
                                     Visit Profile
