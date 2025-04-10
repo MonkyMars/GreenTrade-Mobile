@@ -2,9 +2,10 @@ import { useState, useEffect, useRef } from 'react'
 import {
     View, Text, ScrollView, TouchableOpacity, Image,
     TextInput, Alert, Animated, Dimensions,
+    Modal,
 } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
-import { FontAwesome, MaterialCommunityIcons } from '@expo/vector-icons'
+import { Feather, FontAwesome, MaterialCommunityIcons } from '@expo/vector-icons'
 import BottomNavigation from '../components/BottomNavigation'
 import ProtectedRoute from 'components/ProtectedRoute'
 import { useAuth } from 'lib/auth/AuthContext'
@@ -12,31 +13,38 @@ import { User } from 'lib/types/user'
 import { useTheme } from 'lib/theme/ThemeContext'
 import { isUrl } from 'lib/functions/isUrl'
 import { useNavigation } from '@react-navigation/native'
+import { updateUser } from 'lib/backend/auth/user'
+import { CountryData, fetchCountriesInEurope } from 'lib/functions/countries'
 
 type ActiveTab = 'profile' | 'seller' | 'security' | 'delete'
+type ActiveInnerTab = 'listings' | 'favorites' | 'purchases'
 
 export default function AccountScreen() {
     const { colors, isDark } = useTheme()
     const navigation = useNavigation()
-    const { user: authUser, logout, loading: authLoading } = useAuth()
-    const [user, setUser] = useState<User>({
-        id: "",
-        name: "",
-        email: "",
-        location: "",
-        isSeller: false,
-        profileUrl: "",
-        updatedAt: "",
-        createdAt: "",
+    const [open, setOpen] = useState<boolean>(false)
+    const { user: authUser, logout, loading: authLoading, reloadUser } = useAuth()
+    const [user, setUser] = useState<User | null>(null)
+    const [location, setLocation] = useState<{
+        city: string
+        country: string
+    }>({
+        city: "",
+        country: ""
     })
     const [activeTab, setActiveTab] = useState<ActiveTab>('profile')
-    const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
-    const [deleteText, setDeleteText] = useState('')
-    const [updateSuccess, setUpdateSuccess] = useState("")
-    const [activeInnerTab, setActiveInnerTab] = useState('listings')
-    const [activeAppTab, setActiveAppTab] = useState('account')
-    const animationLock = useRef(false)
-    const previousTab = useRef({ activeTab, activeInnerTab })
+    const [showDeleteConfirm, setShowDeleteConfirm] = useState<boolean>(false)
+    const [countries, setCountries] = useState<CountryData[]>([])
+    const [deleteText, setDeleteText] = useState<string>('')
+    const [updateSuccess, setUpdateSuccess] = useState<string>("")
+    const [activeInnerTab, setActiveInnerTab] = useState<ActiveInnerTab>('listings')
+    const [activeAppTab, setActiveAppTab] = useState<string>('account')
+    const animationLock = useRef<boolean>(false)
+    const previousTab = useRef<{
+        activeTab: ActiveTab
+        activeInnerTab: ActiveInnerTab
+    }>({ activeTab, activeInnerTab })
+    const [disabled, setDisabled] = useState<boolean>(false)
 
     // Animation values
     const slideAnim = useRef(new Animated.Value(0)).current
@@ -46,6 +54,18 @@ export default function AccountScreen() {
     // Window dimensions
     const windowWidth = Dimensions.get("window").width
 
+    useEffect(() => {
+        const fetchCountries = async () => {
+            try {
+                const countries = await fetchCountriesInEurope()
+                setCountries(countries)
+            } catch (error) {
+                console.error('Error fetching countries:', error)
+            }
+        }
+
+        fetchCountries()
+    }, [])
 
     useEffect(() => {
         if (!authLoading) {
@@ -58,13 +78,33 @@ export default function AccountScreen() {
                     location: authUser.location || "",
                     isSeller: authUser.isSeller || false,
                     profileUrl: authUser.profileUrl || "",
-                    updatedAt: authUser.updatedAt || "",
-                    createdAt: authUser.createdAt || "",
+                    updated_at: authUser.updated_at || "",
+                    created_at: authUser.created_at || "",
+                    bio: authUser.bio || "",
+                })
+                const [city, country] = authUser.location.split(",")
+                setLocation({
+                    city: city.trim(),
+                    country: country.trim()
                 })
             }
         }
     }, [authUser, authLoading])
 
+
+    useEffect(() => {
+        if (!authLoading) {
+            const equalName = user?.name === authUser?.name
+            const equalLocation = user?.location === authUser?.location
+            const equalBio = user?.bio === authUser?.bio
+
+            if (!equalName || !equalLocation || !equalBio) {
+                setDisabled(false)
+            } else {
+                setDisabled(true)
+            }
+        }
+    }, [user])
 
     useEffect(() => {
         // Prevent firing if nothing actually changed
@@ -161,10 +201,12 @@ export default function AccountScreen() {
         try {
             // In a real app, you would make an API call to become a seller
             // For now, we'll just simulate it with a delay
-            setUser({
-                ...user,
-                isSeller: true
-            })
+            if (user) {
+                setUser({
+                    ...user,
+                    isSeller: true
+                })
+            }
 
             setUpdateSuccess(
                 "You are now a seller! You can start listing your eco-friendly products."
@@ -190,6 +232,36 @@ export default function AccountScreen() {
         } catch (error) {
             console.error("Error deleting account:", error)
             Alert.alert("Error", "Failed to delete account. Please try again.")
+        }
+    }
+
+    const handleUpdateUser = async () => {
+        if (!user) return
+        const formattedLocation = `${location.city}, ${location.country}`
+        const updated = {
+            name: user.name,
+            location: formattedLocation,
+            bio: user.bio,
+        }
+        try {
+            const response = await updateUser(user.id, updated)
+            if (response) {
+                const updated: User = {
+                    ...user,
+                    name: response.name,
+                    location: response.location,
+                    bio: response.bio,
+                }
+                setUser(updated)
+                setUpdateSuccess("Profile updated successfully.")
+            } else {
+                setUpdateSuccess("Failed to update profile.")
+            }
+        } catch (error) {
+            console.error("Error updating user:", error)
+            Alert.alert("Error", "Failed to update user. Please try again.")
+        } finally {
+            await reloadUser()
         }
     }
 
@@ -237,7 +309,7 @@ export default function AccountScreen() {
                                 marginBottom: 12,
                                 overflow: 'hidden'
                             }}>
-                                {isUrl(user.profileImage as string) ? (
+                                {user && isUrl(user.profileImage as string) ? (
                                     <Image
                                         source={{ uri: user.profileUrl }}
                                         style={{ width: 80, height: 80 }}
@@ -248,7 +320,7 @@ export default function AccountScreen() {
                                         fontWeight: '700',
                                         color: colors.primary
                                     }}>
-                                        {user.name.charAt(0).toLocaleUpperCase() || 'U'}
+                                        {user ? user.name.charAt(0).toLocaleUpperCase() || 'U' : "U"}
                                     </Text>
                                 )}
                             </View>
@@ -322,7 +394,7 @@ export default function AccountScreen() {
                             padding: 4,
                             marginBottom: 16
                         }}>
-                            {['profile', 'seller', 'security', 'delete'].map((tab) => (
+                            {['profile', 'seller', 'security', 'delete' as ActiveTab].map((tab) => (
                                 <TouchableOpacity
                                     key={tab}
                                     style={{
@@ -404,7 +476,7 @@ export default function AccountScreen() {
                             <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 8 }}>
                                 <Text style={{ color: colors.textSecondary }}>Member since</Text>
                                 <Text style={{ color: colors.text, fontWeight: '500' }}>
-                                    {new Date(user?.createdAt || Date.now()).toLocaleDateString()}
+                                    {new Date(user?.created_at || Date.now()).toLocaleDateString()}
                                 </Text>
                             </View>
 
@@ -468,6 +540,7 @@ export default function AccountScreen() {
                                             color: colors.text,
                                             backgroundColor: colors.background,
                                         }}
+                                        onChange={(e => user ? setUser({ ...user, name: e.nativeEvent.text }) : null)}
                                         placeholderTextColor={colors.textTertiary}
                                     />
                                 </View>
@@ -506,21 +579,44 @@ export default function AccountScreen() {
                                         color: colors.textSecondary,
                                         marginBottom: 6
                                     }}>
-                                        Location
+                                        Country
                                     </Text>
-                                    <TextInput
-                                        defaultValue={user?.location}
-                                        style={{
-                                            borderWidth: 1,
-                                            borderColor: colors.border,
-                                            borderRadius: 6,
-                                            paddingHorizontal: 12,
-                                            paddingVertical: 10,
-                                            color: colors.text,
-                                            backgroundColor: colors.background,
-                                        }}
-                                        placeholderTextColor={colors.textTertiary}
-                                    />
+                                    <View style={{ position: 'relative' }}>
+                                        <View style={{ position: 'absolute', left: 12, top: 16, zIndex: 10 }}>
+                                            <FontAwesome name='flag' size={16} color={colors.textTertiary} />
+                                        </View>
+                                        <TouchableOpacity
+                                            style={{
+                                                borderWidth: 1,
+                                                borderColor: colors.border,
+                                                borderRadius: 6,
+                                                paddingHorizontal: 12,
+                                                paddingVertical: 12,
+                                                marginBottom: 4,
+                                                backgroundColor: colors.background,
+                                                flexDirection: 'row',
+                                                paddingLeft: 40,
+                                                justifyContent: 'space-between',
+                                                alignItems: 'center',
+                                            }}
+                                            onPress={() => setOpen(true)}
+                                        >
+                                            <Text
+                                                style={{
+                                                    color: location.country
+                                                        ? colors.text
+                                                        : colors.textTertiary,
+                                                }}
+                                            >
+                                                {location.country || 'Select Country'}
+                                            </Text>
+                                            <FontAwesome
+                                                name="chevron-down"
+                                                size={14}
+                                                color={colors.textTertiary}
+                                            />
+                                        </TouchableOpacity>
+                                    </View>
                                 </View>
 
                                 <View style={{ marginBottom: 16 }}>
@@ -530,11 +626,10 @@ export default function AccountScreen() {
                                         color: colors.textSecondary,
                                         marginBottom: 6
                                     }}>
-                                        Phone Number
+                                        City
                                     </Text>
                                     <TextInput
-                                        defaultValue={user?.phone || ''}
-                                        keyboardType="phone-pad"
+                                        defaultValue={location.city}
                                         style={{
                                             borderWidth: 1,
                                             borderColor: colors.border,
@@ -544,6 +639,7 @@ export default function AccountScreen() {
                                             color: colors.text,
                                             backgroundColor: colors.background,
                                         }}
+                                        onChange={(e => setLocation({ ...location, city: e.nativeEvent.text }))}
                                         placeholderTextColor={colors.textTertiary}
                                     />
                                 </View>
@@ -573,6 +669,7 @@ export default function AccountScreen() {
                                             backgroundColor: colors.background,
                                         }}
                                         placeholderTextColor={colors.textTertiary}
+                                        onChange={(e => user ? setUser({ ...user, bio: e.nativeEvent.text }) : null)}
                                     />
                                 </View>
 
@@ -596,7 +693,7 @@ export default function AccountScreen() {
                                             marginRight: 16,
                                             overflow: 'hidden'
                                         }}>
-                                            {isUrl(user.profileImage as string) ? (
+                                            {user && isUrl(user.profileImage as string) ? (
                                                 <Image
                                                     source={{ uri: user.profileUrl }}
                                                     style={{ width: 60, height: 60 }}
@@ -641,14 +738,21 @@ export default function AccountScreen() {
 
                                 <TouchableOpacity
                                     style={{
-                                        backgroundColor: colors.primary,
+                                        backgroundColor: disabled ? colors.textTertiary : colors.primary,
                                         paddingVertical: 12,
                                         borderRadius: 6,
                                         alignItems: 'center',
+                                        opacity: disabled ? 0.7 : 1,
                                     }}
+                                    onPress={handleUpdateUser}
+                                    disabled={disabled}
                                 >
-                                    <Text style={{ color: 'white', fontWeight: '600' }}>
-                                        Save Changes
+                                    <Text style={{
+                                        color: 'white',
+                                        fontWeight: '600',
+                                        opacity: disabled ? 0.8 : 1
+                                    }}>
+                                        {disabled ? 'No Changes to Save' : 'Save Changes'}
                                     </Text>
                                 </TouchableOpacity>
 
@@ -669,7 +773,7 @@ export default function AccountScreen() {
                                         borderBottomColor: colors.border,
                                         marginBottom: 16
                                     }}>
-                                        {['listings', 'favorites', 'purchases'].map((tab) => (
+                                        {['listings', 'favorites', 'purchases' as ActiveInnerTab].map((tab) => (
                                             <TouchableOpacity
                                                 key={tab}
                                                 style={{
@@ -679,7 +783,7 @@ export default function AccountScreen() {
                                                     borderBottomColor: activeInnerTab === tab ? colors.primary : 'transparent',
                                                     marginRight: 8
                                                 }}
-                                                onPress={() => setActiveInnerTab(tab)}
+                                                onPress={() => setActiveInnerTab(tab as ActiveInnerTab)}
                                             >
                                                 <Text style={{
                                                     color: activeInnerTab === tab ? colors.primary : colors.textSecondary,
@@ -1220,6 +1324,83 @@ export default function AccountScreen() {
 
                 <BottomNavigation activeTab={activeAppTab} onTabChange={() => setActiveAppTab} />
             </SafeAreaView>
+            <Modal
+                animationType="slide"
+                transparent={true}
+                visible={open}
+                onRequestClose={() => setOpen(false)}
+            >
+                <View
+                    style={{
+                        flex: 1,
+                        justifyContent: 'flex-end',
+                        backgroundColor: 'rgba(0,0,0,0.5)',
+                    }}
+                >
+                    <View
+                        style={{
+                            backgroundColor: colors.card,
+                            borderTopLeftRadius: 16,
+                            borderTopRightRadius: 16,
+                            padding: 16,
+                        }}
+                    >
+                        <View
+                            style={{
+                                flexDirection: 'row',
+                                justifyContent: 'space-between',
+                                alignItems: 'center',
+                                marginBottom: 16,
+                            }}
+                        >
+                            <Text
+                                style={{
+                                    fontSize: 18,
+                                    fontWeight: '600',
+                                    color: colors.text,
+                                }}
+                            >
+                                Select Country
+                            </Text>
+                            <TouchableOpacity
+                                onPress={() => setOpen(false)}
+                            >
+                                <Feather name="x" size={24} color={colors.text} />
+                            </TouchableOpacity>
+                        </View>
+
+                        <ScrollView>
+                            {countries.map(country => (
+                                <TouchableOpacity
+                                    key={country.name}
+                                    style={{
+                                        flexDirection: 'row',
+                                        alignItems: 'center',
+                                        paddingVertical: 12,
+                                        borderTopWidth: 1,
+                                        borderTopColor: colors.border,
+                                    }}
+                                    onPress={() => {
+                                        setLocation((prev) => ({ ...prev, country: country.name }));
+                                        setOpen(false);
+                                    }}
+                                >
+                                    <Text style={{ color: colors.text, flex: 1 }}>
+                                        {country.name}
+                                    </Text>
+                                    {location.country === country.name && (
+                                        <FontAwesome
+                                            name="check"
+                                            size={16}
+                                            color={colors.primary}
+                                        />
+                                    )}
+                                </TouchableOpacity>
+                            ))}
+                        </ScrollView>
+                    </View>
+                </View>
+            </Modal>
         </ProtectedRoute>
     )
 }

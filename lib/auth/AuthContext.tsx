@@ -18,6 +18,7 @@ interface AuthContextType {
     logout: () => void;
     isAuthenticated: boolean;
     refreshTokens: () => Promise<boolean>;
+    reloadUser: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -402,6 +403,28 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
         }
     };
 
+    const reloadUser = async () => {
+        setLoading(true);
+        try {
+            const userId = await AsyncStorage.getItem("userId");
+            if (!userId) {
+                throw new Error("User ID not found");
+            }
+
+            const response = await api.get(`/api/auth/user/${userId}`);
+
+            if (!response.data.success) {
+                throw new Error("Failed to fetch user data");
+            }
+
+            setUser(response.data.data.user);
+        } catch (error) {
+            console.error("Reload error:", error);
+        } finally {
+            setLoading(false);
+        }
+    };
+
     return (
         <AuthContext.Provider
             value={{
@@ -412,6 +435,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
                 logout,
                 isAuthenticated: !!user,
                 refreshTokens,
+                reloadUser,
             }}
         >
             {children}
