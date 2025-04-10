@@ -11,16 +11,13 @@ import {
     TouchableOpacity,
     ScrollView,
     FlatList,
-    Image,
     Animated,
     Dimensions,
     ActivityIndicator,
     RefreshControl
 } from 'react-native';
-import { formatDistanceToNow } from 'date-fns';
 import { FontAwesome, MaterialCommunityIcons, Ionicons, Feather } from '@expo/vector-icons';
 import { getSellerListings } from 'lib/backend/listings/getListings';
-import { findCategory } from 'lib/functions/category';
 import { ListingGridItem, ListingListItem } from 'components/ListingItem';
 
 export default function SellerScreen() {
@@ -156,6 +153,7 @@ export default function SellerScreen() {
                     shadowRadius: 2,
                     elevation: headerElevation,
                     zIndex: 10,
+                    paddingTop: StatusBar.currentHeight,
                 }}
             >
                 <View style={{ flexDirection: 'row', alignItems: 'center' }}>
