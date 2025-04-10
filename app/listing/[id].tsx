@@ -544,7 +544,7 @@ export default function ListingDetailScreen() {
                                     backgroundColor: colors.primary,
                                     borderRadius: 6,
                                 }}
-                                onPress={() => navigation.navigate('SellerDetail', { id: listing.seller.id })}
+                                onPress={() => navigation.navigate('SellerDetail', { id: listing.seller.id, seller: listing.seller })}
                             >
                                 <Text style={{ color: 'white', fontWeight: '600' }}>
                                     Visit Profile

@@ -5,10 +5,9 @@ export interface User {
   location: string
   isSeller: boolean
   profileUrl: string
-  createdAt: string
-  updatedAt: string
-  phone?: string
+  created_at: string
+  updated_at: string
   profileImage?: string
-  bio?: string
+  bio: string
   ecoScore?: number
 }

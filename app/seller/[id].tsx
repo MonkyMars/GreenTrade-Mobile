@@ -1,7 +1,7 @@
 import { useNavigation, useRoute } from '@react-navigation/native';
 import BottomNavigation from 'components/BottomNavigation';
 import { useTheme } from 'lib/theme/ThemeContext';
-import { FetchedListing } from 'lib/types/main';
+import { FetchedListing, Seller } from 'lib/types/main';
 import { useEffect, useRef, useState } from 'react';
 import {
     View,
@@ -19,17 +19,31 @@ import {
 import { FontAwesome, MaterialCommunityIcons, Ionicons, Feather } from '@expo/vector-icons';
 import { getSellerListings } from 'lib/backend/listings/getListings';
 import { ListingGridItem, ListingListItem } from 'components/ListingItem';
+import { getSellerBio } from 'lib/backend/auth/seller/getSeller';
+import { useAuth } from 'lib/auth/AuthContext';
 
 export default function SellerScreen() {
     const { colors, isDark } = useTheme();
+    const { isAuthenticated } = useAuth();
+    const [seller, setSeller] = useState<Seller>({
+        name: 'John Doe',
+        rating: '4.5',
+        verified: true,
+        bio: 'Eco-friendly seller with a passion for sustainability.',
+    })
     const [activeTab, setActiveTab] = useState('listings');
     const navigation = useNavigation();
     const route = useRoute();
 
     // Safe access to route params with defaults to prevent errors
     const params = route.params || {};
+    const sellerParam: Seller = params.seller || {
+        name: 'John Doe',
+        rating: '4.5',
+        verified: true,
+        bio: 'Eco-friendly seller with a passion for sustainability.',
+    }
     const id = params.id || '';
-    const seller = params.seller || { id: '', name: 'Seller', rating: 0, verified: false };
 
     const [sellerListings, setSellerListings] = useState<FetchedListing[]>([]);
     const [loading, setLoading] = useState(true);
@@ -57,6 +71,41 @@ export default function SellerScreen() {
         return (sum / listings.length).toFixed(1);
     };
 
+    const fetchSeller = async (isRefreshing = false) => {
+        if (!id) {
+            setError('No seller ID provided');
+            setLoading(false);
+            return;
+        }
+
+        if (isRefreshing) {
+            setRefreshing(true);
+        } else {
+            setLoading(true);
+        }
+        setError(null);
+
+        try {
+            const sellerBio = await getSellerBio(id, isAuthenticated);
+
+            if (typeof sellerBio === 'boolean') {
+                navigation.navigate('Login');
+                return;
+            }
+
+            setSeller({
+                ...sellerParam,
+                bio: sellerBio as string
+            })
+        } catch (error) {
+            console.error('Error fetching seller:', error);
+            setError('Failed to load seller data');
+        } finally {
+            setLoading(false);
+            setRefreshing(false);
+        }
+    };
+
     // Fetch seller listings
     const fetchSellerListings = async (isRefreshing = false) => {
         if (!id) {
@@ -78,7 +127,7 @@ export default function SellerScreen() {
 
             // Calculate average eco score
             const avgScore = calculateAverageEcoScore(listings);
-            setAverageEcoScore(parseFloat(avgScore));
+            setAverageEcoScore(String(avgScore));
 
             // Start animations after data loads
             startAnimations();
@@ -115,6 +164,7 @@ export default function SellerScreen() {
 
     // Handle pull-to-refresh
     const onRefresh = () => {
+        fetchSeller(true);
         fetchSellerListings(true);
     };
 
@@ -125,6 +175,7 @@ export default function SellerScreen() {
 
     // Initial fetch
     useEffect(() => {
+        fetchSeller();
         fetchSellerListings();
     }, [id]);
 
@@ -314,6 +365,29 @@ export default function SellerScreen() {
                                 </TouchableOpacity>
                             </View>
                         </View>
+                    </Animated.View>
+
+                    <Animated.View
+                        style={{
+                            margin: 16,
+                            backgroundColor: colors.card,
+                            borderRadius: 12,
+                            padding: 16,
+                            shadowColor: colors.shadow,
+                            shadowOffset: { width: 0, height: 2 },
+                            shadowOpacity: 0.1,
+                            shadowRadius: 8,
+                            elevation: 4,
+                            opacity: fadeAnim,
+                            transform: [{ translateY: slideAnim }, { scale: scaleAnim }],
+                        }}
+                    >
+                        <Text style={{ fontSize: 18, fontWeight: '700', color: colors.text }}>
+                            Bio
+                        </Text>
+                        <Text style={{ marginTop: 8, fontSize: 16, color: seller.bio ? colors.textSecondary : colors.textTertiary }}>
+                            {seller.bio ? seller.bio : "No bio provided."}
+                        </Text>
                     </Animated.View>
 
                     {/* Listings Section */}

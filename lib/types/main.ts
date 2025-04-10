@@ -40,3 +40,10 @@ export interface FetchedListing extends UploadListing {
   id: number
   created_at: string
 }
+
+export interface Seller {
+  name: string
+  rating: string | number
+  verified: boolean
+  bio?: string
+}
