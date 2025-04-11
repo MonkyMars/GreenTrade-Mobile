@@ -20,13 +20,10 @@ import { useTheme } from '../lib/theme/ThemeContext'
 import {
   categories,
   cleanCategory,
-  findCategory,
 } from '../lib/functions/category'
 import { FetchedListing } from 'lib/types/main'
 import { getListings } from 'lib/backend/listings/getListings'
-import { formatDistanceToNow } from 'date-fns'
 import { NativeStackNavigationProp } from '@react-navigation/native-stack/lib/typescript/src/types'
-import { useAuth } from 'lib/auth/AuthContext';
 import { ListingGridItem, ListingListItem } from '../components/ListingItem'
 
 type ListingsScreenProps = NativeStackNavigationProp<
@@ -39,7 +36,7 @@ export default function ListingsScreen({ navigation }: ListingsScreenProps) {
   const route = useRoute();
   const params = route.params || {};
   const category = params.category;
-  const { colors, isDark } = useTheme()
+  const { colors } = useTheme()
   const [activeTab, setActiveTab] = useState('listings')
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('list')
   const [isFilterOpen, setIsFilterOpen] = useState(false)
@@ -48,7 +45,6 @@ export default function ListingsScreen({ navigation }: ListingsScreenProps) {
   const [listings, setListings] = useState<FetchedListing[]>([])
   const [loading, setLoading] = useState(false)
   const slideAnim = useRef(new Animated.Value(width)).current
-  const { user } = useAuth();
 
   useEffect(() => {
     if (category) {

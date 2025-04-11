@@ -269,7 +269,7 @@ export default function HomeScreen() {
                 </Text>
               </View>
 
-              {item.seller.verified && (
+              {/* {item.sellerVerified && (
                 <View
                   style={{
                     backgroundColor: colors.primaryLight,
@@ -280,7 +280,7 @@ export default function HomeScreen() {
                 >
                   <Text style={{ color: colors.primary, fontSize: 12 }}>Verified ✓</Text>
                 </View>
-              )}
+              )} */}
             </View>
           </View>
 
@@ -320,17 +320,17 @@ export default function HomeScreen() {
               }}
             >
               <Text style={{ color: 'white', fontWeight: '600' }}>
-                {item.seller.name.charAt(0).toUpperCase()}
+                {item.sellerUsername.charAt(0).toUpperCase()}
               </Text>
             </View>
             <View style={{ marginLeft: 8 }}>
               <Text style={{ fontWeight: '600', color: colors.text }}>
-                {item.seller.name}
+                {item.sellerUsername}
               </Text>
               <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                 <FontAwesome name="star" size={12} color={colors.rating} />
                 <Text style={{ fontSize: 12, color: colors.textSecondary, marginLeft: 4 }}>
-                  {item.seller.rating}
+                  {/* {item.sellerRating} */}
                 </Text>
               </View>
             </View>
