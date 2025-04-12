@@ -1,6 +1,7 @@
 import { useNavigation, useRoute } from '@react-navigation/native';
 import BottomNavigation from 'components/BottomNavigation';
 import { useTheme } from 'lib/theme/ThemeContext';
+import { useAuth } from 'lib/auth/AuthContext';
 import { FetchedListing, Seller } from 'lib/types/main';
 import { useEffect, useRef, useState } from 'react';
 import {
@@ -14,17 +15,22 @@ import {
     Animated,
     Dimensions,
     ActivityIndicator,
-    RefreshControl
+    RefreshControl,
+    Modal,
+    Alert,
+    Image
 } from 'react-native';
 import { FontAwesome, MaterialCommunityIcons, Ionicons, Feather } from '@expo/vector-icons';
 import { getSellerListings } from 'lib/backend/listings/getListings';
 import { ListingGridItem, ListingListItem } from 'components/ListingItem';
+import { createConversation } from 'lib/backend/chat/createConversation';
 
 export default function SellerScreen() {
     const route = useRoute();
     const params = route.params || {};
     const sellerParam: Seller = params.seller
     const { colors, isDark } = useTheme();
+    const { user } = useAuth();
     const [activeTab, setActiveTab] = useState('listings');
     const navigation = useNavigation();
     const [sellerListings, setSellerListings] = useState<FetchedListing[]>([]);
@@ -33,6 +39,8 @@ export default function SellerScreen() {
     const [selectedView, setSelectedView] = useState<'grid' | 'list'>('grid');
     const [error, setError] = useState<string | null>(null);
     const [averageEcoScore, setAverageEcoScore] = useState(sellerParam.rating);
+    const [isListingModalVisible, setIsListingModalVisible] = useState(false);
+    const [isCreatingConversation, setIsCreatingConversation] = useState(false);
 
     // Animation values
     const scrollY = useRef(new Animated.Value(0)).current;
@@ -117,6 +125,74 @@ export default function SellerScreen() {
     // Handle listing press
     const handleListingPress = (id: string) => {
         navigation.navigate('ListingDetail', { id });
+    };
+
+    // Handle contact seller
+    const handleContactSeller = () => {
+        if (!user || !user.id) {
+            Alert.alert(
+                "Login Required",
+                "You need to be logged in to contact the seller.",
+                [
+                    { text: "Cancel", style: "cancel" },
+                    { text: "Login", onPress: () => navigation.navigate('Login' as never) }
+                ]
+            );
+            return;
+        }
+
+        // Check if user is trying to contact themselves
+        if (user.id === sellerParam.id) {
+            Alert.alert("Error", "You cannot contact yourself as a seller");
+            return;
+        }
+
+        if (sellerListings.length === 0) {
+            Alert.alert("No Listings", "This seller doesn't have any listings yet.");
+            return;
+        }
+
+        // Show the listing selection modal
+        setIsListingModalVisible(true);
+    };
+
+    // Handle the selection of a listing to start a conversation about
+    const handleListingSelect = async (listing: FetchedListing) => {
+        try {
+            setIsCreatingConversation(true);
+
+            // Create or get conversation
+            const conversationId = await createConversation(
+                listing.id,
+                sellerParam.id,
+                user?.id || ""
+            );
+
+            // Hide modal
+            setIsListingModalVisible(false);
+            setIsCreatingConversation(false);
+
+            // Get image URL for the listing
+            const imageUrl = Array.isArray(listing.imageUrl)
+                ? listing.imageUrl[0]
+                : (listing.imageUrl as any).urls && Array.isArray((listing.imageUrl as any).urls)
+                    ? (listing.imageUrl as any).urls[0]
+                    : 'https://via.placeholder.com/400x300';
+
+            // Navigate to messages screen with conversation ID
+            navigation.navigate('Messages', {
+                conversationId,
+                listingInfo: {
+                    id: listing.id,
+                    title: listing.title,
+                    image: imageUrl,
+                }
+            });
+        } catch (error) {
+            console.error('Error creating conversation:', error);
+            setIsCreatingConversation(false);
+            Alert.alert("Error", "Failed to start conversation. Please try again.");
+        }
     };
 
     // Initial fetch
@@ -317,10 +393,7 @@ export default function SellerScreen() {
                                         flexDirection: 'row',
                                         justifyContent: 'center',
                                     }}
-                                    onPress={() => {
-                                        // Navigate to messages with this seller
-                                        navigation.navigate('Messages', { contactUser: sellerParam });
-                                    }}
+                                    onPress={handleContactSeller}
                                 >
                                     <FontAwesome name="comment" size={16} color="white" style={{ marginRight: 8 }} />
                                     <Text style={{ color: 'white', fontWeight: '600' }}>
@@ -449,6 +522,111 @@ export default function SellerScreen() {
             )}
 
             <BottomNavigation activeTab={activeTab} onTabChange={setActiveTab} />
+
+            {/* Listing Selection Modal */}
+            <Modal
+                visible={isListingModalVisible}
+                transparent={true}
+                animationType="slide"
+                onRequestClose={() => setIsListingModalVisible(false)}
+            >
+                <View style={{
+                    flex: 1,
+                    backgroundColor: 'rgba(0,0,0,0.5)',
+                    justifyContent: 'flex-end'
+                }}>
+                    <View style={{
+                        backgroundColor: colors.card,
+                        borderTopLeftRadius: 16,
+                        borderTopRightRadius: 16,
+                        maxHeight: '80%'
+                    }}>
+                        <View style={{
+                            padding: 16,
+                            borderBottomWidth: 1,
+                            borderBottomColor: colors.border,
+                            flexDirection: 'row',
+                            justifyContent: 'space-between',
+                            alignItems: 'center'
+                        }}>
+                            <Text style={{ fontSize: 18, fontWeight: '600', color: colors.text }}>
+                                Select a listing to discuss
+                            </Text>
+                            <TouchableOpacity
+                                onPress={() => setIsListingModalVisible(false)}
+                                disabled={isCreatingConversation}
+                            >
+                                <Feather name="x" size={24} color={colors.text} />
+                            </TouchableOpacity>
+                        </View>
+
+                        {isCreatingConversation ? (
+                            <View style={{ padding: 20, alignItems: 'center' }}>
+                                <ActivityIndicator size="large" color={colors.primary} />
+                                <Text style={{ marginTop: 16, color: colors.textSecondary }}>
+                                    Creating conversation...
+                                </Text>
+                            </View>
+                        ) : (
+                            <FlatList
+                                data={sellerListings}
+                                keyExtractor={(item) => item.id.toString()}
+                                renderItem={({ item }) => (
+                                    <TouchableOpacity
+                                        style={{
+                                            flexDirection: 'row',
+                                            padding: 16,
+                                            borderBottomWidth: 1,
+                                            borderBottomColor: colors.border,
+                                            alignItems: 'center'
+                                        }}
+                                        onPress={() => handleListingSelect(item)}
+                                    >
+                                        {/* Listing image */}
+                                        <View style={{
+                                            width: 60,
+                                            height: 60,
+                                            borderRadius: 6,
+                                            overflow: 'hidden',
+                                            backgroundColor: colors.borderLight
+                                        }}>
+                                            {item.imageUrl && (
+                                                <Image
+                                                    source={{
+                                                        uri: Array.isArray(item.imageUrl)
+                                                            ? item.imageUrl[0]
+                                                            : ((item.imageUrl as any).urls && Array.isArray((item.imageUrl as any).urls))
+                                                                ? (item.imageUrl as any).urls[0]
+                                                                : 'https://via.placeholder.com/400x300'
+                                                    }}
+                                                    style={{ width: 60, height: 60 }}
+                                                />
+                                            )}
+                                        </View>
+
+                                        {/* Listing details */}
+                                        <View style={{ marginLeft: 12, flex: 1 }}>
+                                            <Text style={{
+                                                fontSize: 16,
+                                                fontWeight: '600',
+                                                color: colors.text,
+                                                marginBottom: 4
+                                            }} numberOfLines={1}>
+                                                {item.title}
+                                            </Text>
+                                            <Text style={{ color: colors.primary, fontWeight: '500' }}>
+                                                €{item.price}
+                                            </Text>
+                                        </View>
+
+                                        <FontAwesome name="chevron-right" size={14} color={colors.textTertiary} />
+                                    </TouchableOpacity>
+                                )}
+                            />
+                        )}
+                    </View>
+                </View>
+            </Modal>
         </SafeAreaView>
     );
 }

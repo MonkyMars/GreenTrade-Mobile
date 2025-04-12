@@ -15,187 +15,35 @@ import {
     ActivityIndicator,
     Animated,
     Dimensions,
-    StatusBar
+    StatusBar,
+    Alert
 } from "react-native";
 import { FontAwesome, Feather, MaterialCommunityIcons } from '@expo/vector-icons';
-import { useNavigation } from "@react-navigation/native";
+import { useNavigation, useRoute } from "@react-navigation/native";
 import ProtectedRoute from "components/ProtectedRoute";
-
-// Types for our messages
-interface Message {
-    id: string;
-    text: string;
-    senderId: string;
-    receiverId: string;
-    timestamp: Date;
-    read: boolean;
-}
-
-interface ChatThread {
-    id: string;
-    participantId: string;
-    participantName: string;
-    participantImage?: string | null;
-    lastMessage: string;
-    lastMessageTime: Date;
-    unreadCount: number;
-    verified: boolean;
-    online: boolean;
-}
-
-// Mock data for conversations
-const mockChatThreads: ChatThread[] = [
-    {
-        id: '1',
-        participantId: 'user1',
-        participantName: 'Emma Johnson',
-        lastMessage: 'Is this plant pot still available?',
-        lastMessageTime: new Date(Date.now() - 1000 * 60 * 5), // 5 minutes ago
-        unreadCount: 2,
-        verified: true,
-        online: true
-    },
-    {
-        id: '2',
-        participantId: 'user2',
-        participantName: 'Michael Stevens',
-        lastMessage: 'Great! I can pick it up tomorrow',
-        lastMessageTime: new Date(Date.now() - 1000 * 60 * 60), // 1 hour ago
-        unreadCount: 0,
-        verified: true,
-        online: false
-    },
-    {
-        id: '3',
-        participantId: 'user3',
-        participantName: 'Sarah Williams',
-        lastMessage: 'I was wondering if you might consider a trade?',
-        lastMessageTime: new Date(Date.now() - 1000 * 60 * 60 * 3), // 3 hours ago
-        unreadCount: 0,
-        verified: false,
-        online: true
-    },
-    {
-        id: '4',
-        participantId: 'user4',
-        participantName: 'David Chen',
-        lastMessage: 'Thank you for the bamboo chair! It looks beautiful in my living room.',
-        lastMessageTime: new Date(Date.now() - 1000 * 60 * 60 * 24), // 1 day ago
-        unreadCount: 0,
-        verified: true,
-        online: false
-    },
-    {
-        id: '5',
-        participantId: 'user5',
-        participantName: 'Lisa Rodriguez',
-        lastMessage: 'Do you have any more of those reusable bags?',
-        lastMessageTime: new Date(Date.now() - 1000 * 60 * 60 * 48), // 2 days ago
-        unreadCount: 0,
-        verified: false,
-        online: false
-    },
-];
-
-// Mock data for chat messages
-const mockMessages: { [key: string]: Message[] } = {
-    '1': [
-        {
-            id: '1-1',
-            text: 'Hello, I saw your listing for the eco-friendly plant pot. Is it still available?',
-            senderId: 'user1',
-            receiverId: 'currentUser',
-            timestamp: new Date(Date.now() - 1000 * 60 * 10), // 10 minutes ago
-            read: true
-        },
-        {
-            id: '1-2',
-            text: 'Yes, it is! Are you interested in purchasing it?',
-            senderId: 'currentUser',
-            receiverId: 'user1',
-            timestamp: new Date(Date.now() - 1000 * 60 * 8), // 8 minutes ago
-            read: true
-        },
-        {
-            id: '1-3',
-            text: 'Definitely! I love that it\'s made from recycled materials.',
-            senderId: 'user1',
-            receiverId: 'currentUser',
-            timestamp: new Date(Date.now() - 1000 * 60 * 7), // 7 minutes ago
-            read: true
-        },
-        {
-            id: '1-4',
-            text: 'Great! Would you like to arrange a pickup or would you prefer shipping?',
-            senderId: 'currentUser',
-            receiverId: 'user1',
-            timestamp: new Date(Date.now() - 1000 * 60 * 6), // 6 minutes ago
-            read: true
-        },
-        {
-            id: '1-5',
-            text: 'Is this plant pot still available?',
-            senderId: 'user1',
-            receiverId: 'currentUser',
-            timestamp: new Date(Date.now() - 1000 * 60 * 5), // 5 minutes ago
-            read: false
-        },
-    ],
-    '2': [
-        {
-            id: '2-1',
-            text: 'Hi there, I\'m interested in the bamboo cutlery set you have listed.',
-            senderId: 'user2',
-            receiverId: 'currentUser',
-            timestamp: new Date(Date.now() - 1000 * 60 * 120), // 2 hours ago
-            read: true
-        },
-        {
-            id: '2-2',
-            text: 'Hello! Yes, I still have it. It\'s a complete set with a carrying case.',
-            senderId: 'currentUser',
-            receiverId: 'user2',
-            timestamp: new Date(Date.now() - 1000 * 60 * 115), // 1 hour 55 minutes ago
-            read: true
-        },
-        {
-            id: '2-3',
-            text: 'Perfect! I\'d like to buy it. How much is shipping?',
-            senderId: 'user2',
-            receiverId: 'currentUser',
-            timestamp: new Date(Date.now() - 1000 * 60 * 90), // 1 hour 30 minutes ago
-            read: true
-        },
-        {
-            id: '2-4',
-            text: 'Shipping would be €3.50, or you can pick it up for free if you\'re local.',
-            senderId: 'currentUser',
-            receiverId: 'user2',
-            timestamp: new Date(Date.now() - 1000 * 60 * 70), // 1 hour 10 minutes ago
-            read: true
-        },
-        {
-            id: '2-5',
-            text: 'Great! I can pick it up tomorrow',
-            senderId: 'user2',
-            receiverId: 'currentUser',
-            timestamp: new Date(Date.now() - 1000 * 60 * 60), // 1 hour ago
-            read: true
-        },
-    ]
-};
+import { ChatMessage, Conversation } from "lib/types/chat";
+import { getConversations } from "lib/backend/chat/getConversations";
+import { getMessages } from "lib/backend/chat/getMessages";
+import { sendMessage } from "lib/backend/chat/sendMessage";
 
 export default function MessagesScreen() {
     const { colors, isDark } = useTheme();
     const { user } = useAuth();
     const navigation = useNavigation();
+    const route = useRoute();
+    const params = route.params || {};
     const [activeTab, setActiveTab] = useState('messages');
-    const [chatThreads, setChatThreads] = useState<ChatThread[]>(mockChatThreads);
-    const [loading, setLoading] = useState(false);
-    const [selectedThreadId, setSelectedThreadId] = useState<string | null>(null);
-    const [messages, setMessages] = useState<Message[]>([]);
+    const [conversations, setConversations] = useState<Conversation[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [loadingMessages, setLoadingMessages] = useState(false);
+    const [selectedConversationId, setSelectedConversationId] = useState<string | null>(
+        params.conversationId ? params.conversationId : null
+    );
+    const [messages, setMessages] = useState<ChatMessage[]>([]);
     const [newMessage, setNewMessage] = useState('');
     const [searchQuery, setSearchQuery] = useState('');
+    const [sendingMessage, setSendingMessage] = useState(false);
+    const [refreshing, setRefreshing] = useState(false);
 
     // Animation values
     const fadeAnim = useRef(new Animated.Value(0)).current;
@@ -217,42 +65,122 @@ export default function MessagesScreen() {
                 useNativeDriver: true,
             }),
         ]).start();
-    }, []);
 
-    // Load chat messages when a thread is selected
+        // Fetch conversations when component mounts
+        if (user && user.id) {
+            fetchConversations();
+        }
+    }, [user]);
+
+    // Check for conversation ID from navigation params and open that conversation
     useEffect(() => {
-        if (selectedThreadId) {
-            setLoading(true);
-            // Simulating API call to fetch messages
-            setTimeout(() => {
-                setMessages(mockMessages[selectedThreadId] || []);
-                setLoading(false);
+        if (params.conversationId && !selectedConversationId) {
+            setSelectedConversationId(params.conversationId);
+        }
+    }, [params]);
 
-                // Animate the chat window sliding in
-                Animated.spring(chatSlideAnim, {
-                    toValue: 0,
-                    friction: 8,
-                    tension: 40,
-                    useNativeDriver: true,
-                }).start();
-
-                // Scroll to the bottom of the chat
-                if (listRef.current) {
-                    setTimeout(() => {
-                        listRef.current?.scrollToEnd({ animated: false });
-                    }, 100);
-                }
-            }, 500);
+    // Load chat messages when a conversation is selected
+    useEffect(() => {
+        if (selectedConversationId) {
+            fetchMessages(selectedConversationId);
         } else {
             // Reset chat slide animation when returning to threads list
             chatSlideAnim.setValue(Dimensions.get('window').width);
         }
-    }, [selectedThreadId]);
+    }, [selectedConversationId]);
 
-    // Filter threads based on search query
-    const filteredThreads = chatThreads.filter(thread =>
-        thread.participantName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        thread.lastMessage.toLowerCase().includes(searchQuery.toLowerCase())
+    // Fetch conversations
+    const fetchConversations = async (isRefresh = false) => {
+        if (!user || !user.id) return;
+
+        if (isRefresh) {
+            setRefreshing(true);
+        } else {
+            setLoading(true);
+        }
+
+        try {
+            const fetchedConversations = await getConversations(user.id);
+
+            // Process conversations to add participantName and other UI properties
+            const processedConversations = fetchedConversations.map(convo => {
+                // Determine if user is buyer or seller to set the participant info correctly
+                const isUserBuyer = convo.buyerId === user.id;
+                return {
+                    ...convo,
+                    participantId: isUserBuyer ? convo.sellerId : convo.buyerId,
+                    // Use the actual participant name if provided, don't fall back to Buyer/Seller
+                    participantName: convo.participantName || "User",
+                    isOnline: convo.isOnline || false,
+                    isVerified: convo.isVerified || false,
+                    unreadCount: convo.unreadCount || 0,
+                    lastMessageTime: convo.lastMessageTime ? new Date(convo.lastMessageTime) : new Date(),
+                    lastMessage: convo.lastMessage || "Start a conversation",
+                };
+            });
+
+            setConversations(processedConversations);
+
+            // Start animations
+            Animated.parallel([
+                Animated.timing(fadeAnim, {
+                    toValue: 1,
+                    duration: 400,
+                    useNativeDriver: true,
+                }),
+                Animated.timing(slideAnim, {
+                    toValue: 0,
+                    duration: 400,
+                    useNativeDriver: true,
+                }),
+            ]).start();
+
+        } catch (error) {
+            console.error('Error fetching conversations:', error);
+            Alert.alert('Error', 'Failed to load conversations');
+        } finally {
+            setLoading(false);
+            setRefreshing(false);
+        }
+    };
+
+    // Fetch messages for a conversation
+    const fetchMessages = async (conversationId: string) => {
+        if (!conversationId) return;
+
+        setLoadingMessages(true);
+
+        try {
+            const fetchedMessages = await getMessages(conversationId);
+            setMessages(fetchedMessages);
+
+            // Animate the chat window sliding in
+            Animated.spring(chatSlideAnim, {
+                toValue: 0,
+                friction: 8,
+                tension: 40,
+                useNativeDriver: true,
+            }).start();
+
+            // Scroll to the bottom of the chat
+            if (listRef.current) {
+                setTimeout(() => {
+                    listRef.current?.scrollToEnd({ animated: false });
+                }, 100);
+            }
+
+        } catch (error) {
+            console.error('Error fetching messages:', error);
+            Alert.alert('Error', 'Failed to load messages');
+        } finally {
+            setLoadingMessages(false);
+        }
+    };
+
+    // Filter conversations based on search query
+    const filteredConversations = conversations.filter(conversation =>
+        (conversation.participantName || "").toLowerCase().includes(searchQuery.toLowerCase()) ||
+        (conversation.lastMessage || "").toLowerCase().includes(searchQuery.toLowerCase())
     );
 
     // Format timestamp to a readable format
@@ -277,41 +205,48 @@ export default function MessagesScreen() {
     };
 
     // Handle sending a new message
-    const handleSendMessage = () => {
-        if (!newMessage.trim() || !selectedThreadId) return;
+    const handleSendMessage = async () => {
+        if (!newMessage.trim() || !selectedConversationId || !user || !user.id || sendingMessage) return;
 
-        const newMsg: Message = {
-            id: `${selectedThreadId}-${messages.length + 1}`,
-            text: newMessage.trim(),
-            senderId: 'currentUser',
-            receiverId: `user${selectedThreadId}`,
-            timestamp: new Date(),
-            read: false
-        };
+        setSendingMessage(true);
 
-        // Add message to the current thread
-        setMessages(prevMessages => [...prevMessages, newMsg]);
+        try {
+            const sentMessage = await sendMessage(
+                selectedConversationId,
+                user.id,
+                newMessage.trim()
+            );
 
-        // Update the last message in threads list
-        setChatThreads(prevThreads =>
-            prevThreads.map(thread =>
-                thread.id === selectedThreadId
-                    ? {
-                        ...thread,
-                        lastMessage: newMessage.trim(),
-                        lastMessageTime: new Date()
-                    }
-                    : thread
-            )
-        );
+            // Add message to the current thread
+            setMessages(prevMessages => [...prevMessages, sentMessage]);
 
-        // Clear input field
-        setNewMessage('');
+            // Update the last message in conversations list
+            setConversations(prevConversations =>
+                prevConversations.map(convo =>
+                    convo.id === selectedConversationId
+                        ? {
+                            ...convo,
+                            lastMessage: newMessage.trim(),
+                            lastMessageTime: new Date()
+                        }
+                        : convo
+                )
+            );
 
-        // Scroll to bottom of chat
-        setTimeout(() => {
-            listRef.current?.scrollToEnd({ animated: true });
-        }, 100);
+            // Clear input field
+            setNewMessage('');
+
+            // Scroll to bottom of chat
+            setTimeout(() => {
+                listRef.current?.scrollToEnd({ animated: true });
+            }, 100);
+
+        } catch (error) {
+            console.error('Error sending message:', error);
+            Alert.alert('Error', 'Failed to send message');
+        } finally {
+            setSendingMessage(false);
+        }
     };
 
     // Return to threads list
@@ -322,14 +257,14 @@ export default function MessagesScreen() {
             duration: 250,
             useNativeDriver: true,
         }).start(() => {
-            setSelectedThreadId(null);
+            setSelectedConversationId(null);
         });
     };
 
-    // Render thread item
-    const renderThreadItem = ({ item }: { item: ChatThread }) => (
+    // Render conversation item
+    const renderConversationItem = ({ item }: { item: Conversation }) => (
         <TouchableOpacity
-            onPress={() => setSelectedThreadId(item.id)}
+            onPress={() => setSelectedConversationId(item.id)}
             style={{
                 flexDirection: 'row',
                 padding: 16,
@@ -355,12 +290,12 @@ export default function MessagesScreen() {
                     />
                 ) : (
                     <Text style={{ fontSize: 18, fontWeight: '700', color: colors.primary }}>
-                        {item.participantName.charAt(0).toUpperCase()}
+                        {(item.participantName || "?").charAt(0).toUpperCase()}
                     </Text>
                 )}
 
                 {/* Online indicator */}
-                {item.online && (
+                {item.isOnline && (
                     <View style={{
                         position: 'absolute',
                         bottom: 0,
@@ -379,14 +314,14 @@ export default function MessagesScreen() {
                 <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 4 }}>
                     <Text style={{
                         fontSize: 16,
-                        fontWeight: item.unreadCount > 0 ? '700' : '500',
+                        fontWeight: (item.unreadCount || 0) > 0 ? '700' : '500',
                         color: colors.text,
                         marginRight: 6
                     }}>
-                        {item.participantName}
+                        {item.participantName || "User"}
                     </Text>
 
-                    {item.verified && (
+                    {item.isVerified && (
                         <View style={{
                             backgroundColor: colors.primaryLight,
                             borderRadius: 10,
@@ -403,20 +338,20 @@ export default function MessagesScreen() {
                     numberOfLines={1}
                     style={{
                         fontSize: 14,
-                        color: item.unreadCount > 0 ? colors.text : colors.textSecondary,
-                        fontWeight: item.unreadCount > 0 ? '500' : 'normal',
+                        color: (item.unreadCount || 0) > 0 ? colors.text : colors.textSecondary,
+                        fontWeight: (item.unreadCount || 0) > 0 ? '500' : 'normal',
                     }}
                 >
-                    {item.lastMessage}
+                    {item.lastMessage || "Start a conversation about " + (item.listingTitle || "this listing")}
                 </Text>
             </View>
 
             <View style={{ alignItems: 'flex-end', justifyContent: 'space-between', height: 50 }}>
                 <Text style={{ fontSize: 12, color: colors.textTertiary, marginBottom: 4 }}>
-                    {formatTime(item.lastMessageTime)}
+                    {item.lastMessageTime ? formatTime(new Date(item.lastMessageTime)) : ''}
                 </Text>
 
-                {item.unreadCount > 0 && (
+                {(item.unreadCount || 0) > 0 && (
                     <View style={{
                         backgroundColor: colors.primary,
                         borderRadius: 12,
@@ -436,8 +371,9 @@ export default function MessagesScreen() {
     );
 
     // Render message item
-    const renderMessageItem = ({ item }: { item: Message }) => {
-        const isUserMessage = item.senderId === 'currentUser';
+    const renderMessageItem = ({ item }: { item: ChatMessage }) => {
+        const isUserMessage = item.senderId === user?.id;
+        const selectedConversation = conversations.find(c => c.id === selectedConversationId);
 
         return (
             <View style={{
@@ -458,7 +394,7 @@ export default function MessagesScreen() {
                         alignSelf: 'flex-end'
                     }}>
                         <Text style={{ fontSize: 14, fontWeight: '700', color: colors.primary }}>
-                            {mockChatThreads.find(t => t.id === selectedThreadId)?.participantName.charAt(0).toUpperCase()}
+                            {(selectedConversation?.participantName || "?").charAt(0).toUpperCase()}
                         </Text>
                     </View>
                 )}
@@ -489,12 +425,10 @@ export default function MessagesScreen() {
                         marginTop: 4,
                         textAlign: isUserMessage ? 'right' : 'left'
                     }}>
-                        {item.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                        {isUserMessage && (
-                            <Text style={{ marginLeft: 4 }}>
-                                {item.read ? ' ✓✓' : ' ✓'}
-                            </Text>
-                        )}
+                        {typeof item.timestamp === 'string'
+                            ? new Date(item.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+                            : item.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+                        }
                     </Text>
                 </View>
             </View>
@@ -564,7 +498,7 @@ export default function MessagesScreen() {
                     <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} />
 
                     {/* Threads List View */}
-                    {!selectedThreadId && (
+                    {!selectedConversationId && (
                         <Animated.View
                             style={{
                                 flex: 1,
@@ -627,10 +561,15 @@ export default function MessagesScreen() {
                             </View>
 
                             {/* Chat Threads List */}
-                            {chatThreads.length > 0 ? (
+                            {loading ? (
+                                <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+                                    <ActivityIndicator size="large" color={colors.primary} />
+                                    <Text style={{ marginTop: 16, color: colors.textSecondary }}>Loading conversations...</Text>
+                                </View>
+                            ) : conversations.length > 0 ? (
                                 <FlatList
-                                    data={filteredThreads}
-                                    renderItem={renderThreadItem}
+                                    data={filteredConversations}
+                                    renderItem={renderConversationItem}
                                     keyExtractor={item => item.id}
                                     contentContainerStyle={{
                                         paddingBottom: 100, // extra padding for bottom nav
@@ -652,7 +591,7 @@ export default function MessagesScreen() {
                     )}
 
                     {/* Chat Detail View */}
-                    {selectedThreadId && (
+                    {selectedConversationId && (
                         <Animated.View
                             style={{
                                 flex: 1,
@@ -687,6 +626,7 @@ export default function MessagesScreen() {
                                     <Feather name="arrow-left" size={24} color={colors.text} />
                                 </TouchableOpacity>
 
+                                {/* User Avatar */}
                                 <View style={{
                                     width: 40,
                                     height: 40,
@@ -697,18 +637,19 @@ export default function MessagesScreen() {
                                     marginRight: 12,
                                     position: 'relative'
                                 }}>
-                                    {chatThreads.find(t => t.id === selectedThreadId)?.participantImage ? (
+                                    {conversations.find(c => c.id === selectedConversationId)?.participantImage ? (
                                         <Image
-                                            source={{ uri: chatThreads.find(t => t.id === selectedThreadId)?.participantImage || undefined }}
+                                            source={{ uri: conversations.find(c => c.id === selectedConversationId)?.participantImage || undefined }}
                                             style={{ width: 40, height: 40, borderRadius: 20 }}
                                         />
                                     ) : (
                                         <Text style={{ fontSize: 16, fontWeight: '700', color: colors.primary }}>
-                                            {chatThreads.find(t => t.id === selectedThreadId)?.participantName.charAt(0).toUpperCase()}
+                                            {(conversations.find(c => c.id === selectedConversationId)?.participantName || "?").charAt(0).toUpperCase()}
                                         </Text>
                                     )}
 
-                                    {chatThreads.find(t => t.id === selectedThreadId)?.online && (
+                                    {/* Online indicator */}
+                                    {conversations.find(c => c.id === selectedConversationId)?.isOnline && (
                                         <View style={{
                                             position: 'absolute',
                                             bottom: 0,
@@ -726,10 +667,10 @@ export default function MessagesScreen() {
                                 <View style={{ flex: 1 }}>
                                     <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                                         <Text style={{ fontSize: 16, fontWeight: '600', color: colors.text, marginRight: 6 }}>
-                                            {chatThreads.find(t => t.id === selectedThreadId)?.participantName}
+                                            {conversations.find(c => c.id === selectedConversationId)?.participantName || "User"}
                                         </Text>
 
-                                        {chatThreads.find(t => t.id === selectedThreadId)?.verified && (
+                                        {conversations.find(c => c.id === selectedConversationId)?.isVerified && (
                                             <View style={{
                                                 backgroundColor: colors.primaryLight,
                                                 borderRadius: 10,
@@ -742,7 +683,9 @@ export default function MessagesScreen() {
                                     </View>
 
                                     <Text style={{ fontSize: 12, color: colors.textTertiary }}>
-                                        {chatThreads.find(t => t.id === selectedThreadId)?.online ? 'Online now' : 'Last active recently'}
+                                        {conversations.find(c => c.id === selectedConversationId)?.listingTitle && (
+                                            `About: ${conversations.find(c => c.id === selectedConversationId)?.listingTitle}`
+                                        )}
                                     </Text>
                                 </View>
 
@@ -752,7 +695,7 @@ export default function MessagesScreen() {
                             </View>
 
                             {/* Messages List */}
-                            {loading ? (
+                            {loadingMessages ? (
                                 <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
                                     <ActivityIndicator size="large" color={colors.primary} />
                                     <Text style={{ marginTop: 16, color: colors.textSecondary }}>Loading messages...</Text>
@@ -823,12 +766,16 @@ export default function MessagesScreen() {
                                         style={{
                                             padding: 8,
                                             marginLeft: 8,
-                                            opacity: newMessage.trim().length > 0 ? 1 : 0.5
+                                            opacity: (newMessage.trim().length > 0 && !sendingMessage) ? 1 : 0.5
                                         }}
                                         onPress={handleSendMessage}
-                                        disabled={newMessage.trim().length === 0}
+                                        disabled={newMessage.trim().length === 0 || sendingMessage}
                                     >
-                                        <Feather name="send" size={24} color={colors.primary} />
+                                        {sendingMessage ? (
+                                            <ActivityIndicator size="small" color={colors.primary} />
+                                        ) : (
+                                            <Feather name="send" size={24} color={colors.primary} />
+                                        )}
                                     </TouchableOpacity>
                                 </View>
                             </KeyboardAvoidingView>

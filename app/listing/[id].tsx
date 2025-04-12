@@ -4,17 +4,19 @@ import { useEffect, useState, useRef } from 'react';
 import {
     View, Text, ActivityIndicator, SafeAreaView, Image,
     TouchableOpacity, Dimensions, Animated,
-    FlatList, Share, Platform
+    FlatList, Share, Platform, Alert
 } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import BottomNavigation from '../../components/BottomNavigation';
 import { formatDistanceToNow } from "date-fns";
 import { useTheme } from 'lib/theme/ThemeContext';
+import { useAuth } from 'lib/auth/AuthContext';
 import {
     FontAwesome, Feather, MaterialCommunityIcons, Ionicons
 } from '@expo/vector-icons';
 import { StatusBar } from 'expo-status-bar';
 import { findCategory } from 'lib/functions/category';
+import { createConversation } from 'lib/backend/chat/createConversation';
 
 export default function ListingDetailScreen() {
     const { colors, isDark } = useTheme();
@@ -26,6 +28,7 @@ export default function ListingDetailScreen() {
     const [loading, setLoading] = useState(true);
     const [currentImageIndex, setCurrentImageIndex] = useState(0);
     const [isFavorite, setIsFavorite] = useState(false);
+    const { user } = useAuth();
 
     // Animation references
     const scrollY = useRef(new Animated.Value(0)).current;
@@ -152,9 +155,46 @@ export default function ListingDetailScreen() {
     };
 
     // Function to contact seller
-    const contactSeller = () => {
-        // Implement your contact logic here
-        console.log('Contact seller:', listing.sellerId);
+    const contactSeller = async () => {
+        if (!user || !user.id) {
+            Alert.alert(
+                "Login Required",
+                "You need to be logged in to contact the seller.",
+                [
+                    { text: "Cancel", style: "cancel" },
+                    { text: "Login", onPress: () => navigation.navigate('Login' as never) }
+                ]
+            );
+            return;
+        }
+
+        try {
+            // Check if user is trying to contact themselves
+            if (user.id === listing.sellerId) {
+                Alert.alert("Error", "You cannot contact yourself as a seller");
+                return;
+            }
+
+            // Create or get conversation
+            const conversationId = await createConversation(
+                listing.id,
+                listing.sellerId,
+                user.id
+            );
+
+            // Navigate to messages screen with conversation ID
+            navigation.navigate('Messages', {
+                conversationId,
+                listingInfo: {
+                    id: listing.id,
+                    title: listing.title,
+                    image: images[0],
+                }
+            });
+        } catch (error) {
+            console.error('Error contacting seller:', error);
+            Alert.alert("Error", "Failed to start conversation. Please try again.");
+        }
     };
 
     return (
