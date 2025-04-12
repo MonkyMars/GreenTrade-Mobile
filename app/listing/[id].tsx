@@ -154,7 +154,7 @@ export default function ListingDetailScreen() {
     // Function to contact seller
     const contactSeller = () => {
         // Implement your contact logic here
-        console.log('Contact seller:', listing.seller.id);
+        console.log('Contact seller:', listing.sellerId);
     };
 
     return (
@@ -230,7 +230,7 @@ export default function ListingDetailScreen() {
                                 );
                                 setCurrentImageIndex(newIndex);
                             }}
-                            keyExtractor={(item, index) => `image-${index}`}
+                            keyExtractor={(_, index) => `image-${index}`}
                             renderItem={({ item }) => (
                                 <Image
                                     source={{ uri: item }}
@@ -430,7 +430,7 @@ export default function ListingDetailScreen() {
                                     style={{ marginRight: 8, width: 20 }}
                                 />
                                 <Text style={{ fontSize: 15, color: colors.textSecondary }}>
-                                    Posted {formatDistanceToNow(new Date(listing.created_at), { addSuffix: true })}
+                                    Posted {formatDistanceToNow(new Date(listing.createdAt), { addSuffix: true })}
                                 </Text>
                             </View>
                             <View style={{ flexDirection: 'row', alignItems: 'center' }}>
@@ -497,7 +497,7 @@ export default function ListingDetailScreen() {
                                 marginRight: 12
                             }}>
                                 <Text style={{ color: 'white', fontSize: 18, fontWeight: '600' }}>
-                                    {listing.seller.name.charAt(0).toUpperCase()}
+                                    {listing.sellerUsername.charAt(0).toUpperCase()}
                                 </Text>
                             </View>
 
@@ -508,9 +508,9 @@ export default function ListingDetailScreen() {
                                         fontWeight: '600',
                                         color: colors.text
                                     }}>
-                                        {listing.seller.name}
+                                        {listing.sellerUsername}
                                     </Text>
-                                    {listing.seller.verified && (
+                                    {listing.sellerVerified && (
                                         <View style={{
                                             backgroundColor: colors.primaryLight,
                                             borderRadius: 10,
@@ -532,7 +532,7 @@ export default function ListingDetailScreen() {
                                         color: colors.textSecondary,
                                         fontSize: 14,
                                     }}>
-                                        {listing.seller.rating} Rating
+                                        {listing.sellerRating} Rating
                                     </Text>
                                 </View>
                             </View>
@@ -544,7 +544,16 @@ export default function ListingDetailScreen() {
                                     backgroundColor: colors.primary,
                                     borderRadius: 6,
                                 }}
-                                onPress={() => navigation.navigate('SellerDetail', { id: listing.seller.id, seller: listing.seller })}
+                                onPress={() => navigation.navigate('SellerDetail', {
+                                    seller: {
+                                        id: listing.sellerId,
+                                        name: listing.sellerUsername,
+                                        bio: listing.sellerBio,
+                                        createdAt: listing.sellerCreatedAt,
+                                        rating: listing.sellerRating,
+                                        verified: listing.sellerVerified,
+                                    }
+                                })}
                             >
                                 <Text style={{ color: 'white', fontWeight: '600' }}>
                                     Visit Profile

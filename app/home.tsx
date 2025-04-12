@@ -26,6 +26,7 @@ import { getListings } from 'lib/backend/listings/getListings'
 import { categories, findCategory } from '../lib/functions/category'
 import { useAuth } from 'lib/auth/AuthContext'
 import { greeting } from 'lib/functions/greeting'
+import { ListingListItem } from 'components/ListingItem'
 
 export default function HomeScreen() {
   const { colors, isDark } = useTheme()
@@ -120,7 +121,7 @@ export default function HomeScreen() {
   }, [loading])
 
   // Navigate to listing detail
-  const handleListingPress = (id: number) => {
+  const handleListingPress = (id: string) => {
     navigation.navigate('ListingDetail', { id })
   }
 
@@ -349,81 +350,6 @@ export default function HomeScreen() {
               View
             </Text>
           </TouchableOpacity>
-        </View>
-      </TouchableOpacity>
-    )
-  }
-
-  // Render a recent listing item
-  const renderRecentItem = ({ item }: { item: FetchedListing }) => {
-    const category = findCategory(item.category)
-
-    return (
-      <TouchableOpacity
-        style={{
-          flexDirection: 'row',
-          backgroundColor: colors.card,
-          borderRadius: 12,
-          marginBottom: 12,
-          overflow: 'hidden',
-          shadowColor: colors.shadow,
-          shadowOffset: { width: 0, height: 1 },
-          shadowOpacity: 0.1,
-          shadowRadius: 4,
-          elevation: 2,
-        }}
-        activeOpacity={0.8}
-        onPress={() => handleListingPress(item.id)}
-      >
-        <Image
-          source={{ uri: getFirstImage(item.imageUrl) }}
-          style={{ width: 100, height: 100 }}
-          resizeMode="cover"
-        />
-
-        <View style={{ flex: 1, paddingHorizontal: 12, paddingVertical: 10, justifyContent: 'center' }}>
-          <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 4 }}>
-            <FontAwesome name={category.icon as any} size={12} color={colors.primary} />
-            <Text style={{ marginLeft: 6, fontSize: 12, color: colors.primary }}>
-              {category.name}
-            </Text>
-            <View
-              style={{
-                marginLeft: 'auto',
-                backgroundColor: colors.primaryLight,
-                paddingHorizontal: 6,
-                paddingVertical: 2,
-                borderRadius: 4,
-                flexDirection: 'row',
-                alignItems: 'center',
-              }}
-            >
-              <FontAwesome name="leaf" size={10} color={colors.primary} />
-              <Text style={{ marginLeft: 2, color: colors.primary, fontSize: 10 }}>
-                {item.ecoScore}/5
-              </Text>
-            </View>
-          </View>
-
-          <Text
-            style={{ fontSize: 16, fontWeight: '600', color: colors.text, marginBottom: 4 }}
-            numberOfLines={1}
-          >
-            {item.title}
-          </Text>
-
-          <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-            <Text style={{ fontSize: 16, fontWeight: 'bold', color: colors.primary }}>
-              €{item.price}
-            </Text>
-
-            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-              <Feather name="map-pin" size={12} color={colors.textTertiary} />
-              <Text style={{ marginLeft: 4, fontSize: 12, color: colors.textTertiary }}>
-                {item.location.split(',')[0]}
-              </Text>
-            </View>
-          </View>
         </View>
       </TouchableOpacity>
     )
@@ -807,7 +733,10 @@ export default function HomeScreen() {
               {recentListings.length > 0 ? (
                 recentListings.map((item) => (
                   <Animated.View key={`recent-${item.id}`}>
-                    {renderRecentItem({ item })}
+                    <ListingListItem
+                      item={item}
+                      onPress={() => handleListingPress(item.id)}
+                    />
                   </Animated.View>
                 ))
               ) : (

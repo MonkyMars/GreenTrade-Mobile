@@ -19,38 +19,20 @@ import {
 import { FontAwesome, MaterialCommunityIcons, Ionicons, Feather } from '@expo/vector-icons';
 import { getSellerListings } from 'lib/backend/listings/getListings';
 import { ListingGridItem, ListingListItem } from 'components/ListingItem';
-import { getSellerBio } from 'lib/backend/auth/seller/getSeller';
-import { useAuth } from 'lib/auth/AuthContext';
 
 export default function SellerScreen() {
+    const route = useRoute();
+    const params = route.params || {};
+    const sellerParam: Seller = params.seller
     const { colors, isDark } = useTheme();
-    const { isAuthenticated } = useAuth();
-    const [seller, setSeller] = useState<Seller>({
-        name: 'John Doe',
-        rating: '4.5',
-        verified: true,
-        bio: 'Eco-friendly seller with a passion for sustainability.',
-    })
     const [activeTab, setActiveTab] = useState('listings');
     const navigation = useNavigation();
-    const route = useRoute();
-
-    // Safe access to route params with defaults to prevent errors
-    const params = route.params || {};
-    const sellerParam: Seller = params.seller || {
-        name: 'John Doe',
-        rating: '4.5',
-        verified: true,
-        bio: 'Eco-friendly seller with a passion for sustainability.',
-    }
-    const id = params.id || '';
-
     const [sellerListings, setSellerListings] = useState<FetchedListing[]>([]);
     const [loading, setLoading] = useState(true);
     const [refreshing, setRefreshing] = useState(false);
     const [selectedView, setSelectedView] = useState<'grid' | 'list'>('grid');
     const [error, setError] = useState<string | null>(null);
-    const [averageEcoScore, setAverageEcoScore] = useState(seller.rating);
+    const [averageEcoScore, setAverageEcoScore] = useState(sellerParam.rating);
 
     // Animation values
     const scrollY = useRef(new Animated.Value(0)).current;
@@ -65,50 +47,15 @@ export default function SellerScreen() {
 
     // Calculate average eco score from listings
     const calculateAverageEcoScore = (listings: FetchedListing[]) => {
-        if (listings.length === 0) return seller.rating;
+        if (listings.length === 0) return sellerParam.rating;
 
         const sum = listings.reduce((total, listing) => total + listing.ecoScore, 0);
         return (sum / listings.length).toFixed(1);
     };
 
-    const fetchSeller = async (isRefreshing = false) => {
-        if (!id) {
-            setError('No seller ID provided');
-            setLoading(false);
-            return;
-        }
-
-        if (isRefreshing) {
-            setRefreshing(true);
-        } else {
-            setLoading(true);
-        }
-        setError(null);
-
-        try {
-            const sellerBio = await getSellerBio(id, isAuthenticated);
-
-            if (typeof sellerBio === 'boolean') {
-                navigation.navigate('Login');
-                return;
-            }
-
-            setSeller({
-                ...sellerParam,
-                bio: sellerBio as string
-            })
-        } catch (error) {
-            console.error('Error fetching seller:', error);
-            setError('Failed to load seller data');
-        } finally {
-            setLoading(false);
-            setRefreshing(false);
-        }
-    };
-
     // Fetch seller listings
     const fetchSellerListings = async (isRefreshing = false) => {
-        if (!id) {
+        if (!sellerParam.id) {
             setError('No seller ID provided');
             setLoading(false);
             return;
@@ -122,7 +69,7 @@ export default function SellerScreen() {
         setError(null);
 
         try {
-            const listings = await getSellerListings(id);
+            const listings = await getSellerListings(sellerParam.id);
             setSellerListings(listings);
 
             // Calculate average eco score
@@ -164,20 +111,18 @@ export default function SellerScreen() {
 
     // Handle pull-to-refresh
     const onRefresh = () => {
-        fetchSeller(true);
         fetchSellerListings(true);
     };
 
     // Handle listing press
-    const handleListingPress = (id: number) => {
+    const handleListingPress = (id: string) => {
         navigation.navigate('ListingDetail', { id });
     };
 
     // Initial fetch
     useEffect(() => {
-        fetchSeller();
         fetchSellerListings();
-    }, [id]);
+    }, [sellerParam]);
 
     // Header elevation effect based on scroll position
     const headerElevation = scrollY.interpolate({
@@ -185,6 +130,11 @@ export default function SellerScreen() {
         outputRange: [0, 1],
         extrapolate: 'clamp',
     });
+
+    const months: string[] = [
+        'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+        'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
+    ]
 
     return (
         <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }}>
@@ -216,7 +166,7 @@ export default function SellerScreen() {
                     </TouchableOpacity>
 
                     <Text style={{ fontSize: 18, fontWeight: '600', color: colors.text }}>
-                        {seller.name}'s Profile
+                        {sellerParam.name}'s Profile
                     </Text>
                 </View>
             </Animated.View>
@@ -296,16 +246,16 @@ export default function SellerScreen() {
                                 }}
                             >
                                 <Text style={{ color: 'white', fontSize: 28, fontWeight: '600' }}>
-                                    {seller.name.charAt(0).toUpperCase()}
+                                    {sellerParam.name.charAt(0).toUpperCase()}
                                 </Text>
                             </View>
 
                             <View style={{ flex: 1 }}>
                                 <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                                     <Text style={{ fontSize: 22, fontWeight: '700', color: colors.text }}>
-                                        {seller.name}
+                                        {sellerParam.name}
                                     </Text>
-                                    {seller.verified && (
+                                    {sellerParam.verified && (
                                         <View
                                             style={{
                                                 backgroundColor: colors.primaryLight,
@@ -331,7 +281,7 @@ export default function SellerScreen() {
                                 </View>
 
                                 <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 8 }}>
-                                    <FontAwesome name="star" size={16} color={colors.rating} />
+                                    <FontAwesome name="leaf" size={16} color={colors.primary} />
                                     <Text style={{ marginLeft: 6, fontSize: 16, color: colors.textSecondary }}>
                                         {averageEcoScore} Eco Score
                                         {sellerListings.length > 0 && (
@@ -339,6 +289,20 @@ export default function SellerScreen() {
                                                 {' '}(avg. of {sellerListings.length} listings)
                                             </Text>
                                         )}
+                                    </Text>
+                                </View>
+
+                                <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 8 }}>
+                                    <FontAwesome name="star" size={16} color={colors.rating} />
+                                    <Text style={{ marginLeft: 6, fontSize: 16, color: colors.textSecondary }}>
+                                        {sellerParam.rating} Rating
+                                    </Text>
+                                </View>
+
+                                <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 8 }}>
+                                    <Ionicons name="time-outline" size={16} color={colors.textSecondary} />
+                                    <Text style={{ marginLeft: 6, fontSize: 16, color: colors.textSecondary }}>
+                                        Active Since {months[new Date(sellerParam.createdAt).getMonth()]}, {new Date(sellerParam.createdAt).getFullYear()}
                                     </Text>
                                 </View>
 
@@ -355,7 +319,7 @@ export default function SellerScreen() {
                                     }}
                                     onPress={() => {
                                         // Navigate to messages with this seller
-                                        navigation.navigate('Messages', { contactUser: seller });
+                                        navigation.navigate('Messages', { contactUser: sellerParam });
                                     }}
                                 >
                                     <FontAwesome name="comment" size={16} color="white" style={{ marginRight: 8 }} />
@@ -385,8 +349,8 @@ export default function SellerScreen() {
                         <Text style={{ fontSize: 18, fontWeight: '700', color: colors.text }}>
                             Bio
                         </Text>
-                        <Text style={{ marginTop: 8, fontSize: 16, color: seller.bio ? colors.textSecondary : colors.textTertiary }}>
-                            {seller.bio ? seller.bio : "No bio provided."}
+                        <Text style={{ marginTop: 8, fontSize: 16, color: sellerParam.bio ? colors.textSecondary : colors.textTertiary }}>
+                            {sellerParam.bio}
                         </Text>
                     </Animated.View>
 

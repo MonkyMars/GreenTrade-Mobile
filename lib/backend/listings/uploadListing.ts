@@ -22,17 +22,10 @@ export const uploadListing = async (listing: UploadListing) => {
       ecoAttributes: listing.ecoAttributes,
       // Format imageUrl as a map with urls key
       imageUrl: {
-        urls: Array.isArray(listing.imageUrl)
-          ? listing.imageUrl
-          : listing.imageUrl.urls,
+        urls: listing.imageUrl,
       },
-      // Format seller to match the backend's expected structure
-      seller: {
-        id: listing.seller.id,
-        name: listing.seller.name,
-        rating: listing.seller.rating,
-        verified: listing.seller.verified,
-      },
+
+      seller_id: listing.sellerId,
     }
 
     const response = await api.post('/api/listings', formattedListing, {

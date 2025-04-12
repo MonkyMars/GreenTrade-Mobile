@@ -15,6 +15,8 @@ import { isUrl } from 'lib/functions/isUrl'
 import { useNavigation } from '@react-navigation/native'
 import { updateUser } from 'lib/backend/auth/user'
 import { CountryData, fetchCountriesInEurope } from 'lib/functions/countries'
+import { getSellerListings } from 'lib/backend/listings/getListings'
+import { FetchedListing } from 'lib/types/main'
 
 type ActiveTab = 'profile' | 'seller' | 'security' | 'delete'
 type ActiveInnerTab = 'listings' | 'favorites' | 'purchases'
@@ -33,6 +35,7 @@ export default function AccountScreen() {
         country: ""
     })
     const [activeTab, setActiveTab] = useState<ActiveTab>('profile')
+    const [userListings, setUserListings] = useState<FetchedListing[]>([])
     const [showDeleteConfirm, setShowDeleteConfirm] = useState<boolean>(false)
     const [countries, setCountries] = useState<CountryData[]>([])
     const [deleteText, setDeleteText] = useState<string>('')
@@ -65,6 +68,22 @@ export default function AccountScreen() {
         }
 
         fetchCountries()
+    }, [])
+
+    useEffect(() => {
+        const fetchUserListings = async () => {
+            try {
+                if (user) {
+                    const response = await getSellerListings(user.id)
+                    if (response) {
+                        setUserListings(response)
+                    }
+                }
+            } catch (error) {
+                console.error('Error fetching user listings:', error)
+            }
+        }
+
     }, [])
 
     useEffect(() => {
@@ -799,7 +818,9 @@ export default function AccountScreen() {
                                     <View style={{ alignItems: 'center', paddingVertical: 24 }}>
                                         <Text style={{ color: colors.textSecondary, marginBottom: 16 }}>
                                             {activeInnerTab === 'listings'
-                                                ? "You haven't created any listings yet."
+                                                ? userListings.length > 0 ?
+                                                    ' '
+                                                    : "You haven't created any listings yet."
                                                 : activeInnerTab === 'favorites'
                                                     ? "You haven't saved any favorites yet."
                                                     : "No purchase history available."}

@@ -123,7 +123,7 @@ export default function ListingsScreen({ navigation }: ListingsScreenProps) {
   }
 
   // Navigation handler for listings
-  const handleListingPress = (id: number) => {
+  const handleListingPress = (id: string) => {
     navigation.navigate('ListingDetail', { id })
   }
 

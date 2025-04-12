@@ -18,7 +18,7 @@ export const getFirstImageUrl = (imageUrl: string[] | { urls: string[] }) => {
 
 interface ListingItemProps {
     item: FetchedListing;
-    onPress: (id: number) => void;
+    onPress: (id: string) => void;
     columnWidth?: number; // Only needed for grid view
 }
 
@@ -135,7 +135,7 @@ export const ListingGridItem: React.FC<ListingItemProps> = ({ item, onPress, col
                                 marginLeft: 4,
                             }}
                         >
-                            {formatDistanceToNow(new Date(item.created_at), {
+                            {formatDistanceToNow(new Date(item.createdAt), {
                                 addSuffix: true,
                             })}
                         </Text>
@@ -201,7 +201,7 @@ export const ListingListItem: React.FC<ListingItemProps> = ({ item, onPress }) =
                         }}
                     >
                         {item.location} •{' '}
-                        {formatDistanceToNow(new Date(item.created_at), {
+                        {formatDistanceToNow(new Date(item.createdAt), {
                             addSuffix: true,
                         })}
                     </Text>

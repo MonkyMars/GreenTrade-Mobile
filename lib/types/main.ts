@@ -9,20 +9,25 @@ export type UploadListing = {
   ecoScore: number
   ecoAttributes: string[]
   imageUrl: string[]
+
+  sellerId: string
+}
+
+export interface FetchedListing extends UploadListing {
+  id: string
   createdAt: string
   sellerUsername: string
   sellerBio: string
   sellerCreatedAt: string
-}
-
-export interface FetchedListing extends UploadListing {
-  id: number
-  created_at: string
+  sellerRating: number
+  sellerVerified: boolean
 }
 
 export interface Seller {
+  id: string
   name: string
   rating: string | number
   verified: boolean
-  bio?: string
+  bio: string
+  createdAt: string
 }

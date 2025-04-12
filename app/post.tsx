@@ -312,12 +312,7 @@ export default function PostScreen() {
         ecoAttributes: formData.ecoAttributes,
         ecoScore: calculateEcoScore(formData.ecoAttributes),
         imageUrl: imageUrlData.urls,
-        seller: {
-          id: user.id,
-          name: user.name,
-          rating: user.ecoScore || 0,
-          verified: true,
-        },
+        sellerId: user.id,
       }
 
       console.log('Submitting listing with data:', listing)
