@@ -11,14 +11,11 @@ export interface Conversation {
   listingId: string
   sellerId: string
   buyerId: string
-  listingTitle?: string
-  listingImage?: string
-  participantName?: string
-  participantId?: string
-  lastMessage?: string
-  lastMessageTime?: Date | string
-  unreadCount?: number
-  participantImage?: string | null
-  isOnline?: boolean
-  isVerified?: boolean
+  sellerName: string
+  buyerName: string
+  listingName: string
+  lastMessage?: {
+    text: string
+    timestamp: Date | string
+  }
 }

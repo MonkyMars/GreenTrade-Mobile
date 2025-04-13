@@ -89,6 +89,10 @@ export default function MessagesScreen() {
         }
     }, [selectedConversationId]);
 
+    const isBuyer = (conversation: Conversation) => {
+        return conversation.buyerId === user?.id;
+    }
+
     // Fetch conversations
     const fetchConversations = async (isRefresh = false) => {
         if (!user || !user.id) return;
@@ -105,17 +109,10 @@ export default function MessagesScreen() {
             // Process conversations to add participantName and other UI properties
             const processedConversations = fetchedConversations.map(convo => {
                 // Determine if user is buyer or seller to set the participant info correctly
-                const isUserBuyer = convo.buyerId === user.id;
+                const isUserBuyer = isBuyer(convo);
                 return {
                     ...convo,
                     participantId: isUserBuyer ? convo.sellerId : convo.buyerId,
-                    // Use the actual participant name if provided, don't fall back to Buyer/Seller
-                    participantName: convo.participantName || "User",
-                    isOnline: convo.isOnline || false,
-                    isVerified: convo.isVerified || false,
-                    unreadCount: convo.unreadCount || 0,
-                    lastMessageTime: convo.lastMessageTime ? new Date(convo.lastMessageTime) : new Date(),
-                    lastMessage: convo.lastMessage || "Start a conversation",
                 };
             });
 
@@ -179,8 +176,8 @@ export default function MessagesScreen() {
 
     // Filter conversations based on search query
     const filteredConversations = conversations.filter(conversation =>
-        (conversation.participantName || "").toLowerCase().includes(searchQuery.toLowerCase()) ||
-        (conversation.lastMessage || "").toLowerCase().includes(searchQuery.toLowerCase())
+        (conversation.buyerName || "").toLowerCase().includes(searchQuery.toLowerCase()) ||
+        (conversation.lastMessage ? conversation.lastMessage.text : conversation.sellerName || "").toLowerCase().includes(searchQuery.toLowerCase())
     );
 
     // Format timestamp to a readable format
@@ -226,8 +223,8 @@ export default function MessagesScreen() {
                     convo.id === selectedConversationId
                         ? {
                             ...convo,
-                            lastMessage: newMessage.trim(),
-                            lastMessageTime: new Date()
+                            lastMessage: sentMessage, // Use the sent message object
+                            lastMessageTime: sentMessage.timestamp // Use timestamp from sent message
                         }
                         : convo
                 )
@@ -283,89 +280,38 @@ export default function MessagesScreen() {
                 marginRight: 12,
                 position: 'relative'
             }}>
-                {item.participantImage ? (
-                    <Image
-                        source={{ uri: item.participantImage }}
-                        style={{ width: 50, height: 50, borderRadius: 25 }}
-                    />
-                ) : (
-                    <Text style={{ fontSize: 18, fontWeight: '700', color: colors.primary }}>
-                        {(item.participantName || "?").charAt(0).toUpperCase()}
-                    </Text>
-                )}
 
-                {/* Online indicator */}
-                {item.isOnline && (
-                    <View style={{
-                        position: 'absolute',
-                        bottom: 0,
-                        right: 0,
-                        width: 14,
-                        height: 14,
-                        borderRadius: 7,
-                        backgroundColor: '#4CAF50',
-                        borderWidth: 2,
-                        borderColor: colors.card
-                    }} />
-                )}
+                <Text style={{ fontSize: 18, fontWeight: '700', color: colors.primary }}>
+                    {(isBuyer(item) ? item.sellerName : item.buyerName || "?").charAt(0).toUpperCase()}
+                </Text>
             </View>
 
             <View style={{ flex: 1, justifyContent: 'center' }}>
                 <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 4 }}>
                     <Text style={{
                         fontSize: 16,
-                        fontWeight: (item.unreadCount || 0) > 0 ? '700' : '500',
                         color: colors.text,
                         marginRight: 6
                     }}>
-                        {item.participantName || "User"}
+                        {isBuyer(item) ? item.sellerName : item.buyerName || "User"}
                     </Text>
-
-                    {item.isVerified && (
-                        <View style={{
-                            backgroundColor: colors.primaryLight,
-                            borderRadius: 10,
-                            paddingHorizontal: 5,
-                            paddingVertical: 2,
-                            marginRight: 4,
-                        }}>
-                            <Text style={{ color: colors.primary, fontSize: 10 }}>✓</Text>
-                        </View>
-                    )}
                 </View>
 
                 <Text
                     numberOfLines={1}
                     style={{
                         fontSize: 14,
-                        color: (item.unreadCount || 0) > 0 ? colors.text : colors.textSecondary,
-                        fontWeight: (item.unreadCount || 0) > 0 ? '500' : 'normal',
+                        color: colors.textTertiary,
                     }}
                 >
-                    {item.lastMessage || "Start a conversation about " + (item.listingTitle || "this listing")}
+                    {item.lastMessage ? item.lastMessage.text : "Start a conversation about " + (item.listingName || "this listing")}
                 </Text>
             </View>
 
             <View style={{ alignItems: 'flex-end', justifyContent: 'space-between', height: 50 }}>
                 <Text style={{ fontSize: 12, color: colors.textTertiary, marginBottom: 4 }}>
-                    {item.lastMessageTime ? formatTime(new Date(item.lastMessageTime)) : ''}
+                    {item.lastMessage ? formatTime(new Date(item.lastMessage.timestamp)) : ''}
                 </Text>
-
-                {(item.unreadCount || 0) > 0 && (
-                    <View style={{
-                        backgroundColor: colors.primary,
-                        borderRadius: 12,
-                        minWidth: 22,
-                        height: 22,
-                        justifyContent: 'center',
-                        alignItems: 'center',
-                        paddingHorizontal: 6
-                    }}>
-                        <Text style={{ fontSize: 12, color: 'white', fontWeight: '600' }}>
-                            {item.unreadCount}
-                        </Text>
-                    </View>
-                )}
             </View>
         </TouchableOpacity>
     );
@@ -394,7 +340,7 @@ export default function MessagesScreen() {
                         alignSelf: 'flex-end'
                     }}>
                         <Text style={{ fontSize: 14, fontWeight: '700', color: colors.primary }}>
-                            {(selectedConversation?.participantName || "?").charAt(0).toUpperCase()}
+                            {(selectedConversation && (isBuyer(selectedConversation) ? selectedConversation.sellerName : selectedConversation.buyerName) || "?").charAt(0).toUpperCase()}
                         </Text>
                     </View>
                 )}
@@ -637,54 +583,45 @@ export default function MessagesScreen() {
                                     marginRight: 12,
                                     position: 'relative'
                                 }}>
-                                    {conversations.find(c => c.id === selectedConversationId)?.participantImage ? (
-                                        <Image
-                                            source={{ uri: conversations.find(c => c.id === selectedConversationId)?.participantImage || undefined }}
-                                            style={{ width: 40, height: 40, borderRadius: 20 }}
-                                        />
-                                    ) : (
-                                        <Text style={{ fontSize: 16, fontWeight: '700', color: colors.primary }}>
-                                            {(conversations.find(c => c.id === selectedConversationId)?.participantName || "?").charAt(0).toUpperCase()}
-                                        </Text>
-                                    )}
+                                    {(() => {
+                                        const selectedConversation = conversations.find(c => c.id === selectedConversationId);
+                                        if (!selectedConversation) return null; // Handle case where conversation is not found
 
-                                    {/* Online indicator */}
-                                    {conversations.find(c => c.id === selectedConversationId)?.isOnline && (
-                                        <View style={{
-                                            position: 'absolute',
-                                            bottom: 0,
-                                            right: 0,
-                                            width: 12,
-                                            height: 12,
-                                            borderRadius: 6,
-                                            backgroundColor: '#4CAF50',
-                                            borderWidth: 2,
-                                            borderColor: colors.card
-                                        }} />
-                                    )}
+                                        const participantName = isBuyer(selectedConversation)
+                                            ? selectedConversation.sellerName
+                                            : selectedConversation.buyerName;
+
+                                        return (
+                                            <Text style={{ fontSize: 16, fontWeight: '700', color: colors.primary }}>
+                                                {(participantName || "?").charAt(0).toUpperCase()}
+                                            </Text>
+                                        );
+                                    })()}
                                 </View>
 
                                 <View style={{ flex: 1 }}>
                                     <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                                        <Text style={{ fontSize: 16, fontWeight: '600', color: colors.text, marginRight: 6 }}>
-                                            {conversations.find(c => c.id === selectedConversationId)?.participantName || "User"}
-                                        </Text>
+                                        {(() => {
+                                            const selectedConversation = conversations.find(c => c.id === selectedConversationId);
+                                            if (!selectedConversation) return null; // Handle case where conversation is not found
 
-                                        {conversations.find(c => c.id === selectedConversationId)?.isVerified && (
-                                            <View style={{
-                                                backgroundColor: colors.primaryLight,
-                                                borderRadius: 10,
-                                                paddingHorizontal: 5,
-                                                paddingVertical: 2,
-                                            }}>
-                                                <Text style={{ color: colors.primary, fontSize: 10 }}>✓</Text>
-                                            </View>
-                                        )}
+                                            const participantName = isBuyer(selectedConversation)
+                                                ? selectedConversation.sellerName
+                                                : selectedConversation.buyerName;
+
+                                            return (
+                                                <Text style={{ fontSize: 16, fontWeight: '600', color: colors.text, marginRight: 6 }} onPress={() => {
+                                                    navigation.navigate("SellerDetail", { id: isBuyer(selectedConversation) ? selectedConversation.sellerId : selectedConversation.buyerId } as never);
+                                                }}>
+                                                    {participantName || "User"}
+                                                </Text>
+                                            );
+                                        })()}
                                     </View>
 
                                     <Text style={{ fontSize: 12, color: colors.textTertiary }}>
-                                        {conversations.find(c => c.id === selectedConversationId)?.listingTitle && (
-                                            `About: ${conversations.find(c => c.id === selectedConversationId)?.listingTitle}`
+                                        {conversations.find(c => c.id === selectedConversationId)?.listingName && (
+                                            `About: ${conversations.find(c => c.id === selectedConversationId)?.listingName}`
                                         )}
                                     </Text>
                                 </View>

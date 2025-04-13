@@ -24,11 +24,13 @@ import { FontAwesome, MaterialCommunityIcons, Ionicons, Feather } from '@expo/ve
 import { getSellerListings } from 'lib/backend/listings/getListings';
 import { ListingGridItem, ListingListItem } from 'components/ListingItem';
 import { createConversation } from 'lib/backend/chat/createConversation';
+import { getSeller } from 'lib/backend/auth/seller/getSeller';
 
 export default function SellerScreen() {
     const route = useRoute();
     const params = route.params || {};
-    const sellerParam: Seller = params.seller
+    const [seller, setSeller] = useState<Seller | null>(params.seller || null);
+    const [loadingSeller, setLoadingSeller] = useState(!params.seller && !!params.id);
     const { colors, isDark } = useTheme();
     const { user } = useAuth();
     const [activeTab, setActiveTab] = useState('listings');
@@ -38,7 +40,7 @@ export default function SellerScreen() {
     const [refreshing, setRefreshing] = useState(false);
     const [selectedView, setSelectedView] = useState<'grid' | 'list'>('grid');
     const [error, setError] = useState<string | null>(null);
-    const [averageEcoScore, setAverageEcoScore] = useState(sellerParam.rating);
+    const [averageEcoScore, setAverageEcoScore] = useState(seller?.rating || "0");
     const [isListingModalVisible, setIsListingModalVisible] = useState(false);
     const [isCreatingConversation, setIsCreatingConversation] = useState(false);
 
@@ -53,9 +55,42 @@ export default function SellerScreen() {
     const numColumns = 2;
     const columnWidth = (screenWidth - 48) / numColumns; // 48 = padding (16) * 3
 
+    // Fetch seller data if we only have the ID
+    const fetchSellerData = async () => {
+        if (!params.id) {
+            setError('No seller ID provided');
+            setLoading(false);
+            setLoadingSeller(false);
+            return;
+        }
+
+        try {
+            setLoadingSeller(true);
+            const sellerData = await getSeller(params.id);
+
+            // Convert backend data to Seller type
+            const formattedSeller: Seller = {
+                id: sellerData.id,
+                name: sellerData.username || sellerData.name,
+                rating: sellerData.rating || "0",
+                verified: sellerData.verified || false,
+                bio: sellerData.bio || "No bio available",
+                createdAt: sellerData.created_at || new Date().toISOString()
+            };
+
+            setSeller(formattedSeller);
+            setAverageEcoScore(formattedSeller.rating.toString());
+        } catch (error) {
+            console.error('Error fetching seller:', error);
+            setError('Failed to load seller information');
+        } finally {
+            setLoadingSeller(false);
+        }
+    };
+
     // Calculate average eco score from listings
     const calculateAverageEcoScore = (listings: FetchedListing[]) => {
-        if (listings.length === 0) return sellerParam.rating;
+        if (listings.length === 0) return seller?.rating || "0";
 
         const sum = listings.reduce((total, listing) => total + listing.ecoScore, 0);
         return (sum / listings.length).toFixed(1);
@@ -63,7 +98,7 @@ export default function SellerScreen() {
 
     // Fetch seller listings
     const fetchSellerListings = async (isRefreshing = false) => {
-        if (!sellerParam.id) {
+        if (!seller?.id) {
             setError('No seller ID provided');
             setLoading(false);
             return;
@@ -77,7 +112,7 @@ export default function SellerScreen() {
         setError(null);
 
         try {
-            const listings = await getSellerListings(sellerParam.id);
+            const listings = await getSellerListings(seller.id);
             setSellerListings(listings);
 
             // Calculate average eco score
@@ -142,7 +177,7 @@ export default function SellerScreen() {
         }
 
         // Check if user is trying to contact themselves
-        if (user.id === sellerParam.id) {
+        if (user.id === seller?.id) {
             Alert.alert("Error", "You cannot contact yourself as a seller");
             return;
         }
@@ -164,7 +199,7 @@ export default function SellerScreen() {
             // Create or get conversation
             const conversationId = await createConversation(
                 listing.id,
-                sellerParam.id,
+                seller?.id || "",
                 user?.id || ""
             );
 
@@ -195,10 +230,19 @@ export default function SellerScreen() {
         }
     };
 
-    // Initial fetch
+    // Initial fetch seller data if needed
     useEffect(() => {
-        fetchSellerListings();
-    }, [sellerParam]);
+        if (!params.seller && params.id) {
+            fetchSellerData();
+        }
+    }, [params]);
+
+    // Fetch listings once we have seller data
+    useEffect(() => {
+        if (seller && !loadingSeller) {
+            fetchSellerListings();
+        }
+    }, [seller, loadingSeller]);
 
     // Header elevation effect based on scroll position
     const headerElevation = scrollY.interpolate({
@@ -211,6 +255,111 @@ export default function SellerScreen() {
         'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
         'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
     ]
+
+    // Show a loading screen if we're fetching seller data
+    if (loadingSeller) {
+        return (
+            <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }}>
+                <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} />
+                <Animated.View
+                    style={{
+                        backgroundColor: colors.card,
+                        paddingHorizontal: 16,
+                        paddingVertical: 14,
+                        borderBottomWidth: 1,
+                        borderBottomColor: colors.borderLight,
+                        shadowColor: colors.shadow,
+                        shadowOffset: { width: 0, height: 1 },
+                        shadowOpacity: headerElevation,
+                        shadowRadius: 2,
+                        elevation: headerElevation,
+                        zIndex: 10,
+                        paddingTop: StatusBar.currentHeight,
+                    }}
+                >
+                    <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                        <TouchableOpacity
+                            onPress={() => navigation.goBack()}
+                            style={{ marginRight: 12 }}
+                        >
+                            <Ionicons name="arrow-back" size={24} color={colors.text} />
+                        </TouchableOpacity>
+
+                        <Text style={{ fontSize: 18, fontWeight: '600', color: colors.text }}>
+                            Seller Profile
+                        </Text>
+                    </View>
+                </Animated.View>
+                <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+                    <ActivityIndicator size="large" color={colors.primary} />
+                    <Text style={{ marginTop: 16, color: colors.textSecondary }}>
+                        Loading seller profile...
+                    </Text>
+                </View>
+            </SafeAreaView>
+        );
+    }
+
+    // If seller data failed to load
+    if (!seller) {
+        return (
+            <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }}>
+                <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} />
+                <Animated.View
+                    style={{
+                        backgroundColor: colors.card,
+                        paddingHorizontal: 16,
+                        paddingVertical: 14,
+                        borderBottomWidth: 1,
+                        borderBottomColor: colors.borderLight,
+                        shadowColor: colors.shadow,
+                        shadowOffset: { width: 0, height: 1 },
+                        shadowOpacity: headerElevation,
+                        shadowRadius: 2,
+                        elevation: headerElevation,
+                        zIndex: 10,
+                        paddingTop: StatusBar.currentHeight,
+                    }}
+                >
+                    <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                        <TouchableOpacity
+                            onPress={() => navigation.goBack()}
+                            style={{ marginRight: 12 }}
+                        >
+                            <Ionicons name="arrow-back" size={24} color={colors.text} />
+                        </TouchableOpacity>
+
+                        <Text style={{ fontSize: 18, fontWeight: '600', color: colors.text }}>
+                            Seller Profile
+                        </Text>
+                    </View>
+                </Animated.View>
+                <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', padding: 20 }}>
+                    <FontAwesome name="exclamation-circle" size={48} color={colors.error} />
+                    <Text style={{
+                        fontSize: 18,
+                        color: colors.text,
+                        marginTop: 16,
+                        textAlign: 'center',
+                        marginBottom: 24
+                    }}>
+                        {error || "Failed to load seller information"}
+                    </Text>
+                    <TouchableOpacity
+                        style={{
+                            backgroundColor: colors.primary,
+                            paddingVertical: 10,
+                            paddingHorizontal: 20,
+                            borderRadius: 8,
+                        }}
+                        onPress={() => navigation.goBack()}
+                    >
+                        <Text style={{ color: 'white', fontWeight: '600' }}>Go Back</Text>
+                    </TouchableOpacity>
+                </View>
+            </SafeAreaView>
+        );
+    }
 
     return (
         <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }}>
@@ -242,7 +391,7 @@ export default function SellerScreen() {
                     </TouchableOpacity>
 
                     <Text style={{ fontSize: 18, fontWeight: '600', color: colors.text }}>
-                        {sellerParam.name}'s Profile
+                        {seller.name}'s Profile
                     </Text>
                 </View>
             </Animated.View>
@@ -322,16 +471,16 @@ export default function SellerScreen() {
                                 }}
                             >
                                 <Text style={{ color: 'white', fontSize: 28, fontWeight: '600' }}>
-                                    {sellerParam.name.charAt(0).toUpperCase()}
+                                    {seller.name.charAt(0).toUpperCase()}
                                 </Text>
                             </View>
 
                             <View style={{ flex: 1 }}>
                                 <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                                     <Text style={{ fontSize: 22, fontWeight: '700', color: colors.text }}>
-                                        {sellerParam.name}
+                                        {seller.name}
                                     </Text>
-                                    {sellerParam.verified && (
+                                    {seller.verified && (
                                         <View
                                             style={{
                                                 backgroundColor: colors.primaryLight,
@@ -371,14 +520,14 @@ export default function SellerScreen() {
                                 <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 8 }}>
                                     <FontAwesome name="star" size={16} color={colors.rating} />
                                     <Text style={{ marginLeft: 6, fontSize: 16, color: colors.textSecondary }}>
-                                        {sellerParam.rating} Rating
+                                        {seller.rating} Rating
                                     </Text>
                                 </View>
 
                                 <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 8 }}>
                                     <Ionicons name="time-outline" size={16} color={colors.textSecondary} />
                                     <Text style={{ marginLeft: 6, fontSize: 16, color: colors.textSecondary }}>
-                                        Active Since {months[new Date(sellerParam.createdAt).getMonth()]}, {new Date(sellerParam.createdAt).getFullYear()}
+                                        Active Since {months[new Date(seller.createdAt).getMonth()]}, {new Date(seller.createdAt).getFullYear()}
                                     </Text>
                                 </View>
 
@@ -422,8 +571,8 @@ export default function SellerScreen() {
                         <Text style={{ fontSize: 18, fontWeight: '700', color: colors.text }}>
                             Bio
                         </Text>
-                        <Text style={{ marginTop: 8, fontSize: 16, color: sellerParam.bio ? colors.textSecondary : colors.textTertiary }}>
-                            {sellerParam.bio}
+                        <Text style={{ marginTop: 8, fontSize: 16, color: seller.bio ? colors.textSecondary : colors.textTertiary }}>
+                            {seller.bio || "This seller hasn't added a bio yet."}
                         </Text>
                     </Animated.View>
 

@@ -1,5 +1,5 @@
 import * as WebBrowser from 'expo-web-browser'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import FontAwesome from 'react-native-vector-icons/FontAwesome'
 import {
   View,
@@ -14,14 +14,18 @@ import {
 } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { z } from 'zod'
+import { CommonActions } from '@react-navigation/native'
 
 import { type RootStackParamList } from './navigation'
 import BottomNavigation from 'components/BottomNavigation'
 import { useTheme } from '../lib/theme/ThemeContext'
 import { useAuth } from '../lib/auth/AuthContext'
 import { NativeStackNavigationProp } from '@react-navigation/native-stack/lib/typescript/src/types'
+
 // Define props type for the login screen using React Navigation
-type LoginScreenProps = NativeStackNavigationProp<RootStackParamList, 'Login'>
+type LoginScreenProps = {
+  navigation: NativeStackNavigationProp<RootStackParamList, 'Login'>
+}
 
 // Ensure authentication redirect is handled properly
 WebBrowser.maybeCompleteAuthSession()
@@ -29,14 +33,13 @@ WebBrowser.maybeCompleteAuthSession()
 const loginSchema = z.object({
   email: z.string().email('Please enter a valid email address'),
   password: z.string().min(8, 'Password must be at least 8 characters'),
-  rememberMe: z.boolean().optional(),
 })
 
 type LoginFormData = z.infer<typeof loginSchema>
 
 export default function LoginScreen({ navigation }: LoginScreenProps) {
   const [activeTab, setActiveTab] = useState('login')
-  const { login } = useAuth()
+  const { login, isAuthenticated } = useAuth()
   const { colors, isDark } = useTheme()
   const [formData, setFormData] = useState<LoginFormData>({
     email: '',
@@ -47,6 +50,19 @@ export default function LoginScreen({ navigation }: LoginScreenProps) {
   >({})
   const [isLoading, setIsLoading] = useState(false)
   const [loginError, setLoginError] = useState('')
+
+  // Listen for authentication state changes and navigate when authenticated
+  useEffect(() => {
+    if (isAuthenticated) {
+      // Reset navigation stack and go to Home
+      navigation.dispatch(
+        CommonActions.reset({
+          index: 0,
+          routes: [{ name: 'Home' }],
+        })
+      );
+    }
+  }, [isAuthenticated, navigation]);
 
   const handleChange = (name: keyof LoginFormData, value: string | boolean) => {
     setFormData(prev => ({
@@ -60,6 +76,11 @@ export default function LoginScreen({ navigation }: LoginScreenProps) {
         ...prev,
         [name]: undefined,
       }))
+    }
+
+    // Clear login error when user starts typing again
+    if (loginError) {
+      setLoginError('')
     }
   }
 
@@ -92,30 +113,27 @@ export default function LoginScreen({ navigation }: LoginScreenProps) {
     setIsLoading(true)
 
     try {
+      // Handle login without navigation - useEffect will handle redirects
       await login(formData.email, formData.password)
-      // Navigate to Home screen after successful login
-      navigation.navigate('Home')
     } catch (error) {
       console.error('Login error:', error)
 
       // Handle the error from the API
       if (typeof error === 'string') {
         setLoginError(error)
-      } else if (error && typeof error === 'object') {
-        if ('message' in error && typeof error.message === 'string') {
-          setLoginError(error.message)
-        } else {
-          setLoginError('Invalid email or password. Please try again.')
-        }
+      } else if (error && typeof error === 'object' && error instanceof Error) {
+        setLoginError(error.message)
       } else {
         setLoginError('An unexpected error occurred. Please try again.')
       }
     } finally {
+      // Always reset loading state
       setIsLoading(false)
     }
   }
 
   const handleSocialLogin = async (provider: string) => {
+    setLoginError('')
     try {
       setIsLoading(true)
       // In a real app, this would connect to your OAuth provider
@@ -168,7 +186,7 @@ export default function LoginScreen({ navigation }: LoginScreenProps) {
                 backgroundColor: isDark ? 'rgba(239, 68, 68, 0.2)' : 'rgba(254, 226, 226, 0.8)'
               }}>
                 <Text style={{ color: colors.error }}>
-                  {loginError === 'Invalid credentials'
+                  {loginError === 'Invalid credentials' || loginError.includes('Network error')
                     ? 'Invalid email or password. Please try again.'
                     : loginError}
                 </Text>
