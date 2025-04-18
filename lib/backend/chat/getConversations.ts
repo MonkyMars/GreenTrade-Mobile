@@ -18,7 +18,7 @@ export const getConversations = async (
       buyerId: conversation.buyer_id,
       sellerName: conversation.seller_name,
       buyerName: conversation.buyer_name,
-      listingName: conversation.listing_name,
+      listingName: conversation.listing_title,
       lastMessage: conversation.last_message_content
         ? {
             text: conversation.last_message_content,

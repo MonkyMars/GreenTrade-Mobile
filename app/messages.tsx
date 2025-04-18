@@ -25,6 +25,7 @@ import { ChatMessage, Conversation } from "lib/types/chat";
 import { getConversations } from "lib/backend/chat/getConversations";
 import { getMessages } from "lib/backend/chat/getMessages";
 import { sendMessage } from "lib/backend/chat/sendMessage";
+import { BASE_URL } from "lib/backend/api/axiosConfig";
 
 export default function MessagesScreen() {
     const { colors, isDark } = useTheme();
@@ -32,6 +33,7 @@ export default function MessagesScreen() {
     const navigation = useNavigation();
     const route = useRoute();
     const params = route.params || {};
+    const ws = useRef<WebSocket | null>(null);
     const [activeTab, setActiveTab] = useState('messages');
     const [conversations, setConversations] = useState<Conversation[]>([]);
     const [loading, setLoading] = useState(true);
@@ -44,6 +46,7 @@ export default function MessagesScreen() {
     const [searchQuery, setSearchQuery] = useState('');
     const [sendingMessage, setSendingMessage] = useState(false);
     const [refreshing, setRefreshing] = useState(false);
+    const [error, setError] = useState<string | null>(null);
 
     // Animation values
     const fadeAnim = useRef(new Animated.Value(0)).current;
@@ -78,6 +81,15 @@ export default function MessagesScreen() {
             setSelectedConversationId(params.conversationId);
         }
     }, [params]);
+
+    useEffect(() => {
+        // Check if there are new messages and scroll to the bottom
+        if (listRef.current && messages.length > 0) {
+            setTimeout(() => {
+                listRef.current?.scrollToEnd({ animated: true });
+            }, 100);
+        }
+    }, [messages])
 
     // Load chat messages when a conversation is selected
     useEffect(() => {
@@ -140,6 +152,55 @@ export default function MessagesScreen() {
             setRefreshing(false);
         }
     };
+
+    useEffect(() => {
+        if (!selectedConversationId || !user) return;
+
+        const wsBaseUrl = BASE_URL.replace(/^https?:\/\//, '');
+        const wsUrl = `ws://${wsBaseUrl}/ws/chat/${selectedConversationId}/${user.id}`;
+        console.log(wsUrl)
+
+        ws.current = new WebSocket(wsUrl);
+
+        ws.current.onopen = () => {
+            console.log(`WebSocket connected for conversation ${selectedConversationId}`);
+        };
+
+        ws.current.onclose = () => {
+            console.log(`WebSocket disconnected for conversation ${selectedConversationId}`);
+            // Optional: Implement reconnection logic here
+        };
+
+        ws.current.onerror = (event) => {
+            console.error("WebSocket error:", event);
+            setError("Chat connection error.");
+        };
+
+        // 3. Listen for new messages
+        ws.current.onmessage = (event) => {
+            try {
+                const messageData = JSON.parse(event.data);
+                // Assuming the backend sends messages in the same structure as the Message struct
+                const newChatMessage: ChatMessage = {
+                    text: messageData.content,
+                    id: messageData.id,
+                    conversationId: messageData.conversation_id,
+                    senderId: messageData.sender_id,
+                    timestamp: new Date(messageData.created_at),
+                };
+                // 4. Update state with the new message
+                setMessages((prevMessages) => [...prevMessages, newChatMessage]);
+            } catch (e) {
+                console.error("Failed to parse incoming WebSocket message:", e);
+            }
+        };
+
+        // 5. Cleanup: Close WebSocket connection when component unmounts or IDs change
+        return () => {
+            ws.current?.close();
+        };
+
+    }, [selectedConversationId]);
 
     // Fetch messages for a conversation
     const fetchMessages = async (conversationId: string) => {
@@ -213,9 +274,6 @@ export default function MessagesScreen() {
                 user.id,
                 newMessage.trim()
             );
-
-            // Add message to the current thread
-            setMessages(prevMessages => [...prevMessages, sentMessage]);
 
             // Update the last message in conversations list
             setConversations(prevConversations =>
@@ -638,24 +696,65 @@ export default function MessagesScreen() {
                                     <Text style={{ marginTop: 16, color: colors.textSecondary }}>Loading messages...</Text>
                                 </View>
                             ) : (
-                                <FlatList
-                                    ref={listRef}
-                                    data={messages}
-                                    renderItem={renderMessageItem}
-                                    keyExtractor={item => item.id}
-                                    contentContainerStyle={{
-                                        flexGrow: 1,
-                                        paddingVertical: 16,
-                                        justifyContent: messages.length === 0 ? 'center' : undefined,
-                                    }}
-                                    ListEmptyComponent={
-                                        <View style={{ padding: 32, alignItems: 'center' }}>
-                                            <Text style={{ color: colors.textSecondary, textAlign: 'center' }}>
-                                                No messages yet. Start the conversation!
-                                            </Text>
+                                <View style={{ flex: 1 }}>
+                                    {/* Listing Info Card */}
+                                    {conversations.find(c => c.id === selectedConversationId)?.listingName && (
+                                        <View style={{
+                                            alignItems: 'center',
+                                            paddingVertical: 12,
+                                            paddingHorizontal: 16,
+                                        }}>
+                                            <TouchableOpacity
+                                                style={{
+                                                    padding: 12,
+                                                    backgroundColor: colors.primaryLight,
+                                                    borderRadius: 8,
+                                                    shadowColor: colors.shadow,
+                                                    shadowOffset: { width: 0, height: 1 },
+                                                    shadowOpacity: 0.1,
+                                                    shadowRadius: 3,
+                                                    elevation: 2,
+                                                    maxWidth: '90%',
+                                                    alignItems: 'center',
+                                                }}
+                                                onPress={() => {
+                                                    const listingId = conversations.find(c => c.id === selectedConversationId)?.listingId;
+                                                    if (listingId) {
+                                                        navigation.navigate('ListingDetail', { id: listingId } as never);
+                                                    }
+                                                }}
+                                            >
+                                                <Text style={{
+                                                    fontSize: 13,
+                                                    fontWeight: '500',
+                                                    color: colors.textSecondary,
+                                                    textAlign: 'center',
+                                                }}>
+                                                    {`Conversation about: ${conversations.find(c => c.id === selectedConversationId)?.listingName}`}
+                                                </Text>
+                                                <Text style={{ color: colors.primary, marginTop: 4, fontSize: 12, fontWeight: '600' }}>View Listing</Text>
+                                            </TouchableOpacity>
                                         </View>
-                                    }
-                                />
+                                    )}
+                                    <FlatList
+                                        ref={listRef}
+                                        data={messages}
+                                        renderItem={renderMessageItem}
+                                        keyExtractor={item => item.id}
+                                        contentContainerStyle={{
+                                            flexGrow: 1,
+                                            paddingVertical: 16,
+                                            justifyContent: messages.length === 0 ? 'center' : undefined,
+                                        }}
+                                        ListEmptyComponent={
+                                            <View style={{ padding: 32, alignItems: 'center' }}>
+                                                <Text style={{ color: colors.textSecondary, textAlign: 'center' }}>
+                                                    No messages yet. Start the conversation!
+                                                </Text>
+                                            </View>
+                                        }
+                                    />
+                                </View>
                             )}
 
                             {/* Message Input */}
