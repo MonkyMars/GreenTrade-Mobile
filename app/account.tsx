@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import {
     View, Text, ScrollView, TouchableOpacity, Image,
-    TextInput, Alert, Animated, Dimensions,
+    TextInput, Animated, Dimensions,
     Modal,
 } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
@@ -17,6 +17,8 @@ import { updateUser } from 'lib/backend/auth/user'
 import { CountryData, fetchCountriesInEurope } from 'lib/functions/countries'
 import { getSellerListings } from 'lib/backend/listings/getListings'
 import { FetchedListing } from 'lib/types/main'
+import CustomAlert from 'components/CustomAlert'
+import { useCustomAlert } from 'lib/hooks/useCustomAlert'
 
 type ActiveTab = 'profile' | 'seller' | 'security' | 'delete'
 type ActiveInnerTab = 'listings' | 'favorites' | 'purchases'
@@ -48,6 +50,7 @@ export default function AccountScreen() {
         activeInnerTab: ActiveInnerTab
     }>({ activeTab, activeInnerTab })
     const [disabled, setDisabled] = useState<boolean>(false)
+    const { showAlert, isVisible, config, hideAlert } = useCustomAlert();
 
     // Animation values
     const slideAnim = useRef(new Animated.Value(0)).current
@@ -197,13 +200,14 @@ export default function AccountScreen() {
     }
 
     const handleLogout = async () => {
-        Alert.alert(
-            "Logout",
-            "Are you sure you want to log out?",
-            [
+        showAlert({
+            title: "Logout",
+            message: "Are you sure you want to log out?",
+            buttons: [
                 {
                     text: "Cancel",
-                    style: "cancel"
+                    style: "cancel",
+                    onPress: hideAlert
                 },
                 {
                     text: "Logout",
@@ -213,7 +217,7 @@ export default function AccountScreen() {
                     }
                 }
             ]
-        )
+        })
     }
 
     const handleBecomeSeller = async () => {
@@ -232,13 +236,21 @@ export default function AccountScreen() {
             )
         } catch (error) {
             console.error("Error becoming seller:", error)
-            Alert.alert("Error", "Failed to become a seller. Please try again.")
+            showAlert({
+                title: "Error",
+                message: "Failed to become a seller. Please try again.",
+                buttons: [{ text: "OK", onPress: hideAlert }]
+            })
         }
     }
 
     const handleDeleteAccount = async () => {
         if (deleteText.toLowerCase() !== "delete my account") {
-            Alert.alert("Error", "Please type 'delete my account' to confirm.")
+            showAlert({
+                title: "Error",
+                message: "Please type 'delete my account' to confirm.",
+                buttons: [{ text: "OK", onPress: hideAlert }]
+            })
             return
         }
 
@@ -247,10 +259,18 @@ export default function AccountScreen() {
             // For now, we'll just log out the user
             await logout()
             navigation.navigate('Home')
-            Alert.alert("Success", "Your account has been deleted.")
+            showAlert({
+                title: "Success",
+                message: "Your account has been deleted.",
+                buttons: [{ text: "OK", onPress: hideAlert }]
+            })
         } catch (error) {
             console.error("Error deleting account:", error)
-            Alert.alert("Error", "Failed to delete account. Please try again.")
+            showAlert({
+                title: "Error",
+                message: "Failed to delete account. Please try again.",
+                buttons: [{ text: "OK", onPress: hideAlert }]
+            })
         }
     }
 
@@ -278,7 +298,11 @@ export default function AccountScreen() {
             }
         } catch (error) {
             console.error("Error updating user:", error)
-            Alert.alert("Error", "Failed to update user. Please try again.")
+            showAlert({
+                title: "Error",
+                message: "Failed to update user. Please try again.",
+                buttons: [{ text: "OK", onPress: hideAlert }]
+            })
         } finally {
             await reloadUser()
         }
@@ -1422,6 +1446,13 @@ export default function AccountScreen() {
                     </View>
                 </View>
             </Modal>
+            <CustomAlert
+                visible={isVisible}
+                title={config.title}
+                message={config.message}
+                buttons={config.buttons}
+                type={config.type}
+            />
         </ProtectedRoute>
     )
 }

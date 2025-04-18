@@ -11,7 +11,6 @@ import {
     TextInput,
     KeyboardAvoidingView,
     Platform,
-    Image,
     ActivityIndicator,
     Animated,
     Dimensions,

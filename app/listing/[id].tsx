@@ -4,7 +4,7 @@ import { useEffect, useState, useRef } from 'react';
 import {
     View, Text, ActivityIndicator, SafeAreaView, Image,
     TouchableOpacity, Dimensions, Animated,
-    FlatList, Share, Platform, Alert
+    FlatList, Share, Platform
 } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import BottomNavigation from '../../components/BottomNavigation';
@@ -17,6 +17,8 @@ import {
 import { StatusBar } from 'expo-status-bar';
 import { findCategory } from 'lib/functions/category';
 import { createConversation } from 'lib/backend/chat/createConversation';
+import CustomAlert from 'components/CustomAlert';
+import { useCustomAlert } from 'lib/hooks/useCustomAlert';
 
 export default function ListingDetailScreen() {
     const { colors, isDark } = useTheme();
@@ -29,6 +31,7 @@ export default function ListingDetailScreen() {
     const [currentImageIndex, setCurrentImageIndex] = useState(0);
     const [isFavorite, setIsFavorite] = useState(false);
     const { user } = useAuth();
+    const { showAlert, isVisible, config, hideAlert } = useCustomAlert();
 
     // Animation references
     const scrollY = useRef(new Animated.Value(0)).current;
@@ -157,21 +160,38 @@ export default function ListingDetailScreen() {
     // Function to contact seller
     const contactSeller = async () => {
         if (!user || !user.id) {
-            Alert.alert(
-                "Login Required",
-                "You need to be logged in to contact the seller.",
-                [
-                    { text: "Cancel", style: "cancel" },
-                    { text: "Login", onPress: () => navigation.navigate('Login' as never) }
+            showAlert({
+                title: "Login Required",
+                message: "You need to be logged in to contact the seller.",
+                type: "info",
+                buttons: [
+                    {
+                        text: "Cancel",
+                        style: "cancel",
+                        onPress: hideAlert
+                    },
+                    {
+                        text: "Login",
+                        style: "default",
+                        onPress: () => {
+                            hideAlert();
+                            navigation.navigate('Login' as never);
+                        }
+                    }
                 ]
-            );
+            });
             return;
         }
 
         try {
             // Check if user is trying to contact themselves
             if (user.id === listing.sellerId) {
-                Alert.alert("Error", "You cannot contact yourself as a seller");
+                showAlert({
+                    title: "Error",
+                    message: "You cannot contact yourself as a seller",
+                    type: "error",
+                    buttons: [{ text: "OK", onPress: hideAlert }]
+                });
                 return;
             }
 
@@ -193,7 +213,12 @@ export default function ListingDetailScreen() {
             });
         } catch (error) {
             console.error('Error contacting seller:', error);
-            Alert.alert("Error", "Failed to start conversation. Please try again.");
+            showAlert({
+                title: "Error",
+                message: "Failed to start conversation. Please try again.",
+                type: "error",
+                buttons: [{ text: "OK", onPress: hideAlert }]
+            });
         }
     };
 
@@ -730,6 +755,14 @@ export default function ListingDetailScreen() {
             </View>
 
             <BottomNavigation activeTab={activeTab} onTabChange={setActiveTab} />
+
+            <CustomAlert
+                visible={isVisible}
+                title={config.title}
+                message={config.message}
+                buttons={config.buttons}
+                type={config.type}
+            />
         </SafeAreaView>
     );
 }

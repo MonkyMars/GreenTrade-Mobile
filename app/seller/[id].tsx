@@ -1,30 +1,23 @@
-import { useNavigation, useRoute } from '@react-navigation/native';
-import BottomNavigation from 'components/BottomNavigation';
-import { useTheme } from 'lib/theme/ThemeContext';
-import { useAuth } from 'lib/auth/AuthContext';
-import { FetchedListing, Seller } from 'lib/types/main';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import {
-    View,
-    Text,
-    SafeAreaView,
-    StatusBar,
-    TouchableOpacity,
-    ScrollView,
-    FlatList,
-    Animated,
-    Dimensions,
-    ActivityIndicator,
-    RefreshControl,
-    Modal,
-    Alert,
-    Image
+    View, Text, TouchableOpacity, ScrollView, FlatList,
+    ActivityIndicator, Image, Animated, Dimensions, RefreshControl,
+    Modal, StatusBar
 } from 'react-native';
-import { FontAwesome, MaterialCommunityIcons, Ionicons, Feather } from '@expo/vector-icons';
-import { getSellerListings } from 'lib/backend/listings/getListings';
-import { ListingGridItem, ListingListItem } from 'components/ListingItem';
-import { createConversation } from 'lib/backend/chat/createConversation';
 import { getSeller } from 'lib/backend/auth/seller/getSeller';
+import { FetchedListing, Seller } from 'lib/types/main';
+import { getSellerListings } from 'lib/backend/listings/getListings';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { useNavigation, useRoute } from '@react-navigation/native';
+import { useTheme } from 'lib/theme/ThemeContext';
+import { FontAwesome, Feather, Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
+import { useAuth } from 'lib/auth/AuthContext';
+import { createConversation } from 'lib/backend/chat/createConversation';
+import { ListingGridItem, ListingListItem } from 'components/ListingItem';
+import CustomAlert from 'components/CustomAlert';
+import { StatusBar as StatusBarComponent } from 'expo-status-bar';
+import { useCustomAlert } from 'lib/hooks/useCustomAlert';
+import BottomNavigation from 'components/BottomNavigation';
 
 export default function SellerScreen() {
     const route = useRoute();
@@ -43,6 +36,7 @@ export default function SellerScreen() {
     const [averageEcoScore, setAverageEcoScore] = useState(seller?.rating || "0");
     const [isListingModalVisible, setIsListingModalVisible] = useState(false);
     const [isCreatingConversation, setIsCreatingConversation] = useState(false);
+    const { showAlert, isVisible, config, hideAlert } = useCustomAlert();
 
     // Animation values
     const scrollY = useRef(new Animated.Value(0)).current;
@@ -165,25 +159,43 @@ export default function SellerScreen() {
     // Handle contact seller
     const handleContactSeller = () => {
         if (!user || !user.id) {
-            Alert.alert(
-                "Login Required",
-                "You need to be logged in to contact the seller.",
-                [
-                    { text: "Cancel", style: "cancel" },
-                    { text: "Login", onPress: () => navigation.navigate('Login' as never) }
+            showAlert({
+                title: "Login Required",
+                message: "You need to be logged in to contact the seller.",
+                type: "info",
+                buttons: [
+                    { text: "Cancel", style: "cancel", onPress: hideAlert },
+                    {
+                        text: "Login",
+                        style: "default",
+                        onPress: () => {
+                            hideAlert();
+                            navigation.navigate('Login' as never);
+                        }
+                    }
                 ]
-            );
+            });
             return;
         }
 
         // Check if user is trying to contact themselves
         if (user.id === seller?.id) {
-            Alert.alert("Error", "You cannot contact yourself as a seller");
+            showAlert({
+                title: "Error",
+                message: "You cannot contact yourself as a seller",
+                type: "error",
+                buttons: [{ text: "OK", onPress: hideAlert }]
+            });
             return;
         }
 
         if (sellerListings.length === 0) {
-            Alert.alert("No Listings", "This seller doesn't have any listings yet.");
+            showAlert({
+                title: "No Listings",
+                message: "This seller doesn't have any listings yet.",
+                type: "warning",
+                buttons: [{ text: "OK", onPress: hideAlert }]
+            });
             return;
         }
 
@@ -226,7 +238,12 @@ export default function SellerScreen() {
         } catch (error) {
             console.error('Error creating conversation:', error);
             setIsCreatingConversation(false);
-            Alert.alert("Error", "Failed to start conversation. Please try again.");
+            showAlert({
+                title: "Error",
+                message: "Failed to start conversation. Please try again.",
+                type: "error",
+                buttons: [{ text: "OK", onPress: hideAlert }]
+            });
         }
     };
 
@@ -260,7 +277,7 @@ export default function SellerScreen() {
     if (loadingSeller) {
         return (
             <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }}>
-                <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} />
+                <StatusBarComponent style={isDark ? 'light' : 'dark'} />
                 <Animated.View
                     style={{
                         backgroundColor: colors.card,
@@ -304,7 +321,7 @@ export default function SellerScreen() {
     if (!seller) {
         return (
             <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }}>
-                <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} />
+                <StatusBarComponent style={isDark ? 'light' : 'dark'} />
                 <Animated.View
                     style={{
                         backgroundColor: colors.card,
@@ -363,7 +380,7 @@ export default function SellerScreen() {
 
     return (
         <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }}>
-            <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} />
+            <StatusBarComponent style={isDark ? 'light' : 'dark'} />
 
             {/* Animated Header */}
             <Animated.View
@@ -776,6 +793,14 @@ export default function SellerScreen() {
                     </View>
                 </View>
             </Modal>
+
+            <CustomAlert
+                visible={isVisible}
+                title={config.title}
+                message={config.message}
+                buttons={config.buttons}
+                type={config.type}
+            />
         </SafeAreaView>
     );
 }
