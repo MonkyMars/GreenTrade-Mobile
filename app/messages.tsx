@@ -154,7 +154,10 @@ export default function MessagesScreen() {
     };
 
     useEffect(() => {
-        if (!selectedConversationId || !user) return;
+        if (!selectedConversationId || !user) {
+            console.log("No conversation ID or user found. Skipping WebSocket connection.");
+            return;
+        };
 
         const wsBaseUrl = BASE_URL.replace(/^https?:\/\//, '');
         const wsUrl = `ws://${wsBaseUrl}/ws/chat/${selectedConversationId}/${user.id}`;
@@ -168,7 +171,6 @@ export default function MessagesScreen() {
 
         ws.current.onclose = () => {
             console.log(`WebSocket disconnected for conversation ${selectedConversationId}`);
-            // Optional: Implement reconnection logic here
         };
 
         ws.current.onerror = (event) => {
@@ -200,7 +202,7 @@ export default function MessagesScreen() {
             ws.current?.close();
         };
 
-    }, [selectedConversationId]);
+    }, [selectedConversationId, user]);
 
     // Fetch messages for a conversation
     const fetchMessages = async (conversationId: string) => {
@@ -514,7 +516,7 @@ export default function MessagesScreen() {
                             <View style={{
                                 backgroundColor: colors.card,
                                 padding: 16,
-                                paddingTop: 32,
+                                paddingTop: StatusBar.currentHeight,
                                 borderBottomWidth: 1,
                                 borderBottomColor: colors.borderLight,
                                 shadowColor: colors.shadow,
@@ -697,45 +699,6 @@ export default function MessagesScreen() {
                                 </View>
                             ) : (
                                 <View style={{ flex: 1 }}>
-                                    {/* Listing Info Card */}
-                                    {conversations.find(c => c.id === selectedConversationId)?.listingName && (
-                                        <View style={{
-                                            alignItems: 'center',
-                                            paddingVertical: 12,
-                                            paddingHorizontal: 16,
-                                        }}>
-                                            <TouchableOpacity
-                                                style={{
-                                                    padding: 12,
-                                                    backgroundColor: colors.primaryLight,
-                                                    borderRadius: 8,
-                                                    shadowColor: colors.shadow,
-                                                    shadowOffset: { width: 0, height: 1 },
-                                                    shadowOpacity: 0.1,
-                                                    shadowRadius: 3,
-                                                    elevation: 2,
-                                                    maxWidth: '90%',
-                                                    alignItems: 'center',
-                                                }}
-                                                onPress={() => {
-                                                    const listingId = conversations.find(c => c.id === selectedConversationId)?.listingId;
-                                                    if (listingId) {
-                                                        navigation.navigate('ListingDetail', { id: listingId } as never);
-                                                    }
-                                                }}
-                                            >
-                                                <Text style={{
-                                                    fontSize: 13,
-                                                    fontWeight: '500',
-                                                    color: colors.textSecondary,
-                                                    textAlign: 'center',
-                                                }}>
-                                                    {`Conversation about: ${conversations.find(c => c.id === selectedConversationId)?.listingName}`}
-                                                </Text>
-                                                <Text style={{ color: colors.primary, marginTop: 4, fontSize: 12, fontWeight: '600' }}>View Listing</Text>
-                                            </TouchableOpacity>
-                                        </View>
-                                    )}
                                     <FlatList
                                         ref={listRef}
                                         data={messages}
