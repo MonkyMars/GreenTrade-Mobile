@@ -15,9 +15,12 @@ import {
     Animated,
     Dimensions,
     StatusBar,
-    Alert
+    Alert,
+    Modal,
+    ScrollView,
+    Linking
 } from "react-native";
-import { FontAwesome, Feather, MaterialCommunityIcons } from '@expo/vector-icons';
+import { FontAwesome, Feather, MaterialCommunityIcons, Ionicons, AntDesign, Entypo } from '@expo/vector-icons';
 import { useNavigation, useRoute } from "@react-navigation/native";
 import ProtectedRoute from "components/ProtectedRoute";
 import { ChatMessage, Conversation } from "lib/types/chat";
@@ -25,6 +28,7 @@ import { getConversations } from "lib/backend/chat/getConversations";
 import { getMessages } from "lib/backend/chat/getMessages";
 import { sendMessage } from "lib/backend/chat/sendMessage";
 import { BASE_URL } from "lib/backend/api/axiosConfig";
+import CustomDatePicker from "components/CustomDatePicker";
 
 export default function MessagesScreen() {
     const { colors, isDark } = useTheme();
@@ -50,6 +54,9 @@ export default function MessagesScreen() {
     const [sendingMessage, setSendingMessage] = useState(false);
     const [refreshing, setRefreshing] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const [showPlusMenu, setShowPlusMenu] = useState(false);
+    const [showDatePicker, setShowDatePicker] = useState(false);
+    const [selectedDate, setSelectedDate] = useState(new Date());
 
     // Animation values
     const fadeAnim = useRef(new Animated.Value(0)).current;
@@ -474,6 +481,115 @@ export default function MessagesScreen() {
         }
     };
 
+    // Function to handle sending a date/time
+    const handleSendDateTime = async () => {
+        if (!selectedConversationId || !user || !user.id || sendingMessage) return;
+
+        setSendingMessage(true);
+
+        try {
+            // Create a formatted date string for display
+            const formattedDate = selectedDate.toLocaleDateString(undefined, {
+                weekday: 'long',
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric',
+            });
+
+            const formattedTime = selectedDate.toLocaleTimeString(undefined, {
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+
+            // Create a special message with date metadata
+            const dateMessage = {
+                text: `📅 ${formattedDate} at ${formattedTime}`,
+                type: 'date',
+                timestamp: selectedDate.toISOString()
+            };
+
+            // Send the message as a JSON string
+            const sentMessage = await sendMessage(
+                selectedConversationId,
+                user.id,
+                JSON.stringify(dateMessage)
+            );
+
+            // Update conversations list with the new message
+            setConversations(prevConversations =>
+                prevConversations.map(convo =>
+                    convo.id === selectedConversationId
+                        ? {
+                            ...convo,
+                            lastMessage: sentMessage,
+                            lastMessageTime: sentMessage.timestamp
+                        }
+                        : convo
+                )
+            );
+
+            // Close menus
+            setShowDatePicker(false);
+            setShowPlusMenu(false);
+
+            // Scroll to bottom of chat
+            setTimeout(() => {
+                listRef.current?.scrollToEnd({ animated: true });
+            }, 100);
+
+        } catch (error) {
+            console.error('Error sending date message:', error);
+            Alert.alert('Error', 'Failed to send date');
+        } finally {
+            setSendingMessage(false);
+        }
+    };
+
+    // Function to handle calendar event creation
+    const addToCalendar = (dateString: string) => {
+        try {
+            const date = new Date(dateString);
+            // Format for calendar URL
+            const year = date.getFullYear();
+            const month = (date.getMonth() + 1).toString().padStart(2, '0');
+            const day = date.getDate().toString().padStart(2, '0');
+            const hours = date.getHours().toString().padStart(2, '0');
+            const minutes = date.getMinutes().toString().padStart(2, '0');
+
+            // Create a calendar event URL
+            // This uses standard URI format that works across platforms
+            const title = encodeURIComponent("Meeting from GreenTrade");
+            const details = encodeURIComponent("Meeting scheduled via GreenTrade Chat");
+            const startDate = `${year}${month}${day}T${hours}${minutes}00`;
+            const endDate = `${year}${month}${day}T${(parseInt(hours) + 1).toString().padStart(2, '0')}${minutes}00`;
+
+            let calendarUrl = '';
+
+            if (Platform.OS === 'ios') {
+                // iOS uses calshow: URL scheme
+                calendarUrl = `calshow:${date.getTime()}`;
+            } else {
+                // Android uses intent with calendar provider
+                calendarUrl = `content://com.android.calendar/time/${date.getTime()}`;
+            }
+
+            // Open the calendar app
+            Linking.openURL(calendarUrl).catch(err => {
+                console.error('Error opening calendar:', err);
+
+                // Fallback to creating a new event if direct opening fails
+                const fallbackUrl = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${title}&details=${details}&dates=${startDate}/${endDate}`;
+                Linking.openURL(fallbackUrl).catch(err => {
+                    Alert.alert('Calendar Error', 'Could not open calendar app. Please add this event manually.');
+                });
+            });
+
+        } catch (error) {
+            console.error('Error adding to calendar:', error);
+            Alert.alert('Calendar Error', 'Could not add event to calendar');
+        }
+    };
+
     // Return to threads list
     const handleBackToThreads = () => {
         // Animate the chat window sliding out
@@ -573,7 +689,23 @@ export default function MessagesScreen() {
             );
         }
 
-        // Otherwise render a normal message
+        // Check if this is a date message (which would be in JSON format)
+        let isDateMessage = false;
+        let dateData = null;
+
+        try {
+            if (item.text.startsWith('{"text":"📅')) {
+                const parsedMessage = JSON.parse(item.text);
+                if (parsedMessage.type === 'date') {
+                    isDateMessage = true;
+                    dateData = parsedMessage;
+                }
+            }
+        } catch (e) {
+            // Not a valid JSON message, treat as regular message
+        }
+
+        // Otherwise render a normal message or date message
         const isUserMessage = item.senderId === user?.id;
         const selectedConversation = conversations.find(c => c.id === selectedConversationId);
 
@@ -614,12 +746,40 @@ export default function MessagesScreen() {
                     shadowRadius: 2,
                     elevation: 1,
                 }}>
-                    <Text style={{
-                        color: isUserMessage ? 'white' : colors.text,
-                        fontSize: 15,
-                    }}>
-                        {item.text}
-                    </Text>
+                    {isDateMessage ? (
+                        <TouchableOpacity
+                            onPress={() => {
+                                if (dateData && dateData.timestamp) {
+                                    addToCalendar(dateData.timestamp);
+                                }
+                            }}
+                            style={{
+                                flexDirection: 'row',
+                                alignItems: 'center',
+                            }}
+                        >
+                            <Text style={{
+                                color: isUserMessage ? 'white' : colors.text,
+                                fontSize: 15,
+                            }}>
+                                {dateData.text}
+                            </Text>
+                            <View style={{ marginLeft: 8 }}>
+                                <AntDesign
+                                    name="calendar"
+                                    size={16}
+                                    color={isUserMessage ? 'white' : colors.primary}
+                                />
+                            </View>
+                        </TouchableOpacity>
+                    ) : (
+                        <Text style={{
+                            color: isUserMessage ? 'white' : colors.text,
+                            fontSize: 15,
+                        }}>
+                            {item.text}
+                        </Text>
+                    )}
 
                     <Text style={{
                         fontSize: 11,
@@ -929,7 +1089,10 @@ export default function MessagesScreen() {
                                     borderTopWidth: 1,
                                     borderTopColor: colors.border,
                                 }}>
-                                    <TouchableOpacity style={{ padding: 8, marginRight: 8 }}>
+                                    <TouchableOpacity
+                                        style={{ padding: 8, marginRight: 8 }}
+                                        onPress={() => setShowPlusMenu(!showPlusMenu)}
+                                    >
                                         <Feather name="plus-circle" size={24} color={colors.primary} />
                                     </TouchableOpacity>
 
@@ -973,7 +1136,77 @@ export default function MessagesScreen() {
                                         )}
                                     </TouchableOpacity>
                                 </View>
+
+                                {/* Plus Menu */}
+                                {showPlusMenu && (
+                                    <View style={{
+                                        backgroundColor: colors.card,
+                                        padding: 16,
+                                        borderTopWidth: 1,
+                                        borderTopColor: colors.border,
+                                    }}>
+                                        <View style={{
+                                            flexDirection: 'row',
+                                            flexWrap: 'wrap',
+                                            justifyContent: 'flex-start',
+                                        }}>
+                                            {/* Date/Time Tile */}
+                                            <TouchableOpacity
+                                                style={{
+                                                    width: '16.66%', // 6 tiles per row
+                                                    aspectRatio: 1,
+                                                    padding: 4,
+                                                    alignItems: 'center',
+                                                    justifyContent: 'center',
+                                                }}
+                                                onPress={() => {
+                                                    setShowDatePicker(true);
+                                                }}
+                                            >
+                                                <View style={{
+                                                    width: '100%',
+                                                    height: '100%',
+                                                    backgroundColor: colors.primaryLight,
+                                                    borderRadius: 12,
+                                                    alignItems: 'center',
+                                                    justifyContent: 'center',
+                                                }}>
+                                                    <AntDesign name="calendar" size={24} color={colors.primary} />
+                                                </View>
+                                                <Text style={{
+                                                    fontSize: 11,
+                                                    color: colors.text,
+                                                    marginTop: 4,
+                                                    textAlign: 'center',
+                                                }}>
+                                                    Date
+                                                </Text>
+                                            </TouchableOpacity>
+
+                                            {/* Placeholder for 5 more tiles */}
+                                            {Array(5).fill(0).map((_, index) => (
+                                                <View key={index} style={{
+                                                    width: '16.66%',
+                                                    aspectRatio: 1,
+                                                    padding: 4,
+                                                }} />
+                                            ))}
+                                        </View>
+                                    </View>
+                                )}
                             </KeyboardAvoidingView>
+
+                            {/* Date Picker Modal - Directly use CustomDatePicker instead of nesting in another modal */}
+                            <CustomDatePicker
+                                isVisible={showDatePicker}
+                                colors={colors}
+                                onConfirm={(date) => {
+                                    setSelectedDate(date);
+                                    handleSendDateTime(); // Send date immediately after confirmation
+                                }}
+                                onClose={() => setShowDatePicker(false)}
+                                selectedDate={selectedDate}
+                            />
                         </Animated.View>
                     )}
                 </SafeAreaView>
