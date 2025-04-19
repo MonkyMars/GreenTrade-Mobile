@@ -128,6 +128,7 @@ const MessageInput: React.FC<MessageInputProps> = ({
                                 padding: 4,
                                 alignItems: 'center',
                                 justifyContent: 'center',
+
                             }}
                             onPress={() => {
                                 setShowDatePicker(true);
@@ -138,12 +139,12 @@ const MessageInput: React.FC<MessageInputProps> = ({
                                 height: '100%',
                                 backgroundColor: colors.primaryLight,
                                 alignItems: 'center',
-                                justifyContent: 'center',
+                                justifyContent: 'center', borderRadius: 12,
                             }}>
                                 <AntDesign name="calendar" size={24} color={colors.primary} />
                             </View>
                             <Text style={{
-                                fontSize: 12,
+                                fontSize: 14,
                                 color: colors.text,
                                 marginTop: 4,
                                 textAlign: 'center',

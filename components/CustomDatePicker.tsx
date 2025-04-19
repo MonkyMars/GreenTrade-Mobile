@@ -225,7 +225,7 @@ const CustomDatePicker: React.FC<CustomDatePickerProps> = ({ isVisible, onClose,
             onRequestClose={onClose}
         >
             <View style={styles.modalOverlay}>
-                <View style={[styles.modalContent, { backgroundColor: colors.card }]}>
+                <View style={[styles.modalContent, { backgroundColor: colors.card, height: '100%' }]}>
                     <View style={styles.modalHeader}>
                         <TouchableOpacity onPress={onClose}>
                             <Text style={{ color: colors.textSecondary, fontSize: 16 }}>Cancel</Text>

@@ -8,10 +8,9 @@ import {
     Animated,
     Dimensions,
     StatusBar,
-    Alert,
     Text,
 } from "react-native";
-import { useNavigation, useRoute } from "@react-navigation/native";
+import { useRoute } from "@react-navigation/native";
 import ProtectedRoute from "components/ProtectedRoute";
 import { ChatMessage, Conversation } from "lib/types/chat";
 import { useWebSocketChat } from "lib/services/useWebSocketChat";
@@ -34,7 +33,6 @@ import MessageInput from "components/chat/MessageInput";
 export default function MessagesScreen() {
     const { colors, isDark } = useTheme();
     const { user } = useAuth();
-    const navigation = useNavigation();
     const route = useRoute();
     const params = route.params || {};
 
