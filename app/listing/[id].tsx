@@ -25,7 +25,7 @@ export default function ListingDetailScreen() {
     const [activeTab, setActiveTab] = useState('listings');
     const navigation = useNavigation();
     const route = useRoute();
-    const { id }: { id: number } = route.params;
+    const { id }: { id: string } = route.params;
     const [listing, setListing] = useState<FetchedListing>();
     const [loading, setLoading] = useState(true);
     const [currentImageIndex, setCurrentImageIndex] = useState(0);

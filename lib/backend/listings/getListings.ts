@@ -2,7 +2,7 @@ import { FetchedListing } from 'lib/types/main'
 import api from '../api/axiosConfig'
 
 export const getListings = async (
-  id?: number,
+  id?: string,
 ): Promise<FetchedListing | FetchedListing[]> => {
   try {
     if (id) {

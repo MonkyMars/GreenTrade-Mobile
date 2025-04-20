@@ -24,7 +24,6 @@ interface ListingItemProps {
 
 export const ListingGridItem: React.FC<ListingItemProps> = ({ item, onPress, columnWidth }) => {
     const { colors, isDark } = useTheme();
-    const category = findCategory(item.category);
 
     return (
         <TouchableOpacity
