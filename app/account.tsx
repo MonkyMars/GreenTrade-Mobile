@@ -20,7 +20,7 @@ import { FetchedListing } from 'lib/types/main'
 import CustomAlert from 'components/CustomAlert'
 import { useCustomAlert } from 'lib/hooks/useCustomAlert'
 
-type ActiveTab = 'profile' | 'seller' | 'security' | 'delete'
+type ActiveTab = 'profile' | 'security' | 'delete'
 type ActiveInnerTab = 'listings' | 'favorites' | 'purchases'
 
 export default function AccountScreen() {
@@ -220,30 +220,6 @@ export default function AccountScreen() {
         })
     }
 
-    const handleBecomeSeller = async () => {
-        try {
-            // In a real app, you would make an API call to become a seller
-            // For now, we'll just simulate it with a delay
-            if (user) {
-                setUser({
-                    ...user,
-                    isSeller: true
-                })
-            }
-
-            setUpdateSuccess(
-                "You are now a seller! You can start listing your eco-friendly products."
-            )
-        } catch (error) {
-            console.error("Error becoming seller:", error)
-            showAlert({
-                title: "Error",
-                message: "Failed to become a seller. Please try again.",
-                buttons: [{ text: "OK", onPress: hideAlert }]
-            })
-        }
-    }
-
     const handleDeleteAccount = async () => {
         if (deleteText.toLowerCase() !== "delete my account") {
             showAlert({
@@ -437,7 +413,7 @@ export default function AccountScreen() {
                             padding: 4,
                             marginBottom: 16
                         }}>
-                            {['profile', 'seller', 'security', 'delete' as ActiveTab].map((tab) => (
+                            {['profile', 'security', 'delete' as ActiveTab].map((tab) => (
                                 <TouchableOpacity
                                     key={tab}
                                     style={{
@@ -867,203 +843,6 @@ export default function AccountScreen() {
                                         )}
                                     </View>
                                 </View>
-                            </View>
-                        )}
-
-                        {/* Seller Tab */}
-                        {activeTab === 'seller' && (
-                            <View style={{
-                                backgroundColor: colors.card,
-                                borderRadius: 12,
-                                padding: 16,
-                                shadowColor: colors.shadow,
-                                shadowOffset: { width: 0, height: 2 },
-                                shadowOpacity: 0.1,
-                                shadowRadius: 4,
-                                elevation: 2,
-                            }}>
-                                <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 16 }}>
-                                    <MaterialCommunityIcons name="store" size={18} color={colors.primary} />
-                                    <Text style={{
-                                        marginLeft: 10,
-                                        fontSize: 18,
-                                        fontWeight: '700',
-                                        color: colors.text
-                                    }}>
-                                        Seller Settings
-                                    </Text>
-                                </View>
-
-                                {user?.isSeller ? (
-                                    <>
-                                        <View style={{
-                                            backgroundColor: isDark ? 'rgba(52, 211, 153, 0.2)' : 'rgba(209, 250, 229, 0.8)',
-                                            borderWidth: 1,
-                                            borderColor: colors.primary,
-                                            borderRadius: 8,
-                                            padding: 16,
-                                            marginBottom: 20
-                                        }}>
-                                            <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 8 }}>
-                                                <FontAwesome name="check-circle" size={16} color={colors.primary} />
-                                                <Text style={{
-                                                    marginLeft: 10,
-                                                    fontSize: 16,
-                                                    fontWeight: '600',
-                                                    color: colors.text
-                                                }}>
-                                                    You are a verified seller
-                                                </Text>
-                                            </View>
-
-                                            <Text style={{
-                                                color: colors.textSecondary,
-                                                marginBottom: 16
-                                            }}>
-                                                You can create listings and sell your eco-friendly products on GreenTrade.
-                                                Access your seller dashboard to manage your listings.
-                                            </Text>
-
-                                            <TouchableOpacity
-                                                style={{
-                                                    backgroundColor: colors.primary,
-                                                    paddingVertical: 10,
-                                                    paddingHorizontal: 16,
-                                                    borderRadius: 6,
-                                                    alignItems: 'center',
-                                                }}
-                                            >
-                                                <Text style={{ color: 'white', fontWeight: '600' }}>
-                                                    Go to Seller Dashboard
-                                                </Text>
-                                            </TouchableOpacity>
-                                        </View>
-
-                                        <Text style={{
-                                            fontSize: 16,
-                                            fontWeight: '600',
-                                            color: colors.text,
-                                            marginBottom: 16
-                                        }}>
-                                            Seller Information
-                                        </Text>
-
-                                        <View style={{ marginBottom: 16 }}>
-                                            <Text style={{
-                                                fontSize: 14,
-                                                fontWeight: '500',
-                                                color: colors.textSecondary,
-                                                marginBottom: 6
-                                            }}>
-                                                Business Name
-                                            </Text>
-                                            <TextInput
-                                                defaultValue={''}
-                                                style={{
-                                                    borderWidth: 1,
-                                                    borderColor: colors.border,
-                                                    borderRadius: 6,
-                                                    paddingHorizontal: 12,
-                                                    paddingVertical: 10,
-                                                    color: colors.text,
-                                                    backgroundColor: colors.background,
-                                                }}
-                                                placeholderTextColor={colors.textTertiary}
-                                            />
-                                        </View>
-
-                                        <View style={{ marginBottom: 24 }}>
-                                            <Text style={{
-                                                fontSize: 14,
-                                                fontWeight: '500',
-                                                color: colors.textSecondary,
-                                                marginBottom: 6
-                                            }}>
-                                                Seller Bio / About Your (Business)
-                                            </Text>
-                                            <TextInput
-                                                defaultValue={''}
-                                                multiline
-                                                numberOfLines={4}
-                                                style={{
-                                                    height: 100,
-                                                    textAlignVertical: 'top',
-                                                    borderWidth: 1,
-                                                    borderColor: colors.border,
-                                                    borderRadius: 6,
-                                                    paddingHorizontal: 12,
-                                                    paddingVertical: 10,
-                                                    color: colors.text,
-                                                    backgroundColor: colors.background,
-                                                }}
-                                                placeholderTextColor={colors.textTertiary}
-                                            />
-                                        </View>
-
-                                        <TouchableOpacity
-                                            style={{
-                                                backgroundColor: colors.primary,
-                                                paddingVertical: 12,
-                                                borderRadius: 6,
-                                                alignItems: 'center',
-                                            }}
-                                        >
-                                            <Text style={{ color: 'white', fontWeight: '600' }}>
-                                                Update Seller Information
-                                            </Text>
-                                        </TouchableOpacity>
-                                    </>
-                                ) : (
-                                    <View style={{
-                                        backgroundColor: isDark ? 'rgba(55, 65, 81, 0.3)' : 'rgba(243, 244, 246, 0.7)',
-                                        borderRadius: 8,
-                                        padding: 16,
-                                        marginBottom: 8
-                                    }}>
-                                        <Text style={{
-                                            fontSize: 16,
-                                            fontWeight: '600',
-                                            color: colors.text,
-                                            marginBottom: 8
-                                        }}>
-                                            Become a Seller on GreenTrade
-                                        </Text>
-
-                                        <Text style={{
-                                            color: colors.textSecondary,
-                                            marginBottom: 16
-                                        }}>
-                                            Start selling your eco-friendly products to our community of environmentally
-                                            conscious buyers. Becoming a seller is free and only takes a few minutes.
-                                        </Text>
-
-                                        <View style={{ marginBottom: 16 }}>
-                                            {["Access to seller dashboard", "Create and manage your listings",
-                                                "Connect with eco-conscious buyers", "Promote sustainable products"].map((item, index) => (
-                                                    <View key={index} style={{ flexDirection: 'row', marginBottom: 8 }}>
-                                                        <FontAwesome name="leaf" size={14} color={colors.primary} style={{ marginTop: 2 }} />
-                                                        <Text style={{ marginLeft: 10, color: colors.textSecondary }}>
-                                                            {item}
-                                                        </Text>
-                                                    </View>
-                                                ))}
-                                        </View>
-
-                                        <TouchableOpacity
-                                            style={{
-                                                backgroundColor: colors.primary,
-                                                paddingVertical: 12,
-                                                borderRadius: 6,
-                                                alignItems: 'center',
-                                            }}
-                                            onPress={handleBecomeSeller}
-                                        >
-                                            <Text style={{ color: 'white', fontWeight: '600' }}>
-                                                Become a Seller
-                                            </Text>
-                                        </TouchableOpacity>
-                                    </View>
-                                )}
                             </View>
                         )}
 
