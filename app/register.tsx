@@ -16,7 +16,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { z } from 'zod'
 import { type RootStackParamList } from './navigation'
-import BottomNavigation from 'components/BottomNavigation'
+import BottomNavigation, { Tab } from 'components/BottomNavigation'
 import { useTheme } from '../lib/theme/ThemeContext'
 import { useAuth } from '../lib/auth/AuthContext'
 import { NativeStackNavigationProp } from '@react-navigation/native-stack/lib/typescript/src/types'
@@ -61,7 +61,7 @@ type RegisterFormData = z.infer<typeof registerSchema>
 export default function RegisterScreen({ navigation }: RegisterScreenProps) {
     const [countries, setCountries] = useState<CountryData[]>([])
     const [open, setOpen] = useState<boolean>(false);
-    const [activeTab, setActiveTab] = useState('register')
+    const [activeTab, setActiveTab] = useState<Tab["name"]>('register')
     const { register } = useAuth()
     const { colors, isDark } = useTheme()
     const [formData, setFormData] = useState<RegisterFormData>({

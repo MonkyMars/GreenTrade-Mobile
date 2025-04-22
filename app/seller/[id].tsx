@@ -17,7 +17,7 @@ import { ListingGridItem, ListingListItem } from 'components/ListingItem';
 import CustomAlert from 'components/CustomAlert';
 import { StatusBar as StatusBarComponent } from 'expo-status-bar';
 import { useCustomAlert } from 'lib/hooks/useCustomAlert';
-import BottomNavigation from 'components/BottomNavigation';
+import BottomNavigation, { Tab } from 'components/BottomNavigation';
 
 export default function SellerScreen() {
     const route = useRoute();
@@ -26,7 +26,7 @@ export default function SellerScreen() {
     const [loadingSeller, setLoadingSeller] = useState(!params.seller && !!params.id);
     const { colors, isDark } = useTheme();
     const { user } = useAuth();
-    const [activeTab, setActiveTab] = useState('listings');
+    const [activeTab, setActiveTab] = useState<Tab["name"]>('listings');
     const navigation = useNavigation();
     const [sellerListings, setSellerListings] = useState<FetchedListing[]>([]);
     const [loading, setLoading] = useState(true);

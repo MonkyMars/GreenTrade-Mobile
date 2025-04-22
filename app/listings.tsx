@@ -15,7 +15,7 @@ import { SafeAreaView } from 'react-native-safe-area-context'
 import FontAwesome from 'react-native-vector-icons/FontAwesome'
 import Feather from 'react-native-vector-icons/Feather'
 import type { RootStackParamList } from './navigation'
-import BottomNavigation from '../components/BottomNavigation'
+import BottomNavigation, { Tab } from '../components/BottomNavigation'
 import { useTheme } from '../lib/theme/ThemeContext'
 import {
   categories,
@@ -37,7 +37,7 @@ export default function ListingsScreen({ navigation }: ListingsScreenProps) {
   const params = route.params || {};
   const category = params.category;
   const { colors } = useTheme()
-  const [activeTab, setActiveTab] = useState('listings')
+  const [activeTab, setActiveTab] = useState<Tab["name"]>('listings')
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('list')
   const [isFilterOpen, setIsFilterOpen] = useState(false)
   const [selectedCategory, setSelectedCategory] = useState('all')

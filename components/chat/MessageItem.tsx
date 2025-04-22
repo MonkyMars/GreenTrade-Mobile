@@ -44,7 +44,7 @@ const MessageItem: React.FC<MessageItemProps> = ({ item, conversation, userId, c
 
     // Check if this is a date message (which would be in JSON format)
     let isDateMessage = false;
-    let dateData = null;
+    let dateData: any = null;
 
     try {
         if (item.text.startsWith('{"text":"📅')) {

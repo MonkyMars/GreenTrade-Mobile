@@ -18,7 +18,7 @@ import { SafeAreaView } from 'react-native-safe-area-context'
 import FontAwesome from 'react-native-vector-icons/FontAwesome'
 import Feather from 'react-native-vector-icons/Feather'
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons'
-import BottomNavigation from '../components/BottomNavigation'
+import BottomNavigation, { Tab } from '../components/BottomNavigation'
 import { useTheme } from '../lib/theme/ThemeContext'
 import ProtectedRoute from 'components/ProtectedRoute'
 import { calculateEcoScore } from 'lib/functions/calculateEcoScore'
@@ -34,7 +34,7 @@ export default function PostScreen() {
   const { colors } = useTheme()
   const { user } = useAuth()
   const navigation = useNavigation()
-  const [activeTab, setActiveTab] = useState('post')
+  const [activeTab, setActiveTab] = useState<Tab["name"]>('post')
   const [uploading, setUploading] = useState(false)
   const [submitting, setSubmitting] = useState(false)
   const [showSuccess, setShowSuccess] = useState(false)

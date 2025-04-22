@@ -17,7 +17,7 @@ import { z } from 'zod'
 import { CommonActions } from '@react-navigation/native'
 
 import { type RootStackParamList } from './navigation'
-import BottomNavigation from 'components/BottomNavigation'
+import BottomNavigation, { Tab } from 'components/BottomNavigation'
 import { useTheme } from '../lib/theme/ThemeContext'
 import { useAuth } from '../lib/auth/AuthContext'
 import { NativeStackNavigationProp } from '@react-navigation/native-stack/lib/typescript/src/types'
@@ -38,7 +38,7 @@ const loginSchema = z.object({
 type LoginFormData = z.infer<typeof loginSchema>
 
 export default function LoginScreen({ navigation }: LoginScreenProps) {
-  const [activeTab, setActiveTab] = useState('login')
+  const [activeTab, setActiveTab] = useState<Tab["name"]>('login')
   const { login, isAuthenticated } = useAuth()
   const { colors, isDark } = useTheme()
   const [formData, setFormData] = useState<LoginFormData>({

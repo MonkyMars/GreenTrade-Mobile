@@ -4,8 +4,8 @@ import { useNavigation } from '@react-navigation/native'
 import { useTheme } from '../lib/theme/ThemeContext'
 import { useAuth } from 'lib/auth/AuthContext'
 
-interface Tab {
-  name: "home" | "listings" | "post" | "messages" | "account" | "login" | "register"
+export interface Tab {
+  name: "home" | "listings" | "post" | "messages" | "account" | "login" | "register" | "messages"
 }
 
 type BottomNavigationProps = {

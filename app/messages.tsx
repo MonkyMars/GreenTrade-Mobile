@@ -1,4 +1,4 @@
-import BottomNavigation from "components/BottomNavigation";
+import BottomNavigation, { Tab } from "components/BottomNavigation";
 import { useTheme } from "lib/theme/ThemeContext";
 import { useAuth } from "lib/auth/AuthContext";
 import { useRef, useState, useEffect } from "react";
@@ -37,7 +37,7 @@ export default function MessagesScreen() {
     const params = route.params || {};
 
     // State
-    const [activeTab, setActiveTab] = useState('messages');
+    const [activeTab, setActiveTab] = useState<Tab["name"]>('messages');
     const [conversations, setConversations] = useState<Conversation[]>([]);
     const [loading, setLoading] = useState(true);
     const [loadingMessages, setLoadingMessages] = useState(false);

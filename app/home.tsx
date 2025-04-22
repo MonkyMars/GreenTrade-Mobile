@@ -12,7 +12,7 @@ import {
   StatusBar,
 } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
-import BottomNavigation from '../components/BottomNavigation'
+import BottomNavigation, { Tab } from '../components/BottomNavigation'
 import { useTheme } from '../lib/theme/ThemeContext'
 import {
   Feather,
@@ -31,7 +31,7 @@ import { ListingListItem } from 'components/ListingItem'
 export default function HomeScreen() {
   const { colors, isDark } = useTheme()
   const navigation = useNavigation()
-  const [activeTab, setActiveTab] = useState('home')
+  const [activeTab, setActiveTab] = useState<Tab["name"]>('home')
   const [username, setUsername] = useState('User')
   const [recentListings, setRecentListings] = useState<FetchedListing[]>([])
   const [featuredListings, setFeaturedListings] = useState<FetchedListing[]>([])
