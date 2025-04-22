@@ -20,7 +20,6 @@ export const uploadListing = async (listing: UploadListing) => {
       negotiable: listing.negotiable,
       ecoScore: listing.ecoScore,
       ecoAttributes: listing.ecoAttributes,
-      // Format imageUrl as a map with urls key
       imageUrl: {
         urls: listing.imageUrl,
       },
@@ -39,6 +38,7 @@ export const uploadListing = async (listing: UploadListing) => {
     if (!response.data || !response.data.success) {
       throw new Error(
         'Failed to upload listing: Server returned unsuccessful response',
+        response.data.message,
       )
     }
 

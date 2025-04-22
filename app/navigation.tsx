@@ -14,6 +14,7 @@ import RegisterScreen from './register'
 import MessagesScreen from './messages'
 import SellerScreen from './seller/[id]'
 import { useTheme } from 'lib/theme/ThemeContext'
+import ReviewsScreen from './reviews'
 
 // Define the types for our navigation routes
 export type RootStackParamList = {
@@ -99,6 +100,7 @@ export function Navigation() {
               animationDuration: 300
             }}
           />
+          <Stack.Screen name="Reviews" component={ReviewsScreen} />
         </Stack.Navigator>
       </NavigationContainer>
     </GestureHandlerRootView>

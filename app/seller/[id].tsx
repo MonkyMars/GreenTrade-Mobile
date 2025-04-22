@@ -2,10 +2,11 @@ import { useEffect, useState, useRef } from 'react';
 import {
     View, Text, TouchableOpacity, ScrollView, FlatList,
     ActivityIndicator, Image, Animated, Dimensions, RefreshControl,
-    Modal, StatusBar
+    Modal, StatusBar,
+    Pressable
 } from 'react-native';
 import { getSeller } from 'lib/backend/auth/seller/getSeller';
-import { FetchedListing, Seller } from 'lib/types/main';
+import { FetchedListing, FetchedReview, Seller } from 'lib/types/main';
 import { getSellerListings } from 'lib/backend/listings/getListings';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation, useRoute } from '@react-navigation/native';
@@ -18,12 +19,14 @@ import CustomAlert from 'components/CustomAlert';
 import { StatusBar as StatusBarComponent } from 'expo-status-bar';
 import { useCustomAlert } from 'lib/hooks/useCustomAlert';
 import BottomNavigation, { Tab } from 'components/BottomNavigation';
+import { getReviews } from 'lib/backend/reviews/getReviews';
 
 export default function SellerScreen() {
     const route = useRoute();
     const params = route.params || {};
     const [seller, setSeller] = useState<Seller | null>(params.seller || null);
     const [loadingSeller, setLoadingSeller] = useState(!params.seller && !!params.id);
+    const [reviews, setReviews] = useState<FetchedReview[]>([]);
     const { colors, isDark } = useTheme();
     const { user } = useAuth();
     const [activeTab, setActiveTab] = useState<Tab["name"]>('listings');
@@ -43,6 +46,8 @@ export default function SellerScreen() {
     const fadeAnim = useRef(new Animated.Value(0)).current;
     const slideAnim = useRef(new Animated.Value(30)).current;
     const scaleAnim = useRef(new Animated.Value(0.95)).current;
+
+    const isUser = user?.id === seller?.id;
 
     // Device dimensions
     const { width: screenWidth } = Dimensions.get('window');
@@ -123,6 +128,20 @@ export default function SellerScreen() {
             setRefreshing(false);
         }
     };
+
+    useEffect(() => {
+        const fetchReviews = async () => {
+            if (!seller?.id) return;
+            try {
+                const reviewsData = await getReviews(seller.id);
+                setReviews(reviewsData);
+            } catch (error) {
+                console.error('Error fetching reviews:', error);
+                setError('Failed to load reviews');
+            }
+        };
+        fetchReviews();
+    }, [seller]);
 
     // Start animations
     const startAnimations = () => {
@@ -447,7 +466,7 @@ export default function SellerScreen() {
                     showsVerticalScrollIndicator={false}
                     onScroll={Animated.event(
                         [{ nativeEvent: { contentOffset: { y: scrollY } } }],
-                        { useNativeDriver: true }
+                        { useNativeDriver: false }
                     )}
                     scrollEventThrottle={16}
                     refreshControl={
@@ -539,6 +558,11 @@ export default function SellerScreen() {
                                     <Text style={{ marginLeft: 6, fontSize: 16, color: colors.textSecondary }}>
                                         {seller.rating} Rating
                                     </Text>
+                                    {!isUser && <Pressable onPress={() => navigation.navigate("Reviews", { sellerId: seller.id })}>
+                                        <Text style={{ marginLeft: 6, fontSize: 14, color: colors.primary }}>
+                                            Leave Review
+                                        </Text>
+                                    </Pressable>}
                                 </View>
 
                                 <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 8 }}>
@@ -683,6 +707,179 @@ export default function SellerScreen() {
                                 </Text>
                             </View>
                         )}
+                        <Animated.View
+                            style={{
+                                marginTop: 8,
+                                marginHorizontal: 16,
+                                opacity: fadeAnim,
+                                transform: [{ translateY: slideAnim }],
+                            }}
+                        >
+                            <View style={{
+                                flexDirection: 'row',
+                                justifyContent: 'space-between',
+                                alignItems: 'center',
+                                marginBottom: 16
+                            }}>
+                                <Text style={{ fontSize: 18, fontWeight: '700', color: colors.text }}>
+                                    Reviews
+                                </Text>
+                                {!isUser && <TouchableOpacity
+                                    onPress={() => navigation.navigate("Reviews", { sellerId: seller.id })}
+                                    style={{
+                                        flexDirection: 'row',
+                                        alignItems: 'center',
+                                        backgroundColor: colors.primaryLight,
+                                        paddingHorizontal: 12,
+                                        paddingVertical: 6,
+                                        borderRadius: 20,
+                                    }}
+                                >
+                                    <FontAwesome name="pencil" size={14} color={colors.primary} style={{ marginRight: 6 }} />
+                                    <Text style={{ color: colors.primary, fontWeight: '600', fontSize: 14 }}>
+                                        Write Review
+                                    </Text>
+                                </TouchableOpacity>}
+                            </View>
+
+                            {reviews.length > 0 ? (
+                                <View>
+                                    {reviews.map((review, index) => (
+                                        <Animated.View
+                                            key={`review-${index}`}
+                                            style={{
+                                                backgroundColor: colors.card,
+                                                borderRadius: 12,
+                                                padding: 16,
+                                                marginBottom: 12,
+                                                shadowColor: colors.shadow,
+                                                shadowOffset: { width: 0, height: 2 },
+                                                shadowOpacity: 0.1,
+                                                shadowRadius: 4,
+                                                elevation: 2,
+                                                opacity: fadeAnim,
+                                                transform: [{ translateY: slideAnim }],
+                                            }}
+                                        >
+                                            <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 8 }}>
+                                                <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                                                    <Text style={{ fontSize: 16, fontWeight: '600', color: colors.text, marginRight: 10 }}>
+                                                        {review.title}
+                                                    </Text>
+                                                    {review.verifiedPurchase && (
+                                                        <View style={{
+                                                            backgroundColor: colors.primaryLight,
+                                                            paddingHorizontal: 8,
+                                                            paddingVertical: 2,
+                                                            borderRadius: 10,
+                                                        }}>
+                                                            <Text style={{ fontSize: 12, color: colors.primary }}>
+                                                                Verified
+                                                            </Text>
+                                                        </View>
+                                                    )}
+                                                </View>
+                                                <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                                                    {[1, 2, 3, 4, 5].map(star => (
+                                                        <FontAwesome
+                                                            key={`star-${star}`}
+                                                            name={review.rating >= star ? "star" : "star-o"}
+                                                            size={14}
+                                                            color={colors.rating}
+                                                            style={{ marginLeft: 2 }}
+                                                        />
+                                                    ))}
+                                                </View>
+                                            </View>
+
+                                            <Text style={{ color: colors.textSecondary, marginBottom: 12 }}>
+                                                {review.content}
+                                            </Text>
+
+                                            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 8 }}>
+                                                {/* Reviewer Info */}
+                                                <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                                                    <View style={{
+                                                        width: 24,
+                                                        height: 24,
+                                                        borderRadius: 12,
+                                                        backgroundColor: colors.primaryLight,
+                                                        alignItems: 'center',
+                                                        justifyContent: 'center',
+                                                        marginRight: 8,
+                                                    }}>
+                                                        <Text style={{ color: colors.primary, fontSize: 12, fontWeight: '600' }}>
+                                                            {review.userName?.charAt(0).toUpperCase() || 'A'}
+                                                        </Text>
+                                                    </View>
+                                                    <Text style={{ fontSize: 14, color: colors.textSecondary, fontWeight: '500' }}>
+                                                        {review.userName || 'Anonymous'}
+                                                    </Text>
+                                                </View>
+
+                                                {/* Helpful Button */}
+                                                <TouchableOpacity
+                                                    style={{ flexDirection: 'row', alignItems: 'center' }}
+                                                    onPress={() => {
+                                                        // Handle helpful button press
+                                                    }}
+                                                >
+                                                    <Feather name="thumbs-up" size={14} color={colors.textTertiary} style={{ marginRight: 6 }} />
+                                                    <Text style={{ fontSize: 12, color: colors.textTertiary }}>
+                                                        Helpful ({review.helpfulCount || 0})
+                                                    </Text>
+                                                </TouchableOpacity>
+                                            </View>
+                                        </Animated.View>
+                                    ))}
+                                </View>
+                            ) : (
+                                <View style={{
+                                    backgroundColor: colors.card,
+                                    padding: 24,
+                                    borderRadius: 12,
+                                    alignItems: 'center',
+                                    marginBottom: 30
+                                }}>
+                                    <Feather name="message-square" size={48} color={colors.textTertiary} />
+                                    <Text style={{
+                                        fontSize: 16,
+                                        color: colors.text,
+                                        textAlign: 'center',
+                                        marginTop: 16,
+                                        fontWeight: '500'
+                                    }}>
+                                        No reviews yet
+                                    </Text>
+                                    <Text style={{
+                                        fontSize: 14,
+                                        color: colors.textTertiary,
+                                        textAlign: 'center',
+                                        marginTop: 8,
+                                        marginBottom: 16,
+                                    }}>
+                                        Be the first to review this seller
+                                    </Text>
+                                    <TouchableOpacity
+                                        onPress={() => navigation.navigate("Reviews", { sellerId: seller.id })}
+                                        style={{
+                                            backgroundColor: colors.primary,
+                                            paddingHorizontal: 16,
+                                            paddingVertical: 10,
+                                            borderRadius: 8,
+                                            flexDirection: 'row',
+                                            alignItems: 'center',
+                                        }}
+                                    >
+                                        <FontAwesome name="pencil" size={16} color="white" style={{ marginRight: 8 }} />
+                                        <Text style={{ color: 'white', fontWeight: '600' }}>
+                                            Write a Review
+                                        </Text>
+                                    </TouchableOpacity>
+                                </View>
+                            )}
+                        </Animated.View>
+
                     </Animated.View>
                 </ScrollView>
             )}
