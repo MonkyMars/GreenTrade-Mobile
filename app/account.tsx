@@ -98,7 +98,6 @@ export default function AccountScreen() {
                     name: authUser.name || "",
                     email: authUser.email || "",
                     location: authUser.location || "",
-                    isSeller: authUser.isSeller || false,
                     profileUrl: authUser.profileUrl || "",
                     updated_at: authUser.updated_at || "",
                     created_at: authUser.created_at || "",
@@ -359,7 +358,7 @@ export default function AccountScreen() {
                                 {user?.email || 'user@example.com'}
                             </Text>
 
-                            {user?.isSeller && (
+                            {userListings.length > 0 && (
                                 <View style={{
                                     backgroundColor: colors.primaryLight,
                                     paddingVertical: 4,
