@@ -3,7 +3,6 @@ export type UploadListing = {
   description: string
   category: string
   condition: string
-  location: string
   price: number
   negotiable: boolean
   ecoScore: number
@@ -16,6 +15,7 @@ export type UploadListing = {
 export interface FetchedListing extends UploadListing {
   id: string
   createdAt: string
+  location: string
   sellerUsername: string
   sellerBio: string
   sellerCreatedAt: string

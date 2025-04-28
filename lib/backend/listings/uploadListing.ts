@@ -15,7 +15,6 @@ export const uploadListing = async (listing: UploadListing) => {
       description: listing.description,
       category: listing.category,
       condition: listing.condition,
-      location: listing.location,
       price: listing.price,
       negotiable: listing.negotiable,
       ecoScore: listing.ecoScore,
@@ -23,7 +22,6 @@ export const uploadListing = async (listing: UploadListing) => {
       imageUrl: {
         urls: listing.imageUrl,
       },
-
       seller_id: listing.sellerId,
     }
 

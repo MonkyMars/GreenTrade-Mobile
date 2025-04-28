@@ -58,7 +58,6 @@ export default function PostScreen() {
     category: '',
     condition: '',
     price: '',
-    location: '',
     ecoAttributes: [] as string[],
     negotiable: false,
   })
@@ -232,10 +231,6 @@ export default function PostScreen() {
       errors.price = 'Please enter a valid price'
     }
 
-    if (!formData.location.trim()) {
-      errors.location = 'Location is required'
-    }
-
     if (images.length === 0) {
       errors.images = 'Please add at least one image'
     }
@@ -306,7 +301,6 @@ export default function PostScreen() {
         description: formData.description,
         category: formData.category,
         condition: formData.condition,
-        location: formData.location || user.location || '',
         price: parseFloat(formData.price),
         negotiable: formData.negotiable,
         ecoAttributes: formData.ecoAttributes,
@@ -337,7 +331,6 @@ export default function PostScreen() {
           category: '',
           condition: '',
           price: '',
-          location: '',
           ecoAttributes: [],
           negotiable: false,
         })
@@ -897,10 +890,9 @@ export default function PostScreen() {
                 <TextInput
                   placeholder="e.g. Berlin, Germany"
                   placeholderTextColor={colors.textTertiary}
-                  value={formData.location}
+                  value={user?.location}
                   editable={false}
                   aria-disabled={true}
-                  onChangeText={value => handleChange('location', value)}
                   style={{
                     borderWidth: formErrors.location ? 2 : 1,
                     borderColor: formErrors.location
