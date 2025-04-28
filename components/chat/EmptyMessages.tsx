@@ -14,7 +14,7 @@ const EmptyMessages: React.FC<EmptyMessagesProps> = ({ colors }) => {
     const navigation = useNavigation();
 
     return (
-        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', paddingHorizontal: 32, paddingBottom: 80 }}>
+        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', paddingHorizontal: 32, paddingBottom: 80, paddingTop: 32 }}>
             <View style={{
                 width: 80,
                 height: 80,

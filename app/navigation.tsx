@@ -6,7 +6,7 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler'
 import HomeScreen from './home'
 import LoginScreen from './login'
 import ListingsScreen from './listings'
-import ListingDetailScreen from './listing/[id]';
+import ListingDetailScreen from './listing/[id]'
 import PostScreen from './post'
 import AccountScreen from './account'
 import { useAuth } from 'lib/auth/AuthContext'
@@ -26,8 +26,9 @@ export type RootStackParamList = {
   Post: undefined
   Messages: undefined
   Listings: { category?: string }
-  ListingDetail: { id: number }
+  ListingDetail: { id: string }
   SellerDetail: { id: string }
+  Reviews: { id: string }
 }
 
 // Create the stack navigator without generic type parameter
@@ -40,12 +41,14 @@ export function Navigation() {
   // Display a loading indicator while auth state is being determined
   if (loading) {
     return (
-      <View style={{
-        flex: 1,
-        justifyContent: 'center',
-        alignItems: 'center',
-        backgroundColor: colors.background
-      }}>
+      <View
+        style={{
+          flex: 1,
+          justifyContent: 'center',
+          alignItems: 'center',
+          backgroundColor: colors.background,
+        }}
+      >
         <ActivityIndicator size="large" color={colors.primary} />
       </View>
     )
@@ -65,17 +68,39 @@ export function Navigation() {
             // Prevent Android back button from unexpected navigation
             freezeOnBlur: true,
             // Make sure transitions don't result in white screens
-            contentStyle: { backgroundColor: colors.background }
+            contentStyle: { backgroundColor: colors.background },
           }}
         >
           <Stack.Screen name="Login" component={LoginScreen} />
-          <Stack.Screen name="Register" component={RegisterScreen} />
-          <Stack.Screen name="Home" component={HomeScreen} />
-
-          {/* Only enable gestures for detail screens with proper configuration */}
+          <Stack.Screen
+            name="Register"
+            component={RegisterScreen}
+            options={{
+              gestureEnabled: true,
+              gestureDirection: 'horizontal',
+              animation: 'slide_from_right',
+              animationDuration: 300,
+            }}
+          />
+          <Stack.Screen
+            name="Home"
+            component={HomeScreen}
+            options={{
+              gestureEnabled: true,
+              gestureDirection: 'horizontal',
+              animation: 'slide_from_right',
+              animationDuration: 300,
+            }}
+          />
           <Stack.Screen
             name="Listings"
             component={ListingsScreen}
+            options={{
+              gestureEnabled: true,
+              gestureDirection: 'horizontal',
+              animation: 'slide_from_right',
+              animationDuration: 300,
+            }}
           />
           <Stack.Screen
             name="ListingDetail"
@@ -84,12 +109,39 @@ export function Navigation() {
               gestureEnabled: true,
               gestureDirection: 'horizontal',
               animation: 'slide_from_right',
-              animationDuration: 300
+              animationDuration: 300,
             }}
           />
-          <Stack.Screen name="Post" component={PostScreen} />
-          <Stack.Screen name="Account" component={AccountScreen} />
-          <Stack.Screen name="Messages" component={MessagesScreen} />
+          <Stack.Screen
+            name="Post"
+            component={PostScreen}
+            options={{
+              gestureEnabled: true,
+              gestureDirection: 'horizontal',
+              animation: 'slide_from_right',
+              animationDuration: 300,
+            }}
+          />
+          <Stack.Screen
+            name="Account"
+            component={AccountScreen}
+            options={{
+              gestureEnabled: true,
+              gestureDirection: 'horizontal',
+              animation: 'slide_from_right',
+              animationDuration: 300,
+            }}
+          />
+          <Stack.Screen
+            name="Messages"
+            component={MessagesScreen}
+            options={{
+              gestureEnabled: true,
+              gestureDirection: 'horizontal',
+              animation: 'slide_from_right',
+              animationDuration: 300,
+            }}
+          />
           <Stack.Screen
             name="SellerDetail"
             component={SellerScreen}
@@ -97,10 +149,19 @@ export function Navigation() {
               gestureEnabled: true,
               gestureDirection: 'horizontal',
               animation: 'slide_from_right',
-              animationDuration: 300
+              animationDuration: 300,
             }}
           />
-          <Stack.Screen name="Reviews" component={ReviewsScreen} />
+          <Stack.Screen
+            name="Reviews"
+            component={ReviewsScreen}
+            options={{
+              gestureEnabled: true,
+              gestureDirection: 'horizontal',
+              animation: 'slide_from_right',
+              animationDuration: 300,
+            }}
+          />
         </Stack.Navigator>
       </NavigationContainer>
     </GestureHandlerRootView>

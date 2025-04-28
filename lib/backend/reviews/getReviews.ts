@@ -11,7 +11,7 @@ export const getReviews = async (
       message?: string
     }
 
-    const response = await api.get<ApiResponse>(`/api/reviews/${sellerId}`)
+    const response = await api.get<ApiResponse>(`/reviews/${sellerId}`)
 
     if (!response.data.success) {
       throw new Error(

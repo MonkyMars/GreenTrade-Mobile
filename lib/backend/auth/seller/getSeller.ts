@@ -2,7 +2,7 @@ import api from 'lib/backend/api/axiosConfig'
 
 export const getSeller = async (sellerId: string) => {
   try {
-    const response = await api.get(`/api/sellers/${sellerId}`)
+    const response = await api.get(`/seller/${sellerId}`)
 
     if (!response.data || !response.data.success) {
       throw new Error(

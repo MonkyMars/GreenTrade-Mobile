@@ -93,7 +93,7 @@ export default function ReviewsScreen() {
         const fetchSellerData = async () => {
             try {
                 setLoading(true);
-                const response = await api.get(`/api/sellers/${sellerId}`);
+                const response = await api.get(`/seller/${sellerId}`);
 
                 if (response.data && response.data.success) {
                     setSellerName(response.data.data.username || response.data.data.name || "Seller");
