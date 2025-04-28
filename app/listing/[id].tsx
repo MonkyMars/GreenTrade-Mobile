@@ -19,6 +19,8 @@ import { findCategory } from 'lib/functions/category';
 import { createConversation } from 'lib/backend/chat/createConversation';
 import CustomAlert from 'components/CustomAlert';
 import { useCustomAlert } from 'lib/hooks/useCustomAlert';
+import { toggleFavorite } from 'lib/backend/favorites/favorites';
+import { isFavoritedListing } from 'lib/backend/favorites/getFavorites';
 
 export default function ListingDetailScreen() {
     const { colors, isDark } = useTheme();
@@ -80,6 +82,18 @@ export default function ListingDetailScreen() {
 
         fetchListing();
     }, [id]);
+
+    useEffect(() => {
+        const checkFavoriteStatus = async () => {
+            if (!user || !listing) return;
+
+            const isFavorited = await isFavoritedListing(listing.id, user.id);
+            setIsFavorite(isFavorited);
+
+        }
+        checkFavoriteStatus();
+    }, [user, listing])
+
 
     if (loading) {
         return (
@@ -153,8 +167,38 @@ export default function ListingDetailScreen() {
     };
 
     // Function to toggle favorite
-    const toggleFavorite = () => {
-        setIsFavorite(!isFavorite);
+    const handleFavorite = async () => {
+        if (!user) {
+            showAlert({
+                title: "Login Required",
+                message: "You need to be logged in to favorite a listing.",
+                type: "info",
+                buttons: [
+                    {
+                        text: "Cancel",
+                        style: "cancel",
+                        onPress: hideAlert
+                    },
+                    {
+                        text: "Login",
+                        style: "default",
+                        onPress: () => {
+                            hideAlert();
+                            navigation.navigate('Login' as never);
+                        }
+                    }
+                ]
+            });
+            return;
+        }
+        const response = await toggleFavorite(user.id, listing.id, isFavorite);
+        setIsFavorite(response);
+        showAlert({
+            title: isFavorite ? "Removed from Favorites" : "Added to Favorites",
+            message: `You have ${isFavorite ? 'removed' : 'added'} this listing to your favorites.`,
+            type: isFavorite ? "success" : "info",
+            buttons: [{ text: "OK", onPress: hideAlert }]
+        });
     };
 
     // Function to contact seller
@@ -279,7 +323,7 @@ export default function ListingDetailScreen() {
                 contentContainerStyle={{ paddingBottom: 80 }}
             >
                 {/* Image gallery */}
-                <View style={{ height: 300, position: 'relative' }}>
+                <View style={{ height: 300, position: 'relative', backgroundColor: colors.card }}>
                     <Animated.View style={{
                         height: 300,
                         transform: [{ scale: imageScale }]
@@ -297,14 +341,23 @@ export default function ListingDetailScreen() {
                             }}
                             keyExtractor={(_, index) => `image-${index}`}
                             renderItem={({ item }) => (
-                                <Image
-                                    source={{ uri: item }}
-                                    style={{
-                                        width: screenWidth,
-                                        height: 300,
-                                    }}
-                                    resizeMode="cover"
-                                />
+                                <View style={{
+                                    width: screenWidth,
+                                    height: 300,
+                                    justifyContent: 'center',
+                                    alignItems: 'center',
+                                    backgroundColor: colors.card,
+                                }}>
+                                    <Image
+                                        source={{ uri: item }}
+                                        style={{
+                                            width: screenWidth,
+                                            height: '100%',
+                                            maxHeight: 300,
+                                        }}
+                                        resizeMode="contain"
+                                    />
+                                </View>
                             )}
                         />
                     </Animated.View>
@@ -451,7 +504,7 @@ export default function ListingDetailScreen() {
                                 </View>
                             </View>
                             <TouchableOpacity
-                                onPress={toggleFavorite}
+                                onPress={handleFavorite}
                                 style={{
                                     width: 40,
                                     height: 40,

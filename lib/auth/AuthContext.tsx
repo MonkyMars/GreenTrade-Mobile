@@ -15,7 +15,7 @@ interface AuthContextType {
         password: string,
         location: string
     ) => Promise<void>;
-    logout: () => void;
+    logout: () => Promise<void>;
     isAuthenticated: boolean;
     refreshTokens: () => Promise<boolean>;
     reloadUser: () => Promise<void>;
