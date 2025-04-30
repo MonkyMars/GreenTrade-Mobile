@@ -1,5 +1,4 @@
 import { useEffect, useRef, useCallback } from 'react'
-import { Alert } from 'react-native'
 import { BASE_URL } from '../backend/api/axiosConfig'
 import { ChatMessage } from '../types/chat'
 import { safeParseDate } from '../utils/date/chatDateUtils'
@@ -25,12 +24,7 @@ export const useWebSocketChat = ({
 
   // WebSocket connection handling with reconnection logic
   const connectWebSocket = useCallback(() => {
-    if (!conversationId || !userId) {
-      console.log(
-        'No conversation ID or user found. Skipping WebSocket connection.',
-      )
-      return
-    }
+    if (!conversationId || !userId) return
 
     // Clear any existing reconnection timeout
     if (reconnectTimeoutRef.current) {

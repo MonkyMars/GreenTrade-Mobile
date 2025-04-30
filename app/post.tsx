@@ -931,7 +931,7 @@ export default function PostScreen() {
                   marginBottom: 16,
                 }}
               >
-                Your exact address will not be shared publicly
+                Your city and country will be shown on the listing
               </Text>
               {/* Eco-friendly Attributes */}
               <View
