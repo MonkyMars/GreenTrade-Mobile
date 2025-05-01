@@ -4,9 +4,13 @@ import { useNavigation } from '@react-navigation/native'
 import { useTheme } from '../lib/theme/ThemeContext'
 import { useAuth } from 'lib/auth/AuthContext'
 
+export interface Tab {
+  name: "home" | "listings" | "post" | "messages" | "account" | "login" | "register" | "messages"
+}
+
 type BottomNavigationProps = {
-  activeTab?: string
-  onTabChange?: (tab: string) => void
+  activeTab: Tab['name']
+  onTabChange?: (tab: Tab['name']) => void
 }
 
 export default function BottomNavigation({
@@ -18,7 +22,7 @@ export default function BottomNavigation({
     useNavigation()
   const { colors } = useTheme()
 
-  const handleTabPress = (tab: string) => {
+  const handleTabPress = (tab: Tab['name']) => {
     if (onTabChange) {
       onTabChange(tab)
     }

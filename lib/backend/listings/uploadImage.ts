@@ -21,13 +21,42 @@ export const uploadImage = async (
     formData.append('listing_title', listing_title)
 
     // The backend expects files with the key "file" (not "file0", "file1", etc.)
-    images.forEach(image => {
-      formData.append('file', {
-        uri: image.uri,
-        type: image.type || 'image/jpeg',
-        name: image.name || `image-${Date.now()}.jpg`,
-      } as any)
-    })
+    await Promise.all(
+      images.map(async (image, index) => {
+        try {
+          // Check if we have a URL/URI or a File object
+          if (image instanceof File) {
+            // If it's already a File object, just append it
+            formData.append('file', image)
+          } else if (image.uri) {
+            // For NextJS, convert the URI to a File object
+            const response = await fetch(image.uri)
+            const blob = await response.blob()
+
+            // Create a File object from the blob
+            const file = new File(
+              [blob],
+              image.name || `image-${Date.now()}-${index}.jpg`,
+              { type: image.type || 'image/jpeg' },
+            )
+
+            // Append the file to the FormData
+            formData.append('file', file)
+
+            if (process.env.NODE_ENV !== 'production') {
+              console.log(
+                `Converted image URI to File: ${file.name}, size: ${file.size}`,
+              )
+            }
+          } else {
+            console.warn('Invalid image object:', image)
+          }
+        } catch (err) {
+          console.error(`Error processing image ${index}:`, err)
+          // Continue with other images even if one fails
+        }
+      }),
+    )
 
     console.log('Uploading images to /api/upload/listing_image')
 

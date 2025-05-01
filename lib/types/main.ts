@@ -1,49 +1,50 @@
-export interface Listing {
-  id: number
+export type UploadListing = {
   title: string
   description: string
-  image: string
-  price: string
-  ecoScore: number
-  location: string
   category: string
-  date: string
   condition: string
-  isFavorite: boolean
-  seller: {
-    name: string
-    rating: number
-    verified: boolean
-  }
-}
-
-export interface UploadListing {
-  title: string
-  description: string
   price: number
-  location: string
-  category: string
-  condition: string
-  ecoAttributes: string[]
-  ecoScore: number
   negotiable: boolean
-  imageUrl: string[] | { urls: string[] }
-  seller: {
-    id: string
-    name: string
-    rating: number
-    verified: boolean
-  }
+  ecoScore: number
+  ecoAttributes: string[]
+  imageUrl: string[]
+
+  sellerId: string
 }
 
 export interface FetchedListing extends UploadListing {
-  id: number
-  created_at: string
+  id: string
+  createdAt: string
+  location: string
+  sellerUsername: string
+  sellerBio: string
+  sellerCreatedAt: string
+  sellerRating: number
+  sellerVerified: boolean
 }
 
 export interface Seller {
+  id: string
   name: string
   rating: string | number
   verified: boolean
-  bio?: string
+  bio: string
+  createdAt: string
+}
+
+export interface Review {
+  rating: number
+  userId: string
+  sellerId: string
+  title: string
+  content: string
+  helpfulCount: number
+  verifiedPurchase: boolean
+}
+
+export interface FetchedReview extends Review {
+  id: string
+  createdAt: string
+  updatedAt: string
+  userName: string
 }

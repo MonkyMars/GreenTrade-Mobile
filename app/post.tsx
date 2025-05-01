@@ -18,7 +18,7 @@ import { SafeAreaView } from 'react-native-safe-area-context'
 import FontAwesome from 'react-native-vector-icons/FontAwesome'
 import Feather from 'react-native-vector-icons/Feather'
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons'
-import BottomNavigation from '../components/BottomNavigation'
+import BottomNavigation, { Tab } from '../components/BottomNavigation'
 import { useTheme } from '../lib/theme/ThemeContext'
 import ProtectedRoute from 'components/ProtectedRoute'
 import { calculateEcoScore } from 'lib/functions/calculateEcoScore'
@@ -34,7 +34,7 @@ export default function PostScreen() {
   const { colors } = useTheme()
   const { user } = useAuth()
   const navigation = useNavigation()
-  const [activeTab, setActiveTab] = useState('post')
+  const [activeTab, setActiveTab] = useState<Tab["name"]>('post')
   const [uploading, setUploading] = useState(false)
   const [submitting, setSubmitting] = useState(false)
   const [showSuccess, setShowSuccess] = useState(false)
@@ -58,7 +58,6 @@ export default function PostScreen() {
     category: '',
     condition: '',
     price: '',
-    location: '',
     ecoAttributes: [] as string[],
     negotiable: false,
   })
@@ -232,10 +231,6 @@ export default function PostScreen() {
       errors.price = 'Please enter a valid price'
     }
 
-    if (!formData.location.trim()) {
-      errors.location = 'Location is required'
-    }
-
     if (images.length === 0) {
       errors.images = 'Please add at least one image'
     }
@@ -306,18 +301,12 @@ export default function PostScreen() {
         description: formData.description,
         category: formData.category,
         condition: formData.condition,
-        location: formData.location || user.location || '',
         price: parseFloat(formData.price),
         negotiable: formData.negotiable,
         ecoAttributes: formData.ecoAttributes,
         ecoScore: calculateEcoScore(formData.ecoAttributes),
         imageUrl: imageUrlData.urls,
-        seller: {
-          id: user.id,
-          name: user.name,
-          rating: user.ecoScore || 0,
-          verified: true,
-        },
+        sellerId: user.id,
       }
 
       console.log('Submitting listing with data:', listing)
@@ -342,7 +331,6 @@ export default function PostScreen() {
           category: '',
           condition: '',
           price: '',
-          location: '',
           ecoAttributes: [],
           negotiable: false,
         })
@@ -902,10 +890,9 @@ export default function PostScreen() {
                 <TextInput
                   placeholder="e.g. Berlin, Germany"
                   placeholderTextColor={colors.textTertiary}
-                  value={formData.location}
+                  value={user?.location}
                   editable={false}
                   aria-disabled={true}
-                  onChangeText={value => handleChange('location', value)}
                   style={{
                     borderWidth: formErrors.location ? 2 : 1,
                     borderColor: formErrors.location
@@ -944,7 +931,7 @@ export default function PostScreen() {
                   marginBottom: 16,
                 }}
               >
-                Your exact address will not be shared publicly
+                Your city and country will be shown on the listing
               </Text>
               {/* Eco-friendly Attributes */}
               <View

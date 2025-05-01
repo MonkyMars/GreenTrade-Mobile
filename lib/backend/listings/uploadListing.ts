@@ -15,24 +15,14 @@ export const uploadListing = async (listing: UploadListing) => {
       description: listing.description,
       category: listing.category,
       condition: listing.condition,
-      location: listing.location,
       price: listing.price,
       negotiable: listing.negotiable,
       ecoScore: listing.ecoScore,
       ecoAttributes: listing.ecoAttributes,
-      // Format imageUrl as a map with urls key
       imageUrl: {
-        urls: Array.isArray(listing.imageUrl)
-          ? listing.imageUrl
-          : listing.imageUrl.urls,
+        urls: listing.imageUrl,
       },
-      // Format seller to match the backend's expected structure
-      seller: {
-        id: listing.seller.id,
-        name: listing.seller.name,
-        rating: listing.seller.rating,
-        verified: listing.seller.verified,
-      },
+      seller_id: listing.sellerId,
     }
 
     const response = await api.post('/api/listings', formattedListing, {
@@ -46,6 +36,7 @@ export const uploadListing = async (listing: UploadListing) => {
     if (!response.data || !response.data.success) {
       throw new Error(
         'Failed to upload listing: Server returned unsuccessful response',
+        response.data.message,
       )
     }
 

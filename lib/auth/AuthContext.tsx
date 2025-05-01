@@ -15,7 +15,7 @@ interface AuthContextType {
         password: string,
         location: string
     ) => Promise<void>;
-    logout: () => void;
+    logout: () => Promise<void>;
     isAuthenticated: boolean;
     refreshTokens: () => Promise<boolean>;
     reloadUser: () => Promise<void>;
@@ -235,8 +235,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
 
     // Login function
     const login = async (email: string, password: string) => {
+        // Don't set global loading state to true here
+        // This allows the login component to control its own loading state
         try {
-            setLoading(true);
             console.log('Attempting login for:', email);
 
             const response = await api.post(
@@ -247,6 +248,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
                 }
             );
 
+            // Check if the response has an error message
             if (!response.data.success) {
                 throw new Error(response.data.message || "Login failed");
             }
@@ -285,9 +287,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
                 throw new Error("User not found");
             }
 
+            // Update user state - this will trigger navigation due to authentication state change
             setUser(user);
-
-            // Note: Navigation will be handled in the component that calls this function
 
         } catch (error) {
             console.error("Login failed:", error);
@@ -295,17 +296,28 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
             // Clean up any partial auth state
             await AsyncStorage.multiRemove(["accessToken", "refreshToken", "userId"]);
 
-            // Handle error based on structure from your API
-            if (axios.isAxiosError(error) && error.response) {
-                if (error.response.status === 401) {
-                    throw new Error("Invalid credentials");
+            // Handle common errors and expose appropriate messages
+            if (axios.isAxiosError(error)) {
+                if (error.response) {
+                    // Server responded with an error status code
+                    if (error.response.status === 401) {
+                        throw new Error("Invalid credentials");
+                    } else if (error.response.data && error.response.data.message) {
+                        throw new Error(error.response.data.message);
+                    }
+                } else if (error.request) {
+                    // No response received
+                    throw new Error("Network error. Please check your connection.");
                 }
-                throw new Error(error.response.data.message || "Login failed");
             }
 
-            throw new Error("Network error. Please try again.");
-        } finally {
-            setLoading(false);
+            // For other kinds of errors, pass them along
+            if (error instanceof Error) {
+                throw error;
+            }
+
+            // Default error
+            throw new Error("Login failed. Please try again.");
         }
     };
 

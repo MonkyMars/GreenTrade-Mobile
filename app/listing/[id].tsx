@@ -7,25 +7,33 @@ import {
     FlatList, Share, Platform
 } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
-import BottomNavigation from '../../components/BottomNavigation';
+import BottomNavigation, { Tab } from '../../components/BottomNavigation';
 import { formatDistanceToNow } from "date-fns";
 import { useTheme } from 'lib/theme/ThemeContext';
+import { useAuth } from 'lib/auth/AuthContext';
 import {
     FontAwesome, Feather, MaterialCommunityIcons, Ionicons
 } from '@expo/vector-icons';
 import { StatusBar } from 'expo-status-bar';
 import { findCategory } from 'lib/functions/category';
+import { createConversation } from 'lib/backend/chat/createConversation';
+import CustomAlert from 'components/CustomAlert';
+import { useCustomAlert } from 'lib/hooks/useCustomAlert';
+import { toggleFavorite } from 'lib/backend/favorites/favorites';
+import { isFavoritedListing } from 'lib/backend/favorites/getFavorites';
 
 export default function ListingDetailScreen() {
     const { colors, isDark } = useTheme();
-    const [activeTab, setActiveTab] = useState('listings');
+    const [activeTab, setActiveTab] = useState<Tab["name"]>('listings');
     const navigation = useNavigation();
     const route = useRoute();
-    const { id }: { id: number } = route.params;
+    const { id }: { id: string } = route.params;
     const [listing, setListing] = useState<FetchedListing>();
     const [loading, setLoading] = useState(true);
     const [currentImageIndex, setCurrentImageIndex] = useState(0);
     const [isFavorite, setIsFavorite] = useState(false);
+    const { user } = useAuth();
+    const { showAlert, isVisible, config, hideAlert } = useCustomAlert();
 
     // Animation references
     const scrollY = useRef(new Animated.Value(0)).current;
@@ -74,6 +82,18 @@ export default function ListingDetailScreen() {
 
         fetchListing();
     }, [id]);
+
+    useEffect(() => {
+        const checkFavoriteStatus = async () => {
+            if (!user || !listing) return;
+
+            const isFavorited = await isFavoritedListing(listing.id, user.id);
+            setIsFavorite(isFavorited);
+
+        }
+        checkFavoriteStatus();
+    }, [user, listing])
+
 
     if (loading) {
         return (
@@ -147,14 +167,103 @@ export default function ListingDetailScreen() {
     };
 
     // Function to toggle favorite
-    const toggleFavorite = () => {
-        setIsFavorite(!isFavorite);
+    const handleFavorite = async () => {
+        if (!user) {
+            showAlert({
+                title: "Login Required",
+                message: "You need to be logged in to favorite a listing.",
+                type: "info",
+                buttons: [
+                    {
+                        text: "Cancel",
+                        style: "cancel",
+                        onPress: hideAlert
+                    },
+                    {
+                        text: "Login",
+                        style: "default",
+                        onPress: () => {
+                            hideAlert();
+                            navigation.navigate('Login' as never);
+                        }
+                    }
+                ]
+            });
+            return;
+        }
+        const response = await toggleFavorite(user.id, listing.id, isFavorite);
+        setIsFavorite(response);
+        showAlert({
+            title: isFavorite ? "Removed from Favorites" : "Added to Favorites",
+            message: `You have ${isFavorite ? 'removed' : 'added'} this listing to your favorites.`,
+            type: isFavorite ? "success" : "info",
+            buttons: [{ text: "OK", onPress: hideAlert }]
+        });
     };
 
     // Function to contact seller
-    const contactSeller = () => {
-        // Implement your contact logic here
-        console.log('Contact seller:', listing.seller.id);
+    const contactSeller = async () => {
+        if (!user || !user.id) {
+            showAlert({
+                title: "Login Required",
+                message: "You need to be logged in to contact the seller.",
+                type: "info",
+                buttons: [
+                    {
+                        text: "Cancel",
+                        style: "cancel",
+                        onPress: hideAlert
+                    },
+                    {
+                        text: "Login",
+                        style: "default",
+                        onPress: () => {
+                            hideAlert();
+                            navigation.navigate('Login' as never);
+                        }
+                    }
+                ]
+            });
+            return;
+        }
+
+        try {
+            // Check if user is trying to contact themselves
+            if (user.id === listing.sellerId) {
+                showAlert({
+                    title: "Error",
+                    message: "You cannot contact yourself as a seller",
+                    type: "error",
+                    buttons: [{ text: "OK", onPress: hideAlert }]
+                });
+                return;
+            }
+
+            // Create or get conversation
+            const conversationId = await createConversation(
+                listing.id,
+                listing.sellerId,
+                user.id
+            );
+
+            // Navigate to messages screen with conversation ID
+            navigation.navigate('Messages', {
+                conversationId,
+                listingInfo: {
+                    id: listing.id,
+                    title: listing.title,
+                    image: images[0],
+                }
+            });
+        } catch (error) {
+            console.error('Error contacting seller:', error);
+            showAlert({
+                title: "Error",
+                message: "Failed to start conversation. Please try again.",
+                type: "error",
+                buttons: [{ text: "OK", onPress: hideAlert }]
+            });
+        }
     };
 
     return (
@@ -214,7 +323,7 @@ export default function ListingDetailScreen() {
                 contentContainerStyle={{ paddingBottom: 80 }}
             >
                 {/* Image gallery */}
-                <View style={{ height: 300, position: 'relative' }}>
+                <View style={{ height: 300, position: 'relative', backgroundColor: colors.card }}>
                     <Animated.View style={{
                         height: 300,
                         transform: [{ scale: imageScale }]
@@ -230,16 +339,25 @@ export default function ListingDetailScreen() {
                                 );
                                 setCurrentImageIndex(newIndex);
                             }}
-                            keyExtractor={(item, index) => `image-${index}`}
+                            keyExtractor={(_, index) => `image-${index}`}
                             renderItem={({ item }) => (
-                                <Image
-                                    source={{ uri: item }}
-                                    style={{
-                                        width: screenWidth,
-                                        height: 300,
-                                    }}
-                                    resizeMode="cover"
-                                />
+                                <View style={{
+                                    width: screenWidth,
+                                    height: 300,
+                                    justifyContent: 'center',
+                                    alignItems: 'center',
+                                    backgroundColor: colors.card,
+                                }}>
+                                    <Image
+                                        source={{ uri: item }}
+                                        style={{
+                                            width: screenWidth,
+                                            height: '100%',
+                                            maxHeight: 300,
+                                        }}
+                                        resizeMode="contain"
+                                    />
+                                </View>
                             )}
                         />
                     </Animated.View>
@@ -386,7 +504,7 @@ export default function ListingDetailScreen() {
                                 </View>
                             </View>
                             <TouchableOpacity
-                                onPress={toggleFavorite}
+                                onPress={handleFavorite}
                                 style={{
                                     width: 40,
                                     height: 40,
@@ -430,7 +548,7 @@ export default function ListingDetailScreen() {
                                     style={{ marginRight: 8, width: 20 }}
                                 />
                                 <Text style={{ fontSize: 15, color: colors.textSecondary }}>
-                                    Posted {formatDistanceToNow(new Date(listing.created_at), { addSuffix: true })}
+                                    Posted {formatDistanceToNow(new Date(listing.createdAt), { addSuffix: true })}
                                 </Text>
                             </View>
                             <View style={{ flexDirection: 'row', alignItems: 'center' }}>
@@ -497,7 +615,7 @@ export default function ListingDetailScreen() {
                                 marginRight: 12
                             }}>
                                 <Text style={{ color: 'white', fontSize: 18, fontWeight: '600' }}>
-                                    {listing.seller.name.charAt(0).toUpperCase()}
+                                    {listing.sellerUsername.charAt(0).toUpperCase()}
                                 </Text>
                             </View>
 
@@ -508,9 +626,9 @@ export default function ListingDetailScreen() {
                                         fontWeight: '600',
                                         color: colors.text
                                     }}>
-                                        {listing.seller.name}
+                                        {listing.sellerUsername}
                                     </Text>
-                                    {listing.seller.verified && (
+                                    {listing.sellerVerified && (
                                         <View style={{
                                             backgroundColor: colors.primaryLight,
                                             borderRadius: 10,
@@ -532,7 +650,7 @@ export default function ListingDetailScreen() {
                                         color: colors.textSecondary,
                                         fontSize: 14,
                                     }}>
-                                        {listing.seller.rating} Rating
+                                        {listing.sellerRating} Rating
                                     </Text>
                                 </View>
                             </View>
@@ -544,7 +662,16 @@ export default function ListingDetailScreen() {
                                     backgroundColor: colors.primary,
                                     borderRadius: 6,
                                 }}
-                                onPress={() => navigation.navigate('SellerDetail', { id: listing.seller.id, seller: listing.seller })}
+                                onPress={() => navigation.navigate('SellerDetail', {
+                                    seller: {
+                                        id: listing.sellerId,
+                                        name: listing.sellerUsername,
+                                        bio: listing.sellerBio,
+                                        createdAt: listing.sellerCreatedAt,
+                                        rating: listing.sellerRating,
+                                        verified: listing.sellerVerified,
+                                    }
+                                })}
                             >
                                 <Text style={{ color: 'white', fontWeight: '600' }}>
                                     Visit Profile
@@ -681,6 +808,14 @@ export default function ListingDetailScreen() {
             </View>
 
             <BottomNavigation activeTab={activeTab} onTabChange={setActiveTab} />
+
+            <CustomAlert
+                visible={isVisible}
+                title={config.title}
+                message={config.message}
+                buttons={config.buttons}
+                type={config.type}
+            />
         </SafeAreaView>
     );
 }
