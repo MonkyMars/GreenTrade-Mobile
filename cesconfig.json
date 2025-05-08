@@ -1,12 +1,6 @@
 {
   "cesVersion": "2.14.3",
   "projectName": "GreenVue",
-  "packages": [
-    {
-      "name": "nativewind",
-      "type": "styling"
-    }
-  ],
   "flags": {
     "noGit": false,
     "noInstall": false,

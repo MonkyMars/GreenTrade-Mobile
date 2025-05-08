@@ -1,5 +1,5 @@
 {
-  "name": "greentradeeu",
+  "name": "greenvue",
   "version": "1.0.0",
   "scripts": {
     "android": "expo run:android",
@@ -25,7 +25,6 @@
     "expo-splash-screen": "~0.29.22",
     "expo-status-bar": "~2.0.1",
     "expo-web-browser": "^14.0.2",
-    "nativewind": "latest",
     "react": "18.3.1",
     "react-dom": "18.3.1",
     "react-native": "0.76.9",
