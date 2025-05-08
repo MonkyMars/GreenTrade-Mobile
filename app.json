@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "GreenTrade.eu",
+    "name": "GreenVue.eu",
     "slug": "greentradeeu",
     "version": "1.0.0",
     "newArchEnabled": true,
@@ -41,7 +41,7 @@
       "supportsTablet": true
     },
     "android": {
-      "package": "com.greentrade.android",
+      "package": "com.greenvue.android",
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "monochromeImage": "./assets/adaptive-icon.png",

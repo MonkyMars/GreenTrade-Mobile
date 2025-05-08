@@ -213,7 +213,7 @@ export default function RegisterScreen({ navigation }: RegisterScreenProps) {
                         <View style={{ marginBottom: 24, alignItems: 'center' }}>
                             <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                                 <FontAwesome name="leaf" size={40} color={colors.primary} />
-                                <Text style={{ marginLeft: 8, fontSize: 30, fontWeight: 'bold', color: colors.primary }}>GreenTrade</Text>
+                                <Text style={{ marginLeft: 8, fontSize: 30, fontWeight: 'bold', color: colors.primary }}>GreenVue</Text>
                             </View>
                             <Text style={{ marginTop: 24, fontSize: 24, fontWeight: 'bold', color: colors.text }}>
                                 Create an account

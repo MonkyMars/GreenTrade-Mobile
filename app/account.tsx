@@ -282,7 +282,7 @@ export default function AccountScreen() {
                         elevation: 3,
                     }}>
                         <Text style={{ fontSize: 24, fontWeight: '700', color: colors.text }}>
-                            <FontAwesome name="leaf" color={colors.primary} size={24} /> My GreenTrade Account
+                            <FontAwesome name="leaf" color={colors.primary} size={24} /> My GreenVue Account
                         </Text>
                     </View>
 
@@ -875,7 +875,7 @@ export default function AccountScreen() {
                                                 color: colors.textSecondary,
                                                 marginBottom: 16
                                             }}>
-                                                You can create listings and sell your eco-friendly products on GreenTrade.
+                                                You can create listings and sell your eco-friendly products on GreenVue.
                                                 Access your seller dashboard to manage your listings.
                                             </Text>
 
@@ -981,7 +981,7 @@ export default function AccountScreen() {
                                             color: colors.text,
                                             marginBottom: 8
                                         }}>
-                                            Become a Seller on GreenTrade
+                                            Become a Seller on GreenVue
                                         </Text>
 
                                         <Text style={{

@@ -473,7 +473,7 @@ export default function HomeScreen() {
             marginLeft: 10,
           }}
         >
-          GreenTrade
+          GreenVue
         </Text>
 
         <TouchableOpacity
@@ -523,7 +523,7 @@ export default function HomeScreen() {
             <View style={{ flexDirection: 'row', alignItems: 'center' }}>
               <FontAwesome name="leaf" size={28} color={colors.primary} />
               <Text style={{ fontSize: 24, fontWeight: '700', color: colors.text, marginLeft: 10 }}>
-                GreenTrade
+                GreenVue
               </Text>
             </View>
 
