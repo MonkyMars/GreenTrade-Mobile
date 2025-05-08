@@ -9,19 +9,19 @@ import {
 import { useNavigation, useRoute } from '@react-navigation/native';
 import BottomNavigation from '../../components/BottomNavigation';
 import { formatDistanceToNow } from "date-fns";
-import { useTheme } from 'lib/theme/ThemeContext';
+import { useTheme } from 'lib/contexts/ThemeContext';
 import {
 	FontAwesome, Feather, MaterialCommunityIcons, Ionicons
 } from '@expo/vector-icons';
 import { StatusBar } from 'expo-status-bar';
-import { findCategory } from 'lib/functions/category';
+import { findCategory } from 'lib/functions/categories';
 
 export default function ListingDetailScreen() {
 	const { colors, isDark } = useTheme();
 	const [activeTab, setActiveTab] = useState('listings');
 	const navigation = useNavigation();
 	const route = useRoute();
-	const { id }: { id: number } = route.params;
+	const { id }: { id: string } = route.params;
 	const [listing, setListing] = useState<FetchedListing>();
 	const [loading, setLoading] = useState(true);
 	const [currentImageIndex, setCurrentImageIndex] = useState(0);
@@ -154,7 +154,7 @@ export default function ListingDetailScreen() {
 	// Function to contact seller
 	const contactSeller = () => {
 		// Implement your contact logic here
-		console.log('Contact seller:', listing.seller.id);
+		console.log('Contact seller:', listing.sellerId);
 	};
 
 	return (
@@ -207,7 +207,7 @@ export default function ListingDetailScreen() {
 				showsVerticalScrollIndicator={false}
 				onScroll={Animated.event(
 					[{ nativeEvent: { contentOffset: { y: scrollY } } }],
-					{ useNativeDriver: true }
+					{ useNativeDriver: true, listener: () => { } }
 				)}
 				scrollEventThrottle={16}
 				style={{ flex: 1 }}
@@ -430,7 +430,7 @@ export default function ListingDetailScreen() {
 									style={{ marginRight: 8, width: 20 }}
 								/>
 								<Text style={{ fontSize: 15, color: colors.textSecondary }}>
-									Posted {formatDistanceToNow(new Date(listing.created_at), { addSuffix: true })}
+									Posted {formatDistanceToNow(new Date(listing.createdAt), { addSuffix: true })}
 								</Text>
 							</View>
 							<View style={{ flexDirection: 'row', alignItems: 'center' }}>
@@ -497,7 +497,7 @@ export default function ListingDetailScreen() {
 								marginRight: 12
 							}}>
 								<Text style={{ color: 'white', fontSize: 18, fontWeight: '600' }}>
-									{listing.seller.name.charAt(0).toUpperCase()}
+									{listing.sellerUsername.charAt(0).toUpperCase()}
 								</Text>
 							</View>
 
@@ -508,9 +508,9 @@ export default function ListingDetailScreen() {
 										fontWeight: '600',
 										color: colors.text
 									}}>
-										{listing.seller.name}
+										{listing.sellerUsername}
 									</Text>
-									{listing.seller.verified && (
+									{listing.sellerVerified && (
 										<View style={{
 											backgroundColor: colors.primaryLight,
 											borderRadius: 10,
@@ -532,7 +532,7 @@ export default function ListingDetailScreen() {
 										color: colors.textSecondary,
 										fontSize: 14,
 									}}>
-										{listing.seller.rating} Rating
+										{listing.sellerRating} Rating
 									</Text>
 								</View>
 							</View>
@@ -544,7 +544,7 @@ export default function ListingDetailScreen() {
 									backgroundColor: colors.primary,
 									borderRadius: 6,
 								}}
-								onPress={() => navigation.navigate('SellerDetail', { id: listing.seller.id, seller: listing.seller })}
+								onPress={() => navigation.navigate('SellerDetail', { id: listing.sellerId })}
 							>
 								<Text style={{ color: 'white', fontWeight: '600' }}>
 									Visit Profile

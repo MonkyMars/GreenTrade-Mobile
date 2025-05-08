@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "GreenVue.eu",
-    "slug": "greentradeeu",
+    "name": "GreenVue",
+    "slug": "greenvue",
     "version": "1.0.0",
     "newArchEnabled": true,
     "web": {

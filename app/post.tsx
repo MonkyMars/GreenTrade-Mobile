@@ -19,16 +19,17 @@ import FontAwesome from 'react-native-vector-icons/FontAwesome'
 import Feather from 'react-native-vector-icons/Feather'
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons'
 import BottomNavigation from '../components/BottomNavigation'
-import { useTheme } from '../lib/theme/ThemeContext'
+import { useTheme } from '../lib/contexts/ThemeContext'
 import ProtectedRoute from 'components/ProtectedRoute'
 import { calculateEcoScore } from 'lib/functions/calculateEcoScore'
-import { useAuth } from 'lib/auth/AuthContext'
+import { useAuth } from 'lib/contexts/AuthContext'
 import { useNavigation } from '@react-navigation/native'
 import { uploadListing } from 'lib/backend/listings/uploadListing'
 import { type UploadListing } from 'lib/types/main'
 import { uploadImage } from 'lib/backend/listings/uploadImage'
-import { categories } from 'lib/functions/category'
+import { categories } from 'lib/functions/categories'
 import * as ImagePicker from 'expo-image-picker'
+import { Condition, conditions } from 'lib/functions/conditions'
 
 export default function PostScreen() {
 	const { colors } = useTheme()
@@ -68,18 +69,6 @@ export default function PostScreen() {
 	>([])
 	const [imageFiles, setImageFiles] = useState<File[]>([])
 	const [formErrors, setFormErrors] = useState<Record<string, string>>({})
-
-	const conditions: {
-		name: string
-		iconName: string
-	}[] = [
-			{ name: 'New', iconName: 'FaBoxOpen' },
-			{ name: 'Like New', iconName: 'MdCheckCircleOutline' },
-			{ name: 'Very Good', iconName: 'FaStar' },
-			{ name: 'Good', iconName: 'MdThumbUp' },
-			{ name: 'Acceptable', iconName: 'RiCheckboxBlankCircleLine' },
-			{ name: 'For Parts/Not Working', iconName: 'MdBuild' },
-		]
 
 	// Eco-friendly attributes
 	const ecoAttributes: string[] = [
@@ -305,19 +294,13 @@ export default function PostScreen() {
 				title: formData.title,
 				description: formData.description,
 				category: formData.category,
-				condition: formData.condition,
-				location: formData.location || user.location || '',
+				condition: formData.condition as Condition["name"],
 				price: parseFloat(formData.price),
 				negotiable: formData.negotiable,
 				ecoAttributes: formData.ecoAttributes,
 				ecoScore: calculateEcoScore(formData.ecoAttributes),
 				imageUrl: imageUrlData.urls,
-				seller: {
-					id: user.id,
-					name: user.name,
-					rating: user.ecoScore || 0,
-					verified: true,
-				},
+				sellerId: user.id,
 			}
 
 			console.log('Submitting listing with data:', listing)
@@ -871,81 +854,6 @@ export default function PostScreen() {
 								</Text>
 							)}
 
-							{/* Location field */}
-							<Text
-								style={{
-									fontSize: 14,
-									fontWeight: '500',
-									color: colors.textSecondary,
-									marginBottom: 8,
-								}}
-							>
-								Location <Text style={{ color: colors.error }}>*</Text>
-							</Text>
-							<View style={{ position: 'relative' }}>
-								<View
-									style={{
-										position: 'absolute',
-										left: 12,
-										top: -6,
-										bottom: 0,
-										justifyContent: 'center',
-										zIndex: 1,
-									}}
-								>
-									<FontAwesome
-										name="map-marker"
-										size={16}
-										color={colors.textSecondary}
-									/>
-								</View>
-								<TextInput
-									placeholder="e.g. Berlin, Germany"
-									placeholderTextColor={colors.textTertiary}
-									value={formData.location}
-									editable={false}
-									aria-disabled={true}
-									onChangeText={value => handleChange('location', value)}
-									style={{
-										borderWidth: formErrors.location ? 2 : 1,
-										borderColor: formErrors.location
-											? colors.error
-											: colors.border,
-										borderRadius: 6,
-										paddingHorizontal: 12,
-										paddingVertical: 10,
-										paddingLeft: 36,
-										marginBottom: formErrors.location ? 4 : 8,
-										color: colors.textTertiary,
-										backgroundColor: colors.card,
-									}}
-								/>
-							</View>
-							{formErrors.location && (
-								<Text
-									style={{ color: colors.error, fontSize: 14, marginBottom: 8 }}
-								>
-									{formErrors.location}
-								</Text>
-							)}
-							<Text
-								style={{
-									color: colors.textTertiary,
-									fontSize: 12,
-									marginBottom: 16,
-								}}
-							>
-								This cannot be edited. Your location is retrieved from your account.
-							</Text>
-							<Text
-								style={{
-									color: colors.textTertiary,
-									fontSize: 12,
-									marginBottom: 16,
-								}}
-							>
-								Your exact address will not be shared publicly
-							</Text>
 							{/* Eco-friendly Attributes */}
 							<View
 								style={{
@@ -1328,33 +1236,44 @@ export default function PostScreen() {
 							</View>
 
 							<ScrollView>
-								{conditions.map(condition => (
-									<TouchableOpacity
-										key={condition.name}
-										style={{
-											flexDirection: 'row',
-											alignItems: 'center',
-											paddingVertical: 12,
-											borderBottomWidth: 1,
-											borderBottomColor: colors.border,
-										}}
-										onPress={() => {
-											handleChange('condition', condition.name)
-											setConditionModalVisible(false)
-										}}
-									>
-										<Text style={{ color: colors.text, flex: 1 }}>
-											{condition.name}
-										</Text>
-										{formData.condition === condition.name && (
-											<FontAwesome
-												name="check"
-												size={16}
-												color={colors.primary}
-											/>
-										)}
-									</TouchableOpacity>
-								))}
+								{conditions.map(condition => {
+									const IconLibrary = condition.icon.library;
+									return (
+										<TouchableOpacity
+											key={condition.name}
+											style={{
+												flexDirection: 'row',
+												alignItems: 'center',
+												paddingVertical: 12,
+												borderBottomWidth: 1,
+												borderBottomColor: colors.border,
+											}}
+											onPress={() => {
+												handleChange('condition', condition.name)
+												setConditionModalVisible(false)
+											}}
+										>
+											<View style={{ display: 'flex', flexDirection: 'row', alignItems: 'center' }}>
+												<IconLibrary
+													name={condition.icon.name as any}
+													size={20}
+													color={colors.primary}
+													style={{ marginRight: 12 }}
+												/>
+												<Text style={{ color: colors.text }}>
+													{condition.name}
+												</Text>
+											</View>
+											{formData.condition === condition.name && (
+												<FontAwesome
+													name="check"
+													size={16}
+													color={colors.primary}
+												/>
+											)}
+										</TouchableOpacity>
+									)
+								})}
 							</ScrollView>
 						</View>
 					</View>

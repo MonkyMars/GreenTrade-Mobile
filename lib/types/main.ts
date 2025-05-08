@@ -1,49 +1,27 @@
-export interface Listing {
-  id: number
-  title: string
-  description: string
-  image: string
-  price: string
-  ecoScore: number
-  location: string
-  category: string
-  date: string
-  condition: string
-  isFavorite: boolean
-  seller: {
-    name: string
-    rating: number
-    verified: boolean
-  }
-}
+import { Condition } from "../functions/conditions";
 
-export interface UploadListing {
-  title: string
-  description: string
-  price: number
-  location: string
-  category: string
-  condition: string
-  ecoAttributes: string[]
-  ecoScore: number
-  negotiable: boolean
-  imageUrl: string[] | { urls: string[] }
-  seller: {
-    id: string
-    name: string
-    rating: number
-    verified: boolean
-  }
-}
+export type UploadListing = {
+  title: string;
+  description: string;
+  category: string;
+  condition: Condition["name"];
+  price: number;
+  negotiable: boolean;
+  ecoScore: number;
+  ecoAttributes: string[];
+  imageUrl: string[];
+
+  sellerId: string;
+};
 
 export interface FetchedListing extends UploadListing {
-  id: number
-  created_at: string
-}
-
-export interface Seller {
-  name: string
-  rating: string | number
-  verified: boolean
-  bio?: string
+  id: string;
+  createdAt: string;
+  location: string;
+  sellerUsername: string;
+  sellerBio: string;
+  sellerCreatedAt: string;
+  sellerRating: number;
+  sellerVerified: boolean;
+  isUserFavorite?: boolean;
 }
