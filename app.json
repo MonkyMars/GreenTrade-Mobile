@@ -17,7 +17,7 @@
         {
           "image": "./assets/splash-light.jpg",
           "resizeMode": "contain",
-          "backgroundColor": "#10b880",
+          "backgroundColor": "#0f172b",
           "imageWidth": 200,
           "dark": {
             "image": "./assets/splash-dark.jpg",
@@ -31,11 +31,6 @@
     "orientation": "portrait",
     "icon": "./assets/icons/playstore.png",
     "userInterfaceStyle": "automatic",
-    "splash": {
-      "image": "./assets/splash.png",
-      "resizeMode": "contain",
-      "backgroundColor": "#10b880"
-    },
     "assetBundlePatterns": ["**/*"],
     "ios": {
       "supportsTablet": true
@@ -46,7 +41,7 @@
         "foregroundImage": "./assets/adaptive-icon.png",
         "monochromeImage": "./assets/adaptive-icon.png",
         "backgroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#10b880"
+        "backgroundColor": "#0f172b"
       }
     },
     "extra": {
