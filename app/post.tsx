@@ -18,7 +18,7 @@ import { SafeAreaView } from 'react-native-safe-area-context'
 import FontAwesome from 'react-native-vector-icons/FontAwesome'
 import Feather from 'react-native-vector-icons/Feather'
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons'
-import BottomNavigation from '../components/BottomNavigation'
+import BottomNavigation, { Tab } from '../components/BottomNavigation'
 import { useTheme } from '../lib/contexts/ThemeContext'
 import ProtectedRoute from 'components/ProtectedRoute'
 import { calculateEcoScore } from 'lib/functions/calculateEcoScore'
@@ -30,12 +30,13 @@ import { uploadImage } from 'lib/backend/listings/uploadImage'
 import { categories } from 'lib/functions/categories'
 import * as ImagePicker from 'expo-image-picker'
 import { Condition, conditions } from 'lib/functions/conditions'
+import { AppError, retryOperation } from 'lib/errorUtils'
 
 export default function PostScreen() {
 	const { colors } = useTheme()
 	const { user } = useAuth()
 	const navigation = useNavigation()
-	const [activeTab, setActiveTab] = useState('post')
+	const [activeTab, setActiveTab] = useState<Tab>('post')
 	const [uploading, setUploading] = useState(false)
 	const [submitting, setSubmitting] = useState(false)
 	const [showSuccess, setShowSuccess] = useState(false)
@@ -267,8 +268,14 @@ export default function PostScreen() {
 					throw new Error('Please add at least one image')
 				}
 
-				console.log('Starting image upload with', images.length, 'images')
-				imageUrlData = await uploadImage(images, formData.title)
+				imageUrlData = await retryOperation(
+					() => uploadImage(images, formData.title),
+					{
+						context: "Image Upload",
+						maxRetries: 2,
+						showToastOnRetry: true,
+					}
+				);
 
 				if (
 					!imageUrlData ||
@@ -282,7 +289,7 @@ export default function PostScreen() {
 
 			} catch (error) {
 				console.error('Image upload error:', error)
-				throw new Error(
+				throw new AppError(
 					error instanceof Error
 						? error.message
 						: 'Failed to upload images. Please try again.',

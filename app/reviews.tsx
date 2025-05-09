@@ -21,6 +21,8 @@ import { z } from 'zod';
 import { Review } from 'lib/types/review';
 import { toSnakeCase } from 'lib/functions/snakeCase';
 
+// TODO: RLS does not yet work with reviews.
+
 // Define the Zod schema for review form validation
 const reviewSchema = z.object({
 	rating: z.number()
