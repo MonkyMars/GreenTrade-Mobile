@@ -11,6 +11,7 @@ import { useAuth } from 'lib/contexts/AuthContext'
 import RegisterScreen from './register'
 import MessagesScreen from './messages'
 import SellerScreen from './seller/[id]'
+import ReviewsScreen from './reviews'
 
 // Define the types for our navigation routes
 export type RootStackParamList = {
@@ -21,6 +22,8 @@ export type RootStackParamList = {
 	Navigation: undefined
 	Post: undefined
 	Messages: undefined
+	Reviews: undefined
+	SellerDetail: { id: string }
 	Listings: { category?: string }
 	ListingDetail: { id: string }
 }
@@ -50,6 +53,7 @@ export function Navigation() {
 				<Stack.Screen name="Register" component={RegisterScreen} />
 				<Stack.Screen name="Messages" component={MessagesScreen} />
 				<Stack.Screen name="SellerDetail" component={SellerScreen} />
+				<Stack.Screen name="Reviews" component={ReviewsScreen} />
 			</Stack.Navigator>
 		</NavigationContainer>
 	)

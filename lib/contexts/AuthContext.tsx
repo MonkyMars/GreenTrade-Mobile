@@ -172,7 +172,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
 				// Prevent infinite retry loops - check retry flag and status code
 				if (
 					error.response?.status === 401 &&
-					!originalRequest._retry &&
 					refreshAttempts.current < maxRefreshAttempts
 				) {
 					originalRequest._retry = true;
