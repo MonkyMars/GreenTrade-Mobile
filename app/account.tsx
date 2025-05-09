@@ -6,7 +6,7 @@ import {
 } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { Feather, FontAwesome, MaterialCommunityIcons } from '@expo/vector-icons'
-import BottomNavigation from '../components/BottomNavigation'
+import BottomNavigation, { Tab } from '../components/BottomNavigation'
 import ProtectedRoute from 'components/ProtectedRoute'
 import { useAuth } from 'lib/contexts/AuthContext'
 import { User } from 'lib/types/user'
@@ -46,7 +46,7 @@ export default function AccountScreen() {
 	const [deleteText, setDeleteText] = useState<string>('')
 	const [updateSuccess, setUpdateSuccess] = useState<string>("")
 	const [activeInnerTab, setActiveInnerTab] = useState<ActiveInnerTab>('listings')
-	const [activeAppTab, setActiveAppTab] = useState<string>('account')
+	const [activeAppTab, setActiveAppTab] = useState<Tab>('account')
 	const animationLock = useRef<boolean>(false)
 	const previousTab = useRef<{
 		activeTab: ActiveTab

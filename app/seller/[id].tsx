@@ -1,5 +1,5 @@
 import { useNavigation, useRoute } from '@react-navigation/native';
-import BottomNavigation from 'components/BottomNavigation';
+import BottomNavigation, { Tab } from 'components/BottomNavigation';
 import { useTheme } from 'lib/contexts/ThemeContext';
 import { FetchedListing } from 'lib/types/main';
 import { useEffect, useRef, useState } from 'react';
@@ -24,7 +24,7 @@ import { fetchSellerData } from 'lib/backend/seller/getSeller';
 export default function SellerScreen() {
 	const { colors, isDark } = useTheme();
 	const [seller, setSeller] = useState<Seller>()
-	const [activeTab, setActiveTab] = useState('listings');
+	const [activeTab, setActiveTab] = useState<Tab>('listings');
 	const navigation = useNavigation();
 	const route = useRoute();
 

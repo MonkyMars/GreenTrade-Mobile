@@ -5,9 +5,13 @@ import { useTheme } from '../lib/contexts/ThemeContext'
 import { useAuth } from 'lib/contexts/AuthContext'
 
 type BottomNavigationProps = {
-	activeTab?: string
-	onTabChange?: (tab: string) => void
+	activeTab?: Tab
+	onTabChange?: (tab: Tab) => void
 }
+
+export type Tab =
+	"home" | "listings" | "post" | "messages" | "account" | "login" | "register" | "messages"
+
 
 export default function BottomNavigation({
 	activeTab = 'home',
@@ -18,7 +22,7 @@ export default function BottomNavigation({
 		useNavigation()
 	const { colors } = useTheme()
 
-	const handleTabPress = (tab: string) => {
+	const handleTabPress = (tab: Tab) => {
 		if (onTabChange) {
 			onTabChange(tab)
 		}

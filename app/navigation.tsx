@@ -22,7 +22,7 @@ export type RootStackParamList = {
 	Post: undefined
 	Messages: undefined
 	Listings: { category?: string }
-	ListingDetail: { id: number }
+	ListingDetail: { id: string }
 }
 
 // Create the stack navigator without generic type parameter

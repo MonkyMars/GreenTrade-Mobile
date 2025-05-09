@@ -1,5 +1,5 @@
-import { ChatMessage } from '@/lib/types/chat'
-import api from '@/lib/backend/api/axiosConfig'
+import { ChatMessage } from 'lib/types/chat'
+import api from 'lib/backend/api/axiosConfig'
 
 export const sendMessage = async (
   conversationId: string,
