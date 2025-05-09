@@ -7,7 +7,7 @@ import {
 	FlatList, Share, Platform
 } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
-import BottomNavigation from '../../components/BottomNavigation';
+import BottomNavigation, { Tab } from '../../components/BottomNavigation';
 import { formatDistanceToNow } from "date-fns";
 import { useTheme } from 'lib/contexts/ThemeContext';
 import {
@@ -18,7 +18,7 @@ import { findCategory } from 'lib/functions/categories';
 
 export default function ListingDetailScreen() {
 	const { colors, isDark } = useTheme();
-	const [activeTab, setActiveTab] = useState('listings');
+	const [activeTab, setActiveTab] = useState<Tab>('listings');
 	const navigation = useNavigation();
 	const route = useRoute();
 	const { id }: { id: string } = route.params;
