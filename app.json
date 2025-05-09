@@ -16,12 +16,12 @@
         "expo-splash-screen",
         {
           "image": "./assets/splash-light.jpg",
-          "resizeMode": "contain",
+          "resizeMode": "cover",
           "backgroundColor": "#0f172b",
           "imageWidth": 200,
           "dark": {
             "image": "./assets/splash-dark.jpg",
-            "resizeMode": "contain",
+            "resizeMode": "cover",
             "backgroundColor": "#10b880",
             "imageWidth": 200
           }
@@ -31,9 +31,7 @@
     "orientation": "portrait",
     "icon": "./assets/icons/playstore.png",
     "userInterfaceStyle": "automatic",
-    "assetBundlePatterns": [
-      "**/*"
-    ],
+    "assetBundlePatterns": ["**/*"],
     "ios": {
       "supportsTablet": true
     },

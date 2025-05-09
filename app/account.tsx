@@ -842,9 +842,38 @@ export default function AccountScreen() {
 										)}
 
 										{activeInnerTab === 'favorites' && (
-											<Text style={{ color: colors.textSecondary, marginBottom: 16 }}>
-												You haven't saved any favorites yet.
-											</Text>
+											<>
+												{userFavorites.length > 0 ? (
+													<View style={{ width: '100%' }}>
+														{userFavorites.map(listing => (
+															<ListingListItem
+																key={listing.id}
+																item={listing}
+																onPress={() => navigation.navigate('Listing', { id: listing.id })}
+															/>
+														))}
+													</View>
+												) : (
+													<View style={{ width: '100%', alignItems: 'center', display: 'flex', gap: 8 }}>
+														<TouchableOpacity
+															style={{
+																backgroundColor: colors.primary,
+																paddingVertical: 10,
+																paddingHorizontal: 16,
+																borderRadius: 6,
+															}}
+															onPress={() => navigation.navigate('Listings')}
+														>
+															<Text style={{ color: 'white', fontWeight: '600' }}>
+																Favorite Your First Listing
+															</Text>
+														</TouchableOpacity>
+														<Text style={{ color: colors.textSecondary, marginBottom: 16 }}>
+															You haven't favorited any listings yet.
+														</Text>
+													</View>
+												)}
+											</>
 										)}
 
 										{activeInnerTab === 'purchases' && (
